@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import torch
 import sys
-SYS_PATH = '/u/ajagadish/vanilla-llama/categorisation'
+SYS_PATH = '/u/ajagadish/ermi/categorisation'
 sys.path.append(f"{SYS_PATH}/categorisation/rl2")
 sys.path.append(f"{SYS_PATH}/categorisation/data")
 sys.path.append(f"{SYS_PATH}/categorisation/")
