@@ -64,14 +64,6 @@ def l2_distance_trials(data, within_targets=False, within_consecutive_targets=Fa
                 distances = distance
             else:
                 distances = np.vstack((distances, distance))
-
-        # # plot the spatial distances
-        # f, ax = plt.subplots(1, 1, figsize=(7,7))   
-        # sns.heatmap(distances, annot=False, ax=ax, cmap='hot_r', vmin=0, vmax=1)
-        # ax.set_title(f'Distance between datapoints')
-        # ax.set_xlabel('Trial')
-        # ax.set_ylabel('Task')
-        # plt.show()
     
     return distances
 
@@ -267,101 +259,103 @@ def bin_data_points(num_bins, data, min_value=0, max_value=1):
     return bin_counts, target_counts
 
 def gini_compute(x):
-                    mad = np.abs(np.subtract.outer(x, x)).mean()
-                    rmad = mad/np.mean(x)
-                    return 0.5 * rmad
+    mad = np.abs(np.subtract.outer(x, x)).mean()
+    rmad = mad/np.mean(x)
+    return 0.5 * rmad
 
 def return_data_stats(data, poly_degree=2):
 
     df = data.copy()
-    max_tasks = int(df['task_id'].max() + 1)
-    all_corr, all_coef, all_bics_linear, all_bics_quadratic  = [], [], [], []
-    f1_ceof, f2_coef, f3_coef = [], [], []
-    f1_corr, f2_corr, f3_corr = [], [], []
-    gini_coeff, advantage = [], []
+    max_tasks = 400
+    max_trial = 50
+    all_corr, all_bics_linear, all_bics_quadratic, gini_coeff, all_accuraries_linear, all_accuraries_polynomial = [], [], [], [], [], []
     for i in range(0, max_tasks):
         df_task = df[df['task_id'] == i]
         if len(df_task) > 50: # arbitary data size threshold
             y = df_task['target'].to_numpy()
             y = np.unique(y, return_inverse=True)[1]
 
-            # df_task['input'] = df_task['input'].apply(eval).apply(np.array)
             X = df_task["input"].to_numpy()
             X = np.stack(X)
-            X = (X - X.min())/(X.max() - X.min())  # normalize data
-            
-            # correlations
+            X = (X - X.min())/(X.max() - X.min())
+
             all_corr.append(np.corrcoef(X[:, 0], X[:, 1])[0, 1])
             all_corr.append(np.corrcoef(X[:, 0], X[:, 2])[0, 1])
             all_corr.append(np.corrcoef(X[:, 1], X[:, 2])[0, 1])
 
-            # per feature correlations
-            f1_corr.append(np.corrcoef(X[:, 0], X[:, 1])[0, 1])
-            f2_corr.append(np.corrcoef(X[:, 0], X[:, 2])[0, 1])
-            f3_corr.append(np.corrcoef(X[:, 1], X[:, 2])[0, 1])
 
             if (y == 0).all() or (y == 1).all():
                 pass
             else:
                 X_linear = PolynomialFeatures(1).fit_transform(X)
-                log_reg = sm.Logit(y, X_linear).fit(method='bfgs', maxiter=10000)
+                log_reg = sm.Logit(y, X_linear).fit(method='bfgs', maxiter=10000, disp=0)
 
-                # weights
-                all_coef.append(log_reg.params[1])
-                all_coef.append(log_reg.params[2])
-                all_coef.append(log_reg.params[3])
-                
-                # store feature specific weights separately
-                f1_ceof.append(log_reg.params[1])
-                f2_coef.append(log_reg.params[2])
-                f3_coef.append(log_reg.params[3])
-
+                gini = gini_compute(np.abs(log_reg.params[1:]))
+                gini_coeff.append(gini)
 
                 X_poly = PolynomialFeatures(poly_degree).fit_transform(X)
-                log_reg_quadratic = sm.Logit(y, X_poly).fit(method='bfgs', maxiter=10000)
-                
-                # svm using sklearn
-                # svm = SVMModel(X, y)
-                # score_svm = svm.score(X, y)
-                # bic_svm, ll_svm = svm.calculate_bic(X, y)
-                
-                # logisitic regression with polynomial features using sklearn
-                svm = LogisticRegressionModel(X_poly, y)
-                score_svm = svm.score(X_poly, y)
-                bic_svm, ll_svm = svm.calculate_bic(X_poly, y)
-                
-                # logisitic regression with linear features using sklearn
-                lr = LogisticRegressionModel(X_linear, y)
-                score_lr = lr.score(X_linear, y)
-                bic_lr, ll_lr = lr.calculate_bic(X_linear, y)
-                # print(bic_lr, bic_svm)
-               
-                advantage.append(0. if score_svm > score_lr else 1.) #0 if score_svm > score_lr else 1) #(score_svm - score_lr) #(ll_svm-ll_lr)
+                log_reg_quadratic = sm.Logit(y, X_poly).fit(method='bfgs', maxiter=10000, disp=0)
 
-                # bics
-                all_bics_linear.append(bic_lr) #(-2*ll_lr) #(log_reg.bic)
-                all_bics_quadratic.append(bic_svm) #(-2*ll_svm) #(log_reg_quadratic.bic)
+                all_bics_linear.append(log_reg.bic)
+                all_bics_quadratic.append(log_reg_quadratic.bic)
 
-                gini = gini_compute(np.abs(log_reg.params[1:])) 
-                gini_coeff.append(gini)
-                
+                if X.shape[0] < max_trial:
+                    pass
+                else:
+                    task_accuraries_linear = []
+                    task_accuraries_polynomial = []
+                    for trial in range(max_trial):
+                        X_linear_uptotrial = X_linear[:trial]
+                        #X_poly_uptotrial = X_poly[:trial]
+                        y_uptotrial = y[:trial]
 
-    # compute posterior probabilities
+                        if (y_uptotrial == 0).all() or (y_uptotrial == 1).all() or trial == 0:
+                            task_accuraries_linear.append(0.5)
+                            #task_accuraries_polynomial.append(0.5)
+                        else:
+                            log_reg = sm.Logit(y_uptotrial, X_linear_uptotrial).fit(method='bfgs', maxiter=10000, disp=0)
+                            #log_reg_quadratic = sm.Logit(y_uptotrial, X_poly_uptotrial).fit(method='bfgs', maxiter=10000, disp=0)
+
+                            y_linear_trial = log_reg.predict(X_linear[trial])
+                            #y_poly_trial = log_reg_quadratic.predict(X_poly[trial])
+
+                            task_accuraries_linear.append(float((y_linear_trial.round() == y[trial]).item()))
+                            #task_accuraries_polynomial.append(float((y_poly_trial.round() == y[trial]).item()))
+
+                all_accuraries_linear.append(task_accuraries_linear)
+                #all_accuraries_polynomial.append(task_accuraries_polynomial)
+    all_accuraries_linear = np.array(all_accuraries_linear).mean(0)
+    #all_accuraries_polynomial = np.array(all_accuraries_polynomial).mean(0)
+
     logprobs = torch.from_numpy(-0.5 * np.stack((all_bics_linear, all_bics_quadratic), -1))
     joint_logprob = logprobs + torch.log(torch.ones([]) /logprobs.shape[1])
     marginal_logprob = torch.logsumexp(joint_logprob, dim=1, keepdim=True)
     posterior_logprob = joint_logprob - marginal_logprob
 
-    # store feature specific weights separately
-    f1_ceof = np.array(f1_ceof)
-    f2_coef = np.array(f2_coef)
-    f3_coef = np.array(f3_coef)
-    feature_coef = np.stack((f1_ceof, f2_coef, f3_coef), -1)
-    # horizontal task the feature coefficients
-    # hfeature_coef = feature_coef.reshape(-1, 3)
+    return all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial
 
-    # horizontal stack per feature correlations
-    features_corrs = np.stack((f1_corr, f2_corr, f3_corr), -1)
+def save_dataset_statistics(mode=0):
+    
+    # set env_name and color_stats based on mode
+    if mode == 0:
+        env_name = f'{SYS_PATH}/categorisation/data/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
+    elif mode == 1:
+        env_name = f'{SYS_PATH}/categorisation/data/linear_data'
+    elif mode == 2:
+        env_name = f'{SYS_PATH}/categorisation/data/real_data'
 
+    # load data
+    data = pd.read_csv(f'{env_name}.csv')
+    data = data.groupby(['task_id']).filter(lambda x: len(x['target'].unique()) == 2) # check if data has only two values for target in each task
+    data.input = data['input'].apply(lambda x: np.array(eval(x)))
 
-    return all_corr, all_coef, posterior_logprob, feature_coef, features_corrs, gini_coeff, advantage
+    all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial = return_data_stats(data)
+
+    gini_coeff = np.array(gini_coeff)
+    gini_coeff = gini_coeff[~np.isnan(gini_coeff)]
+    bin_max = np.max(gini_coeff)
+
+    posterior_logprob = posterior_logprob[:, 0].exp().detach().numpy()
+    
+    # save corr, gini, posterior_logprob, and all_accuraries_linear for each mode in one .npz file
+    np.savez(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz', all_corr=all_corr, gini_coeff=gini_coeff, posterior_logprob=posterior_logprob, all_accuraries_linear=all_accuraries_linear)
