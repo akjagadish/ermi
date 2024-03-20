@@ -46,6 +46,16 @@ def pool_tasklabels(path_to_dir, run_gpt, model, num_dim, num_tasks, num_runs, p
     # df.category_names = df['category_names'].apply(lambda x: eval(x))
     df.to_csv(f'{path_to_dir}/{run_gpt}_generated_tasklabels_params{model}_dim{num_dim}_tasks{num_tasks}_pversion{prompt_version}.csv')             
 
+
+def retrieve_features_and_categories(path, file_name, task_id):
+ 
+    df = pd.read_csv(f'{path}/{file_name}.csv')
+    task_id = df.task_id[task_id]
+    df = df[df.task_id==df.task_id[task_id]]
+    features = eval(df.feature_names.values[0])
+    categories = eval(df.category_names.values[0])
+    return features, categories, task_id
+
 def get_regex_patterns(num_dim, use_generated_tasklabels, prompt_version):
     ''' 
     Generate regex patterns to parse the generated tasks

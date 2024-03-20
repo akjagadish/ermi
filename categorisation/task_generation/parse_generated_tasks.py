@@ -63,7 +63,7 @@ def parse_and_pool_generated_tasks(path, gpt, models, dims, data, tasks, runs, p
 if __name__ == '__main__':
     ## take arguments from command line and arg parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path', type=str, default='/raven/u/ajagadish/vanilla-llama/categorisation/data', help='path to the folder containing the generated tasks')
+    parser.add_argument('--path', type=str, default=None, help='path to the folder containing the generated tasks')
     parser.add_argument('--gpt', type=str, default='claude', help='gpt model used to generate the tasks')
     parser.add_argument('--models', nargs='+', default=['NA'], help='versions of gpt model used to generate the tasks')
     parser.add_argument('--dims', nargs='+', type=int,  default=[3], help='list of dimensions used to generate the tasks')

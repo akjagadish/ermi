@@ -6,9 +6,6 @@ import numpy as np
 import torch
 import argparse
 import sys
-sys.path.append("..")
-sys.path.insert(1, '/u/ajagadish/vanilla-llama/')
-sys.path.insert(1, '/raven/u/ajagadish/vanilla-llama/')
 from inference import LLaMAInference
 from prompts import retrieve_prompt
 from utils import retrieve_features_and_categories, get_regex_patterns
@@ -21,6 +18,7 @@ import anthropic
 load_dotenv() # load environment variables from .env
 TOKEN_COUNTER = 0
 
+SYS_PATH = '/u/ajagadish/ermi/categorisation'
 # generate action using LLaMA or GPT-3
 def act(text=None, run_gpt='llama', temperature=1., max_length=300):
 
@@ -195,7 +193,7 @@ if __name__ == "__main__":
            
            ## generate tasks in one or two stages
             if args.stage == 2:
-                with open(f"data/raw_data/{run_gpt}_generated_tasks_params{args.model}_dim{num_dim}_data{num_data}_tasks{num_tasks}_run{run}_procid{proc_id}_pversion{prompt_version}_stage1_starttaskid{start_task_id}_raw.txt", "rb") as fp:   
+                with open(f"{SYS_PATH}/data/raw_data/{run_gpt}_generated_tasks_params{args.model}_dim{num_dim}_data{num_data}_tasks{num_tasks}_run{run}_procid{proc_id}_pversion{prompt_version}_stage1_starttaskid{start_task_id}_raw.txt", "rb") as fp:   
                     stage1_action = pickle.load(fp)[idx]
                 matches = check_if_parsable(stage1_action, patterns)
                 if matches is not None: # the original few points are getting changed
@@ -218,17 +216,17 @@ if __name__ == "__main__":
             # save data using pickle
             filename = f'{run_gpt}_generated_tasks_params{args.model}_dim{num_dim}_data{num_data}_tasks{num_tasks}_run{run}_procid{proc_id}_pversion{prompt_version}'
             filename += f"_stage{str(args.stage)}" if args.stage > 0 else ""
-            with open(f"data/parsed/{filename}.txt", "wb") as fp:   
-                pickle.dump(data, fp)
+            # with open(f"{SYS_PATH}/data/parsed/{filename}.txt", "wb") as fp:   
+            #     pickle.dump(data, fp)
 
-            with open(f"data/parsed/{filename}_taskids.txt", "wb") as fp:
-                pickle.dump(task_ids, fp)
+            # with open(f"{SYS_PATH}/data/parsed/{filename}_taskids.txt", "wb") as fp:
+            #     pickle.dump(task_ids, fp)
 
-            with open(f"data/unparsed/{filename}_unparsed.txt", "wb") as fp:   
-                pickle.dump(unparsable_data, fp)
+            # with open(f"{SYS_PATH}/data/unparsed/{filename}_unparsed.txt", "wb") as fp:   
+            #     pickle.dump(unparsable_data, fp)
 
-            with open(f"data/raw_data/{filename}_starttaskid{start_task_id}_raw.txt", "wb") as fp:
-                pickle.dump(raw_data, fp)
+            # with open(f"{SYS_PATH}/data/raw_data/{filename}_starttaskid{start_task_id}_raw.txt", "wb") as fp:
+            #     pickle.dump(raw_data, fp)
 
     if run_gpt == 'gpt4':
         print(f'total tokens used: {TOKEN_COUNTER}')
