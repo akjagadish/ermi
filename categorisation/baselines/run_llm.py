@@ -132,14 +132,13 @@ def run_llm_on_devraj2022(mode='llm', model='claude-2', start_participant=0):
             categories = {'0': choice_options[0], '1': choice_options[1]} 
 
             # instructions
-            instructions =   'In this experiment, you will be shown examples of nonsense world stimuli. \n'\
-            f'Look carefully at each word and decide if it belongs to Group {str(choice_options[0])} or Group {str(choice_options[1])}. \n'\
-            f'Respond with {str(choice_options[0])} if you think it is a Group {str(choice_options[0])} word and a'\
-            f' {str(choice_options[1])} if you think it is a Group {str(choice_options[1])} word. \n'\
-            'If you choose correctly, you will be told that your answer is correct. \n'\
-            'If you choose incorrectly, you will be told that your answer is incorrect. \n'\
+            instructions =   'In this experiment, you will be shown examples of nonsense word stimuli. \n'\
+            f'Look carefully at each word and decide if it belongs to group {str(choice_options[0])} or group {str(choice_options[1])}. \n'\
+            f'Respond with {str(choice_options[0])} if you think it is a group {str(choice_options[0])} word and a'\
+            f' {str(choice_options[1])} if you think it is a group {str(choice_options[1])} word. \n'\
+            'You will recieve feedback about the correct group after each of your response. \n'\
             'At first, the task will seem quite difficult,'\
-            'but with time and practice, you should be able to answer correctly. \n\n'
+            ' but with time and practice, you should be able to answer correctly. \n\n'
             
             for task in range(num_tasks):
                 df_task = df_participant[(df_participant['task'] == task)]
@@ -160,8 +159,8 @@ def run_llm_on_devraj2022(mode='llm', model='claude-2', start_participant=0):
                         # anthropic prompt
                         Q_ = anthropic.HUMAN_PROMPT if model == 'claude-2' else 'Q:'
                         A_ = anthropic.AI_PROMPT if model == 'claude-2' else 'A:'
-                        question = f'{Q_} What category would the word ' + object_name + ' belong to? (Give the answer in the form \"Category <your answer>\").'\
-                                f'{A_} Category'
+                        question = f'{Q_} What group would the word ' + object_name + ' belong to? (Give the answer in the form \"Group <your answer>\").'\
+                                f'{A_} Group'
                         query = block_instructions + question
                         # print(query)
                         llm_response = call_claude(query)
@@ -181,8 +180,8 @@ def run_llm_on_devraj2022(mode='llm', model='claude-2', start_participant=0):
                         response = llm_response if mode == 'llm' else human_response
 
                         # add to block instructions
-                        block_instructions += '- In trial '+ str(t_idx+1) +', you picked category ' + str(response) + ' for ' + object_name + ' and category ' + str(t) + ' was correct.\n'
-                    
+                        block_instructions += '- In trial '+ str(t_idx+1) +', you picked group ' + str(response) + ' for ' + object_name + ' and group ' + str(t) + ' was correct.\n'
+                        import ipdb; ipdb.set_trace()
                     # print(block_instructions)
                     
             # save df with llm predicted category and true category
