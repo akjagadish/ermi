@@ -1,0 +1,10 @@
+from plots import model_comparison_badham2017, model_simulations_smith1998, model_simulations_shepard1961, model_comparison_devraj2022, model_comparison_johanssen2002, plot_dataset_statistics
+
+plot_dataset_statistics(0)
+plot_dataset_statistics(1)
+plot_dataset_statistics(2)
+model_simulations_shepard1961()
+model_comparison_badham2017()
+model_simulations_smith1998()
+model_comparison_devraj2022()
+model_comparison_johanssen2002()
