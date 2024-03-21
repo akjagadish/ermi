@@ -7,6 +7,9 @@ import argparse
 load_dotenv() # load environment variables from .env
 import time
 import sys
+from llm import LLMCategoryLearning
+SYS_PATH = '/u/ajagadish/ermi'
+sys.path.append(f'{SYS_PATH}/categorisation/data')
 
 def randomized_choice_options(num_choices):
     choice_options = list(map(chr, range(65, 91)))
@@ -175,6 +178,7 @@ def run_llm_on_devraj2022(mode='llm', model='claude-2', start_participant=0):
                         query = block_instructions + question
                         # print(query)
                         # llm_response = call_claude(query)
+                        count = 0
                         while count < 10:
                             try: 
                                 time.sleep(3**count - 1)
@@ -206,18 +210,60 @@ def run_llm_on_devraj2022(mode='llm', model='claude-2', start_participant=0):
             # save df with llm predicted category and true category
             df.to_csv(dataset.replace('.csv', f'llm_choices{mode}.csv'), index=False)
 
+def fit_llm_to_humans(num_runs, num_blocks, num_iter, opt_method, loss, task_name):
+    
+    if task_name == 'devraj2022':
+        df = pd.read_csv(f'{SYS_PATH}/categorisation/data/llm/devraj2022rational.csv')
+        df = df[df['condition'] == 'control'] # only pass 'control' condition
+        NUM_TASKS, NUM_FEATURES = 1, 6
+    elif task_name == 'badham2017':
+        df = pd.read_csv(f'{SYS_PATH}/categorisation/data/llm/badham2017deficits_llm_choiceshuman.csv')
+        NUM_TASKS, NUM_FEATURES = 1, 3
+    else:
+        raise NotImplementedError
+
+    # comment out for testing
+    # df = df[df['participant'] == 0]
+    # df['llm_category'] = df['true_category']
+    # df['choice'] = df['correct_choice']
+    
+    lls, r2s, params_list = [], [], []
+    for idx in range(num_runs):
+        llm = LLMCategoryLearning(num_features=NUM_FEATURES, num_iterations=num_iter, opt_method=opt_method, loss=loss)
+        ll, r2, params = llm.fit_participants(df, num_blocks=num_blocks, reduce='sum')
+        params_list.append(params)
+        lls.append(ll)
+        r2s.append(r2)
+        print(f'mean fit across blocks: {lls[idx].mean()} \n')
+        print(f'mean pseudo-r2 across blocks: {r2s[idx].mean()}')
+
+    # save the r2 and ll values
+    lls = np.array(lls)
+    r2s = np.array(r2s)
+    np.savez(f'{SYS_PATH}/categorisation/data/model_comparison/{task_name}_llm_runs={num_runs}_iters={num_iter}_blocks={num_blocks}_loss={loss}'\
+             , r2s=r2s, lls=lls, params=np.stack(params_list), opt_method=opt_method)
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=str, default='llm', help='llm or human')
     parser.add_argument('--model', type=str, default='claude-2', help='claude-2 or claude-1')
     parser.add_argument('--dataset', type=str, default='badham2017', help='badham2017 or devraj2022')
     parser.add_argument('--start-participant', type=int, default=0, help='start participant number')
+    parser.add_argument('--fit-human-data', action='store_true', help='fit llm to humans')
+    parser.add_argument('--num-runs', type=int, required=False,  default=1, help='number of runs')
+    parser.add_argument('--num-iter', type=int, required=False, default=1, help='number of iterations')
+    parser.add_argument('--num-blocks', type=int,required=False, default=1, help='number of blocks')
+    parser.add_argument('--opt-method', type=str, required=False, default='minimize', help='optimization method')
+    parser.add_argument('--loss', type=str, required=False, default='nll', help='loss function')
 
     args = parser.parse_args()
 
-    if args.dataset == 'badham2017':
-        run_llm_on_badham2017(mode=args.mode, model=args.model, start_participant=args.start_participant)
-    elif args.dataset == 'devraj2022':
-        run_llm_on_devraj2022(mode=args.mode, model=args.model, start_participant=args.start_participant)
+    if args.fit_human_data:
+        fit_llm_to_humans(num_runs=args.num_runs, num_blocks=args.num_blocks, num_iter=args.num_iter, opt_method=args.opt_method, loss=args.loss, task_name=args.dataset)
     else:
-        raise ValueError('Invalid dataset. Please provide a valid dataset.')
+        if args.dataset == 'badham2017':
+            run_llm_on_badham2017(mode=args.mode, model=args.model, start_participant=args.start_participant)
+        elif args.dataset == 'devraj2022':
+            run_llm_on_devraj2022(mode=args.mode, model=args.model, start_participant=args.start_participant)
+        else:
+            raise ValueError('Invalid dataset. Please provide a valid dataset.')
