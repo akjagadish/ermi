@@ -5,6 +5,8 @@ import anthropic
 from dotenv import load_dotenv
 import argparse
 load_dotenv() # load environment variables from .env
+import time
+import sys
 
 def randomized_choice_options(num_choices):
     choice_options = list(map(chr, range(65, 91)))
@@ -72,8 +74,17 @@ def run_llm_on_badham2017(mode='llm', model='claude-2', start_participant=0):
                                 f'{A_} Category'
                         query = block_instructions + question
                         # print(query)
-                        llm_response = call_claude(query)
-                        
+                        count = 0
+                        while count < 10:
+                            try: 
+                                time.sleep(3**count - 1)
+                                llm_response = call_claude(query)
+                                break
+                            except Exception as e:
+                                print(f'Error in anthropic {e}. Retrying...')
+                                count += 1
+                                continue
+                    
                         # check if response is valid
                         assert llm_response in [str(choice_options[0]), str(choice_options[1])], 'Invalid response. Please try again.'
                         # while response not in ['A', 'B']:
@@ -163,8 +174,17 @@ def run_llm_on_devraj2022(mode='llm', model='claude-2', start_participant=0):
                                 f'{A_} Group'
                         query = block_instructions + question
                         # print(query)
-                        llm_response = call_claude(query)
-                        
+                        # llm_response = call_claude(query)
+                        while count < 10:
+                            try: 
+                                time.sleep(3**count - 1)
+                                llm_response = call_claude(query)
+                                break
+                            except Exception as e:
+                                print(f'Error in anthropic {e}. Retrying...')
+                                count += 1
+                                continue
+                       
                         # check if response is valid
                         assert llm_response in [str(choice_options[0]), str(choice_options[1])], 'Invalid response. Please try again.'
                         # while response not in ['A', 'B']:
@@ -181,7 +201,6 @@ def run_llm_on_devraj2022(mode='llm', model='claude-2', start_participant=0):
 
                         # add to block instructions
                         block_instructions += '- In trial '+ str(t_idx+1) +', you picked group ' + str(response) + ' for ' + object_name + ' and group ' + str(t) + ' was correct.\n'
-                        import ipdb; ipdb.set_trace()
                     # print(block_instructions)
                     
             # save df with llm predicted category and true category
