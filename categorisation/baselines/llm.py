@@ -51,7 +51,6 @@ class LLMCategoryLearning():
                     if self.loss == 'nll':
                         num_trials = len(df_condition_block)*(df_condition_block.task.max()+1)
                         r2[p_idx, c_idx, b_idx] = 1 - (fit_measure[p_idx, c_idx, b_idx]/(-num_trials*np.log(1/2)))
-                    import ipdb; ipdb.set_trace()
                     store_params[p_idx, c_idx, b_idx] = best_params
                 
         return fit_measure, r2, store_params
