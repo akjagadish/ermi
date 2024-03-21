@@ -4,11 +4,11 @@ import torch
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
-SYS_PATH = '/u/ajagadish/ermi/categorisation'
+SYS_PATH = '/u/ajagadish/ermi'
 sys.path.append(f"{SYS_PATH}/categorisation/")
 sys.path.append(f"{SYS_PATH}/categorisation/rl2")
 sys.path.append(f"{SYS_PATH}/categorisation/data")
-from evaluate import evaluate_metalearner
+# from evaluate import evaluate_metalearner
 import json
 from groupBMC.groupBMC import GroupBMC
 FONTSIZE=20
@@ -48,7 +48,7 @@ def posterior_model_frequency(bics, models, horizontal=True, FIGSIZE=(5,5), FONT
     ax.set_title(f'{task_name}', fontsize=FONTSIZE-5)
     sns.despine()
     f.tight_layout()
-    f.savefig(f'{SYS_PATH}/categorisation/figures/posterior_model_frequency_{task_name}.svg', bbox_inches='tight', dpi=300)
+    f.savefig(f'{SYS_PATH}/figures/posterior_model_frequency_{task_name}.svg', bbox_inches='tight', dpi=300)
     plt.show()
 
 def exceedance_probability(bics, models, horizontal=True, FIGSIZE=(5,5), FONTSIZE=25, task_name=None):
@@ -83,14 +83,16 @@ def exceedance_probability(bics, models, horizontal=True, FIGSIZE=(5,5), FONTSIZ
     ax.set_title(f'{task_name}', fontsize=FONTSIZE-5)
     sns.despine()
     f.tight_layout()
-    f.savefig(f'{SYS_PATH}/categorisation/figures/exceedance_probability_{task_name}.svg', bbox_inches='tight', dpi=300)
+    f.savefig(f'{SYS_PATH}/figures/exceedance_probability_{task_name}.svg', bbox_inches='tight', dpi=300)
     plt.show()
     
 def model_comparison_badham2017(FIGSIZE=(6,5)):
 
     
-    models = ['badham2017_env=claude_generated_tasks_paramsNA_dim3_data100_tasks11518_pversion4_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=3_soft_sigmoid_differential_evolution',\
+    models = [
+              'badham2017_env=claude_generated_tasks_paramsNA_dim3_data100_tasks11518_pversion4_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0_soft_sigmoid_differential_evolution',\
               'badham2017_env=rmc_tasks_dim3_data100_tasks11499_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1_rmc_soft_sigmoid_differential_evolution',
+              'badham2017_llm_runs=1_iters=1_blocks=1_loss=nll',\
               'badham2017_env=dim3synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0_syntheticnonlinear_soft_sigmoid_differential_evolution',\
               'badham2017_env=dim3synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0_synthetic_soft_sigmoid_differential_evolution',\
               'badham2017_gcm_runs=1_iters=1_blocks=1_loss=nll',\
@@ -106,7 +108,7 @@ def model_comparison_badham2017(FIGSIZE=(6,5)):
     num_trials = NUM_TRIALs*NUM_TASKS
     # FONTSIZE = 16
     # MODELS = ['ERMI', 'RMC-MI', 'L-MI', 'PFN-MI', 'GCM', 'Rulex', 'Rule',  'PM']
-    MODELS = ['ERMI', 'RMC', 'MI', 'PFN', 'GCM', 'Rulex', 'Rule',  'PM']
+    MODELS = ['ERMI', 'RMC',  'LLM', 'MI', 'PFN', 'GCM', 'Rulex', 'Rule',  'PM']
 
 
     for model_name in models:
@@ -127,6 +129,14 @@ def model_comparison_badham2017(FIGSIZE=(6,5)):
             num_parameters = 5*NUM_TASKS if ('gcm' in model_name) else 11*NUM_TASKS
             bic = np.array(nlls_min_nlls)*2 + np.log(num_trials)*num_parameters
             fitted_betas.append(betas.squeeze()[..., 1].mean(1))
+        elif 'llm' in model_name:
+            betas, pnlls, pr2s = fits['params'], fits['lls'], fits['r2s']
+            # summing the fits for the four conditions separately; hence the total number of parameters is model_parameters*NUM_TASKS
+            nlls_min_nlls = np.array(pnlls).squeeze().sum(1)
+            pr2s_min_nll = np.array(pr2s).squeeze().mean(1)
+            num_parameters = 1*NUM_TASKS 
+            bic = np.array(nlls_min_nlls)*2 + np.log(num_trials)*num_parameters
+            fitted_betas.append(betas.squeeze().mean(1))
         elif ('rulex' in model_name):
             betas, pnlls, pr2s = fits['params'], fits['lls'], fits['r2s']
             nlls_min_nlls = np.array(pnlls).squeeze().sum(1)
@@ -142,7 +152,7 @@ def model_comparison_badham2017(FIGSIZE=(6,5)):
     num_participants = len(nlls[0])
     MODELS = MODELS[:len(nlls)]
     # set colors depending on number of models in MODELS
-    colors = ['#173b4f', '#8b9da7', '#5d7684', '#2f4a5a', '#0d2c3d', '#4d6a75', '#748995', '#a2c0a9'][:len(nlls)]
+    colors = ['#173b4f', '#8b9da7', '#5d7684', '#2f4a5a', '#0d2c3d', '#4d6a75', '#748995', '#a2c0a9', '#c4d9c2'][:len(nlls)]
 
 
     # compare mean nlls across models in a bar plot
@@ -180,7 +190,7 @@ def model_comparison_badham2017(FIGSIZE=(6,5)):
     sns.despine()
     f.tight_layout()
     plt.show()
-    f.savefig(f'{SYS_PATH}/categorisation/figures/bic_badham2017.svg', bbox_inches='tight', dpi=300)
+    f.savefig(f'{SYS_PATH}/figures/bic_badham2017.svg', bbox_inches='tight', dpi=300)
 
     # compare mean r2s across models in a bar plot
     f, ax = plt.subplots(1, 1, figsize=FIGSIZE)
@@ -291,7 +301,7 @@ def model_comparison_devraj2022(FIGSIZE=(6,5)):
     sns.despine()
     f.tight_layout()
     plt.show()
-    f.savefig(f'{SYS_PATH}/categorisation/figures/bic_devraj2022.svg', bbox_inches='tight', dpi=300)
+    f.savefig(f'{SYS_PATH}/figures/bic_devraj2022.svg', bbox_inches='tight', dpi=300)
 
     # compare mean r2s across models in a bar plot
     f, ax = plt.subplots(1, 1, figsize=FIGSIZE)
@@ -381,7 +391,7 @@ def model_simulations_smith1998():
     sns.despine()
     f.tight_layout()
     plt.show()
-    f.savefig(f'{SYS_PATH}/categorisation/figures/model_simulations_smith1998.svg', bbox_inches='tight', dpi=300)
+    f.savefig(f'{SYS_PATH}/figures/model_simulations_smith1998.svg', bbox_inches='tight', dpi=300)
 
 
 def model_simulations_shepard1961(tasks=np.arange(1,7), batch_size=64):
@@ -451,7 +461,7 @@ def model_simulations_shepard1961(tasks=np.arange(1,7), batch_size=64):
     sns.despine()
     f.tight_layout()
     plt.show()
-    f.savefig(f'{SYS_PATH}/categorisation/figures/model_simulations_shepard1961.svg', bbox_inches='tight', dpi=300)
+    f.savefig(f'{SYS_PATH}/figures/model_simulations_shepard1961.svg', bbox_inches='tight', dpi=300)
 
 
 def model_comparison_johanssen2002():
@@ -539,3 +549,163 @@ def model_comparison_johanssen2002():
     fig.tight_layout()
     sns.despine()
     plt.show() 
+
+
+def plot_dataset_statistics(mode=0):
+
+    from sklearn.preprocessing import PolynomialFeatures
+    import statsmodels.api as sm
+    
+    def gini_compute(x):
+        mad = np.abs(np.subtract.outer(x, x)).mean()
+        rmad = mad/np.mean(x)
+        return 0.5 * rmad
+
+    def return_data_stats(data, poly_degree=2):
+
+        df = data.copy()
+        max_tasks = 400
+        max_trial = 50
+        all_corr, all_bics_linear, all_bics_quadratic, gini_coeff, all_accuraries_linear, all_accuraries_polynomial = [], [], [], [], [], []
+        for i in range(0, max_tasks):
+            df_task = df[df['task_id'] == i]
+            if len(df_task) > 50: # arbitary data size threshold
+                y = df_task['target'].to_numpy()
+                y = np.unique(y, return_inverse=True)[1]
+
+                X = df_task["input"].to_numpy()
+                X = np.stack(X)
+                X = (X - X.min())/(X.max() - X.min())
+
+                all_corr.append(np.corrcoef(X[:, 0], X[:, 1])[0, 1])
+                all_corr.append(np.corrcoef(X[:, 0], X[:, 2])[0, 1])
+                all_corr.append(np.corrcoef(X[:, 1], X[:, 2])[0, 1])
+
+
+                if (y == 0).all() or (y == 1).all():
+                    pass
+                else:
+                    X_linear = PolynomialFeatures(1).fit_transform(X)
+                    log_reg = sm.Logit(y, X_linear).fit(method='bfgs', maxiter=10000, disp=0)
+
+                    gini = gini_compute(np.abs(log_reg.params[1:]))
+                    gini_coeff.append(gini)
+
+                    X_poly = PolynomialFeatures(poly_degree).fit_transform(X)
+                    log_reg_quadratic = sm.Logit(y, X_poly).fit(method='bfgs', maxiter=10000, disp=0)
+
+                    all_bics_linear.append(log_reg.bic)
+                    all_bics_quadratic.append(log_reg_quadratic.bic)
+
+                    if X.shape[0] < max_trial:
+                        pass
+                    else:
+                        task_accuraries_linear = []
+                        task_accuraries_polynomial = []
+                        for trial in range(max_trial):
+                            X_linear_uptotrial = X_linear[:trial]
+                            #X_poly_uptotrial = X_poly[:trial]
+                            y_uptotrial = y[:trial]
+
+                            if (y_uptotrial == 0).all() or (y_uptotrial == 1).all() or trial == 0:
+                                task_accuraries_linear.append(0.5)
+                                #task_accuraries_polynomial.append(0.5)
+                            else:
+                                log_reg = sm.Logit(y_uptotrial, X_linear_uptotrial).fit(method='bfgs', maxiter=10000, disp=0)
+                                #log_reg_quadratic = sm.Logit(y_uptotrial, X_poly_uptotrial).fit(method='bfgs', maxiter=10000, disp=0)
+
+                                y_linear_trial = log_reg.predict(X_linear[trial])
+                                #y_poly_trial = log_reg_quadratic.predict(X_poly[trial])
+
+                                task_accuraries_linear.append(float((y_linear_trial.round() == y[trial]).item()))
+                                #task_accuraries_polynomial.append(float((y_poly_trial.round() == y[trial]).item()))
+
+                    all_accuraries_linear.append(task_accuraries_linear)
+                    #all_accuraries_polynomial.append(task_accuraries_polynomial)
+        all_accuraries_linear = np.array(all_accuraries_linear).mean(0)
+        #all_accuraries_polynomial = np.array(all_accuraries_polynomial).mean(0)
+
+        logprobs = torch.from_numpy(-0.5 * np.stack((all_bics_linear, all_bics_quadratic), -1))
+        joint_logprob = logprobs + torch.log(torch.ones([]) /logprobs.shape[1])
+        marginal_logprob = torch.logsumexp(joint_logprob, dim=1, keepdim=True)
+        posterior_logprob = joint_logprob - marginal_logprob
+
+        return all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial
+
+    # set env_name and color_stats based on mode
+    if mode == 0:
+        env_name = f'{SYS_PATH}/categorisation/data/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
+        color_stats = '#405A63' #'#2F4A5A'# '#173b4f'
+    elif mode == 1:#last plot
+        env_name = f'{SYS_PATH}/categorisation/data/linear_data'
+        color_stats = '#66828F' #5d7684'# '#5d7684'
+    elif mode == 2:#first plot
+        env_name = f'{SYS_PATH}/categorisation/data/real_data'
+        color_stats = '#173b4f'#'#0D2C3D' #'#8b9da7'
+
+    # load data
+    data = pd.read_csv(f'{env_name}.csv')
+    data = data.groupby(['task_id']).filter(lambda x: len(x['target'].unique()) == 2) # check if data has only two values for target in each task
+    data.input = data['input'].apply(lambda x: np.array(eval(x)))
+
+    if os.path.exists(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz'):
+        stats = np.load(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz', allow_pickle=True)
+        all_corr, gini_coeff, posterior_logprob, all_accuraries_linear = stats['all_corr'], stats['gini_coeff'], stats['posterior_logprob'], stats['all_accuraries_linear']
+    else:
+        all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial = return_data_stats(data)
+        gini_coeff = np.array(gini_coeff)
+        gini_coeff = gini_coeff[~np.isnan(gini_coeff)]
+        posterior_logprob = posterior_logprob[:, 0].exp().detach().numpy()
+
+    FONTSIZE=22 #8
+    bin_max = np.max(gini_coeff)
+    fig, axs = plt.subplots(1, 4,  figsize = (6*4,4))#figsize=(6.75, 1.5))
+    axs[0].plot(all_accuraries_linear, color=color_stats, alpha=1., lw=3)
+    #axs[0].plot(all_accuraries_polynomial, alpha=0.7)
+    sns.histplot(np.array(all_corr), ax=axs[1], bins=11, binrange=(-1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+    sns.histplot(gini_coeff, ax=axs[2], bins=11, binrange=(0, bin_max), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+    sns.histplot(posterior_logprob, ax=axs[3], bins=5, binrange=(0.0, 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+    axs[1].set_xlim(-1, 1)
+
+    axs[0].set_ylim(0.45, 1.05)
+    axs[1].set_ylim(0, 0.4)
+    axs[2].set_xlim(0., 0.76)
+    axs[3].set_xlim(0., 1.05)
+
+    axs[0].set_yticks(np.arange(0.5, 1.05, 0.25))
+    axs[1].set_yticks(np.arange(0, 0.45, 0.2))
+    axs[2].set_yticks(np.arange(0, 0.4, 0.15))
+    axs[3].set_yticks(np.arange(0, 1.05, 0.5))
+
+    # set tick size
+    axs[0].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    axs[1].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    axs[2].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    axs[3].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+
+    axs[0].set_ylabel('Accuracy', fontsize=FONTSIZE)
+    axs[1].set_ylabel('Proportion', fontsize=FONTSIZE)
+    axs[2].set_ylabel('')
+    axs[3].set_ylabel('')
+
+    if mode == 1:
+        axs[0].set_xlabel('Trials', fontsize=FONTSIZE)
+        axs[1].set_xlabel('Pearson\'s r', fontsize=FONTSIZE)
+        axs[2].set_xlabel('Gini Coefficient', fontsize=FONTSIZE)
+        axs[3].set_xlabel('Posterior probability ', fontsize=FONTSIZE)
+
+    #set title
+    if mode == 2:
+        axs[0].set_title('Performance', fontsize=FONTSIZE)
+        axs[1].set_title('Input correlation', fontsize=FONTSIZE)
+        axs[2].set_title('Sparsity', fontsize=FONTSIZE)
+        axs[3].set_title('Linearity', fontsize=FONTSIZE)
+
+    plt.tight_layout()
+    sns.despine()
+    plt.savefig(f'{SYS_PATH}/figures/stats_' + str(mode) + '.svg', bbox_inches='tight')
+    plt.show()
+
+    # save corr, gini, posterior_logprob, and all_accuraries_linear for each mode in one .npz file
+    if not os.path.exists(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz'):
+        np.savez(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz', all_corr=all_corr, gini_coeff=gini_coeff, posterior_logprob=posterior_logprob, all_accuraries_linear=all_accuraries_linear)
