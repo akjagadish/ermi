@@ -13,7 +13,7 @@
 
 # #export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK} # set it to 20 if you changed it multiples of 32
 
-cd ~/ermi/categorisation/
+cd ~/ermi/
 module purge
 module load anaconda/3/2021.11
 module load gcc/11 impi/2021.6
