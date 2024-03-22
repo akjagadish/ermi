@@ -99,11 +99,13 @@ def run_llm_on_badham2017(mode='llm', model='claude-2', start_participant=0):
                         df.loc[(df['participant'] == participant) & (df['task'] == task) & (df['trial'] == trial) & (df['block'] == block) , 'llm_category'] = llm_response
                         df.loc[(df['participant'] == participant) & (df['task'] == task) & (df['trial'] == trial) & (df['block'] == block) , 'true_category'] = str(t)
                         
-                        # set response to llm response if mode is llm
-                        response = llm_response if mode == 'llm' else human_response
-
                         # add to block instructions
-                        block_instructions += '- In trial '+ str(t_idx+1) +', you picked category ' + str(response) + ' for ' + object_name + ' and category ' + str(t) + ' was correct.\n'
+                        if mode == 'match_ermi':
+                            block_instructions += '- In trial '+ str(t_idx+1) +', you saw ' + object_name + ' which belonged to category ' + str(t) + '.\n'
+                        else:
+                            # set response to llm response if mode is llm
+                            response = llm_response if mode == 'llm' else human_response
+                            block_instructions += '- In trial '+ str(t_idx+1) +', you picked category ' + str(response) + ' for ' + object_name + ' and category ' + str(t) + ' was correct.\n'
         
             # save df with llm predicted category and true category
             df.to_csv(dataset.replace('.csv', f'llm_choices{mode}.csv'), index=False)
@@ -204,7 +206,12 @@ def run_llm_on_devraj2022(mode='llm', model='claude-2', start_participant=0):
                         response = llm_response if mode == 'llm' else human_response
 
                         # add to block instructions
-                        block_instructions += '- In trial '+ str(t_idx+1) +', you picked group ' + str(response) + ' for ' + object_name + ' and group ' + str(t) + ' was correct.\n'
+                        if mode == 'match_ermi':
+                            block_instructions += '- In trial '+ str(t_idx+1) +', you saw ' + object_name + ' which belonged to group ' + str(t) + '.\n'
+                        else:
+                            # set response to llm response if mode is llm
+                            response = llm_response if mode == 'llm' else human_response
+                            block_instructions += '- In trial '+ str(t_idx+1) +', you picked group ' + str(response) + ' for ' + object_name + ' and group ' + str(t) + ' was correct.\n'     
                     # print(block_instructions)
                     
             # save df with llm predicted category and true category
@@ -245,7 +252,7 @@ def fit_llm_to_humans(num_runs, num_blocks, num_iter, opt_method, loss, task_nam
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', type=str, default='llm', help='llm or human')
+    parser.add_argument('--mode', type=str, default='llm', help='llm or human or match_ermi')
     parser.add_argument('--model', type=str, default='claude-2', help='claude-2 or claude-1')
     parser.add_argument('--dataset', type=str, default='badham2017', help='badham2017 or devraj2022')
     parser.add_argument('--start-participant', type=int, default=0, help='start participant number')
