@@ -414,40 +414,39 @@ def model_simulations_smith1998():
     f.savefig(f'{SYS_PATH}/figures/model_simulations_smith1998.svg', bbox_inches='tight', dpi=300)
 
 
-def model_simulations_shepard1961(tasks=np.arange(1,7), batch_size=64):
+def model_simulations_shepard1961(plot='main', num_blocks=15, tasks=np.arange(1,7)):
 
     models = ['humans',\
               'env=claude_generated_tasks_paramsNA_dim3_data100_tasks11518_pversion4_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0',
               'env=dim3synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0_synthetic',\
-              ]
-    num_blocks = 15 # 16
+               ] if plot == 'main' else ['humans',\
+              'env=rmc_tasks_dim3_data100_tasks11499_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1_rmc',
+              'env=dim3synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0_synthetic_nonlinear',\
+               ] 
+    #num_blocks = 15 # 16 blocks doesn't work for current ERMI model
     num_trials_per_block = 16
-    num_trials = num_blocks*num_trials_per_block
     num_runs = 50
     betas = []
-    for model in models:
+    errors = np.ones((len(models), len(tasks), num_blocks))
+    for m_idx, model in enumerate(models):
         if model == 'humans':
             betas.append(None)
         else:
-            model_name = 'ermi' if 'claude' in models[1] else 'rmc' if 'rmc' in models[1] else 'pfn' if 'syntheticnonlinear' in models[1] else 'mi'
+            model_name = 'ermi' if 'claude' in models[m_idx] else 'rmc' if 'rmc' in models[m_idx] else 'pfn' if 'synthetic_nonlinear' in models[m_idx] else 'mi'
             mse_distances, beta_range = np.load(f'{SYS_PATH}/categorisation/data/fitted_simulation/shepard1961_{model_name}_num_runs={num_runs}_num_blocks={num_blocks}_num_trials_per_block={num_trials_per_block}.npy', allow_pickle=True)
+            block_errors = np.load(f'{SYS_PATH}/categorisation/data/fitted_simulation/shepard1961_{model_name}_num_runs={num_runs}_num_blocks={num_blocks}_num_trials_per_block={num_trials_per_block}_block_errors.npy', allow_pickle=True)
             betas.append(beta_range[np.argmin(mse_distances)])
-
-    #betas = [None, 1, 1, ]
-    corrects = np.ones((len(models), len(tasks), batch_size, num_trials))
+            # the block errors contain distance between humans and another model hence consider only idx==1
+            errors[m_idx] = block_errors[np.argmin(mse_distances), 1]
+            # print mean error for all six tasks
+            print(f'{model_name} mean error: {np.mean(errors[m_idx], axis=1)}')
+            # print min mse distance and corresponding beta
+            print(f'{model_name} min mse distance and beta: {np.min(mse_distances)}, {beta_range[np.argmin(mse_distances)]}')
+    
     assert len(models)==len(betas), "Number of models and betas should be the same"
-    for m_idx, (model_name, beta) in enumerate(zip(models, betas)):
-        if model_name != 'humans':
-            for t_idx, task in enumerate(tasks):
-                model_path = f"/u/ajagadish/vanilla-llama/categorisation/trained_models/{model_name}.pt"
-                corrects[m_idx, t_idx] = evaluate_metalearner(task, model_path, 'shepard_categorisation', beta=beta, shuffle_trials=True, num_trials=num_trials, num_runs=num_runs)      
-    # compuate error rates across trials using corrects
-    errors = 1. - corrects.mean(2)
-
-    # load json file containing the data
+    # load json file containing the human data
     with open(f'{SYS_PATH}/categorisation/data/human/nosofsky1994.json') as json_file:
         data = json.load(json_file)
-
     # compare the error rate over trials between different tasks meaned over noise levels, shuffles and shuffle_evals
     f, axes = plt.subplots(1, len(models), figsize=(6*len(models), 5))
     colors = ['#E0E1DD', '#B6B9B9', '#8C9295', '#616A72','#37434E','#0D1B2A']
@@ -457,27 +456,39 @@ def model_simulations_shepard1961(tasks=np.arange(1,7), batch_size=64):
     for idx, ax in enumerate(axes):
 
         if models[idx]=='humans':
+            assert idx==0, "Humans should be the first model"
             for i, rule in enumerate(data.keys()):
                 ax.plot(np.arange(len(data[rule]['y'][:num_blocks]))+1, data[rule]['y'][:num_blocks], label=f'Type {i+1}', lw=3, color=colors[i], marker=markers[i], markersize=8)
+                print(f'Humans mean error: {np.mean(data[rule]["y"][:num_blocks], axis=0)}')
+            if idx==0:
+                ax.set_title('Human', fontsize=FONTSIZE)
         else:
             for t_idx, task in enumerate(tasks):
-                block_errors = np.stack(np.split(errors[idx, t_idx], num_blocks)).mean(1)                
+                block_errors = errors[idx, t_idx]         
                 ax.plot(np.arange(1, num_blocks+1), block_errors, label=f'Type {task}', lw=3, color=colors[t_idx], marker=markers[t_idx], markersize=8)
-
+            model_name = 'ermi' if 'claude' in models[idx] else 'rmc' if 'rmc' in models[idx] else 'pfn' if 'synthetic_nonlinear' in models[idx] else 'mi'
+            if model_name=='ermi':
+                ax.set_title('ERMI', fontsize=FONTSIZE)
+            elif model_name =='rmc':
+                ax.set_title('RMC', fontsize=FONTSIZE)
+            elif model_name =='pfn':
+                ax.set_title('PFN', fontsize=FONTSIZE)
+            elif model_name =='mi':
+                ax.set_title('MI', fontsize=FONTSIZE)
+        
         ax.set_xticks(np.arange(1, num_blocks+1))
-        ax.set_xlabel('Block', fontsize=FONTSIZE)
         if idx==0:
-            ax.set_ylabel('Error rate', fontsize=FONTSIZE)
-        ax.set_ylim([-0.05, .55])
-        locs, labels = ax.get_xticks(), ax.get_xticklabels()
+            ax.set_xlabel('Block', fontsize=FONTSIZE)
+            ax.set_ylabel('P(Error)', fontsize=FONTSIZE)
+        ax.set_ylim([-0.01, .55])
+        # locs, labels = ax.get_xticks(), ax.get_xticklabels()
         # Set new x-tick locations and labels
-        ax.set_xticks(locs[::2])
+        ax.set_xticks(np.arange(1, num_blocks+1)[::2])
         ax.set_xticklabels(np.arange(1, num_blocks+1)[::2], fontsize=FONTSIZE-2)
-        ax.tick_params(axis='y', labelsize=FONTSIZE-2)
+        ax.tick_params(axis='y', labelsize=FONTSIZE-2)       
 
     # add legend that spans across all subplots, in one row, at the center for the subplots, and place it outside the plot 
-    f.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=6, fontsize=FONTSIZE-2, frameon=False, labels=[f'Type {task}' for task in tasks])
-    #axes[int(len(models)/2)].legend(fontsize=FONTSIZE-4, frameon=False,  loc="upper center", bbox_to_anchor=(.5, 1.2), ncol=6)  # place legend outside the plot
+    # f.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=6, fontsize=FONTSIZE-2, frameon=False, labels=[f'TYPE {task}' for task in tasks])
     sns.despine()
     f.tight_layout()
     plt.show()
