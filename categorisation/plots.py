@@ -691,7 +691,7 @@ def plot_dataset_statistics(mode=0):
         all_corr, gini_coeff, posterior_logprob, all_accuraries_linear = stats['all_corr'], stats['gini_coeff'], stats['posterior_logprob'], stats['all_accuraries_linear']
         all_accuraries_polynomial, all_features_without_norm, all_features_with_norm = stats['all_accuraries_polynomial'], stats['all_features_without_norm'], stats['all_features_with_norm']
     else:
-        all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial, _, all_features_with_norm = return_data_stats(data)
+        all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial, all_features_without_norm, all_features_with_norm = return_data_stats(data)
         gini_coeff = np.array(gini_coeff)
         gini_coeff = gini_coeff[~np.isnan(gini_coeff)]
         posterior_logprob = posterior_logprob[:, 0].exp().detach().numpy()
