@@ -703,9 +703,9 @@ def plot_dataset_statistics(mode=0):
     fig, axs = plt.subplots(1, 4,  figsize = (6*4,4))#figsize=(6.75, 1.5))
     axs[0].plot(all_accuraries_linear, color=color_stats, alpha=1., lw=3)
     #axs[0].plot(all_accuraries_polynomial, alpha=0.7)
-    sns.histplot(np.array(all_corr), ax=axs[1], bins=11, binrange=(-1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
-    sns.histplot(gini_coeff, ax=axs[2], bins=11, binrange=(0, bin_max), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
-    sns.histplot(posterior_logprob, ax=axs[3], bins=5, binrange=(0.0, 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+    sns.histplot(np.array(all_corr), ax=axs[1], bins=11, binrange=(-1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=0.5)
+    sns.histplot(gini_coeff, ax=axs[2], bins=11, binrange=(0, bin_max), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=.5)
+    sns.histplot(posterior_logprob, ax=axs[3], bins=5, binrange=(0.0, 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=.5)
     axs[1].set_xlim(-1, 1)
 
     axs[0].set_ylim(0.45, 1.05)
@@ -837,56 +837,83 @@ def unnormalized_realworlddata_stats():
 
     return all_features_without_norm
 
-    # # check what percentange of all_features_without_norm are integers or floats
-    # print(f'Percentage of integers in all_features_without_norm: {np.sum(all_features_without_norm%1==0)/len(all_features_without_norm)*100}')
-    # print(f'Percentage of floats in all_features_without_norm: {np.sum(all_features_without_norm%1!=0)/len(all_features_without_norm)*100}')
+def compare_data_statistics(modes):
 
-    # # among integer features plot how many are multiples of 5 and 10
-    # print(f'Percentage of integer features that are multiples of 5: {np.sum(all_features_without_norm%5==0)/len(all_features_without_norm)*100}')
-    # print(f'Percentage of integer features that are multiples of 10: {np.sum(all_features_without_norm%10==0)/len(all_features_without_norm)*100}')
+    fig, axs = plt.subplots(1, 4,  figsize = (6*4,4))#figsize=(6.75, 1.5))
+    # set env_name and color_stats based on mode
+    labels = []
+    for mode in modes:
+        if mode == 0:
+            env_name = f'{SYS_PATH}/categorisation/data/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
+            color_stats = '#405A63' #'#2F4A5A'# '#173b4f'
+            labels.append('Ecological Valid Data')
+        elif mode == 1: #last plot
+            env_name = f'{SYS_PATH}/categorisation/data/linear_data'
+            color_stats = '#66828F' #5d7684'# '#5d7684'
+            labels.append('Synthetic Linear Data')
+        elif mode == 2: #first plot
+            env_name = f'{SYS_PATH}/categorisation/data/real_data'
+            color_stats = '#173b4f'#'#0D2C3D' #'#8b9da7'
+            labels.append('Real-world Data')
 
-    # # percentage of integer features that are less than 100
-    # print(f'Percentage of integer features that are less than 100: {np.sum(all_features_without_norm<100)/len(all_features_without_norm)*100}')
+        # load data
+        data = pd.read_csv(f'{env_name}.csv')
+        data = data.groupby(['task_id']).filter(lambda x: len(x['target'].unique()) == 2) # check if data has only two values for target in each task
+        data.input = data['input'].apply(lambda x: np.array(eval(x)))
 
-    # # percentage of integer features that are less than 15
-    # print(f'Percentage of integer features that are less than 15: {np.sum(all_features_without_norm<=15)/len(all_features_without_norm)*100}')
+        if os.path.exists(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz'):
+            stats = np.load(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz', allow_pickle=True)
+            all_corr, gini_coeff, posterior_logprob, all_accuraries_linear = stats['all_corr'], stats['gini_coeff'], stats['posterior_logprob'], stats['all_accuraries_linear']
+            all_accuraries_polynomial, all_features_without_norm, all_features_with_norm = stats['all_accuraries_polynomial'], stats['all_features_without_norm'], stats['all_features_with_norm']
+        else:
+            all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial, all_features_without_norm, all_features_with_norm = return_data_stats(data)
+            gini_coeff = np.array(gini_coeff)
+            gini_coeff = gini_coeff[~np.isnan(gini_coeff)]
+            posterior_logprob = posterior_logprob[:, 0].exp().detach().numpy()
+            if mode==2:
+                all_features_without_norm = unnormalized_realworlddata_stats()
 
-    # # histogram of all_features_without_norm that are integers
-    # fig, ax = plt.subplots(1, 1, figsize=(6, 4))
-    # bins = np.arange(0, 15, 1) - 0.5
-    # sns.histplot(all_features_without_norm[(all_features_without_norm%1==0) & (all_features_without_norm<=15)], bins=bins, ax=ax, color=color_stats, edgecolor='w', linewidth=1, stat='probability')
-    # # sns.histplot(all_features_without_norm[(all_features_without_norm%1!=0) & (all_features_without_norm<10)], bins=bins, ax=ax, color='gray', edgecolor='w', linewidth=1, stat='probability', alpha=0.01)
-    # ax.set_title('Integer features', fontsize=FONTSIZE)
-    # ax.set_xlabel('Feature values', fontsize=FONTSIZE)
-    # ax.set_ylabel('Proportion', fontsize=FONTSIZE)
-    # ax.tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
-    # ax.set_xticks(np.arange(0, 11, 1))
-    # plt.tight_layout()
-    # sns.despine()
-    # plt.savefig(f'{SYS_PATH}/figures/integer_features_{str(2)}.svg', bbox_inches='tight')
+        FONTSIZE=22 #8
+        bin_max = np.max(gini_coeff)
+        axs[0].plot(all_accuraries_linear, color=color_stats, alpha=1., lw=3)
+        #axs[0].plot(all_accuraries_polynomial, alpha=0.7)
+        sns.histplot(np.array(all_corr), ax=axs[1], bins=11, binrange=(-1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+        sns.histplot(gini_coeff, ax=axs[2], bins=11, binrange=(0, bin_max), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+        sns.histplot(posterior_logprob, ax=axs[3], bins=5, binrange=(0.0, 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
 
-    # # bins poins such that 0s are in one bin, between 0 and 1 are in one bin, 1s are in one bin repeat it until 10
-    # values = []
-    # labels = []
-    # max_val = 15
-    # for i in range(0, 15):
-    #     values.append(np.sum(all_features_without_norm==i)/len(all_features_without_norm)*100)
-    #     values.append(np.sum((all_features_without_norm>i) & (all_features_without_norm<i+1))/len(all_features_without_norm)*100)
-    #     labels.append(f'{i}')
-    #     labels.append(f'-')
+    plt.legend(labels, fontsize=FONTSIZE-2, frameon=False, loc='upper left')
+    axs[1].set_xlim(-1, 1)
+    axs[0].set_ylim(0.45, 1.05)
+    axs[1].set_ylim(0, 0.4)
+    axs[2].set_xlim(0., 0.76)
+    axs[3].set_xlim(0., 1.05)
 
-    # # plot a bar plot of the above
-    # fig, ax = plt.subplots(1, 1, figsize=(10, 4))
-    # sns.barplot(x=np.arange(0, max_val*2, 1), y=values, ax=ax, color=color_stats)
-    # ax.set_xticklabels(labels, fontsize=FONTSIZE-2)
-    # ax.set_xlabel('Feature values', fontsize=FONTSIZE)
-    # ax.set_ylabel('Proportion', fontsize=FONTSIZE)
-    # ax.tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
-    # # label x-ticks with labels
-    # plt.tight_layout()
-    # sns.despine()
-    # plt.savefig(f'{SYS_PATH}/figures/binned_features_{str(2)}.svg', bbox_inches='tight')
+    axs[0].set_yticks(np.arange(0.5, 1.05, 0.25))
+    axs[1].set_yticks(np.arange(0, 0.45, 0.2))
+    axs[2].set_yticks(np.arange(0, 0.4, 0.15))
+    axs[3].set_yticks(np.arange(0, 1.05, 0.5))
 
-        
+    # set tick size
+    axs[0].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    axs[1].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    axs[2].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    axs[3].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
 
-    
+    axs[0].set_ylabel('Accuracy', fontsize=FONTSIZE)
+    axs[1].set_ylabel('Proportion', fontsize=FONTSIZE)
+    axs[2].set_ylabel('')
+    axs[3].set_ylabel('')
+
+    axs[0].set_xlabel('Trials', fontsize=FONTSIZE)
+    axs[1].set_xlabel('Pearson\'s r', fontsize=FONTSIZE)
+    axs[2].set_xlabel('Gini Coefficient', fontsize=FONTSIZE)
+    axs[3].set_xlabel('Posterior probability ', fontsize=FONTSIZE)
+    axs[0].set_title('Performance', fontsize=FONTSIZE)
+    axs[1].set_title('Input correlation', fontsize=FONTSIZE)
+    axs[2].set_title('Sparsity', fontsize=FONTSIZE)
+    axs[3].set_title('Linearity', fontsize=FONTSIZE)
+
+    plt.tight_layout()
+    sns.despine()
+    plt.savefig(f'{SYS_PATH}/figures/compare_stats_' + str(mode) + '.svg', bbox_inches='tight')
+    plt.show()
