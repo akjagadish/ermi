@@ -4,6 +4,7 @@ import torch
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
+import os
 SYS_PATH = '/u/ajagadish/ermi'
 sys.path.append(f"{SYS_PATH}/categorisation/")
 sys.path.append(f"{SYS_PATH}/categorisation/rl2")
@@ -598,6 +599,7 @@ def plot_dataset_statistics(mode=0):
         max_tasks = 400
         max_trial = 50
         all_corr, all_bics_linear, all_bics_quadratic, gini_coeff, all_accuraries_linear, all_accuraries_polynomial = [], [], [], [], [], []
+        all_features_without_norm, all_features_with_norm = np.array([]), np.array([])
         for i in range(0, max_tasks):
             df_task = df[df['task_id'] == i]
             if len(df_task) > 50: # arbitary data size threshold
@@ -606,12 +608,17 @@ def plot_dataset_statistics(mode=0):
 
                 X = df_task["input"].to_numpy()
                 X = np.stack(X)
+                all_features_without_norm = np.concatenate([all_features_without_norm, X.flatten()])
                 X = (X - X.min())/(X.max() - X.min())
 
                 all_corr.append(np.corrcoef(X[:, 0], X[:, 1])[0, 1])
                 all_corr.append(np.corrcoef(X[:, 0], X[:, 2])[0, 1])
                 all_corr.append(np.corrcoef(X[:, 1], X[:, 2])[0, 1])
+                all_corr.append(np.corrcoef(X[:, 0], X[:, 3])[0, 1])
+                all_corr.append(np.corrcoef(X[:, 1], X[:, 3])[0, 1])
+                all_corr.append(np.corrcoef(X[:, 2], X[:, 3])[0, 1])
 
+                all_features_with_norm = np.concatenate([all_features_with_norm, X.flatten()])
 
                 if (y == 0).all() or (y == 1).all():
                     pass
@@ -661,16 +668,16 @@ def plot_dataset_statistics(mode=0):
         marginal_logprob = torch.logsumexp(joint_logprob, dim=1, keepdim=True)
         posterior_logprob = joint_logprob - marginal_logprob
 
-        return all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial
+        return all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial, all_features_without_norm, all_features_with_norm
 
     # set env_name and color_stats based on mode
     if mode == 0:
         env_name = f'{SYS_PATH}/categorisation/data/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
         color_stats = '#405A63' #'#2F4A5A'# '#173b4f'
-    elif mode == 1:#last plot
+    elif mode == 1: #last plot
         env_name = f'{SYS_PATH}/categorisation/data/linear_data'
         color_stats = '#66828F' #5d7684'# '#5d7684'
-    elif mode == 2:#first plot
+    elif mode == 2: #first plot
         env_name = f'{SYS_PATH}/categorisation/data/real_data'
         color_stats = '#173b4f'#'#0D2C3D' #'#8b9da7'
 
@@ -682,11 +689,14 @@ def plot_dataset_statistics(mode=0):
     if os.path.exists(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz'):
         stats = np.load(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz', allow_pickle=True)
         all_corr, gini_coeff, posterior_logprob, all_accuraries_linear = stats['all_corr'], stats['gini_coeff'], stats['posterior_logprob'], stats['all_accuraries_linear']
+        all_accuraries_polynomial, all_features_without_norm, all_features_with_norm = stats['all_accuraries_polynomial'], stats['all_features_without_norm'], stats['all_features_with_norm']
     else:
-        all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial = return_data_stats(data)
+        all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial, _, all_features_with_norm = return_data_stats(data)
         gini_coeff = np.array(gini_coeff)
         gini_coeff = gini_coeff[~np.isnan(gini_coeff)]
         posterior_logprob = posterior_logprob[:, 0].exp().detach().numpy()
+        if mode==2:
+            all_features_without_norm = unnormalized_realworlddata_stats()
 
     FONTSIZE=22 #8
     bin_max = np.max(gini_coeff)
@@ -737,6 +747,146 @@ def plot_dataset_statistics(mode=0):
     plt.savefig(f'{SYS_PATH}/figures/stats_' + str(mode) + '.svg', bbox_inches='tight')
     plt.show()
 
+    max_val = 15
+    # plot histogram of all_features_with_norm and all_features_without_norm
+    fig, ax = plt.subplots(1, 2, figsize=(12, 4))
+    sns.histplot(all_features_with_norm, bins=10, ax=ax[0], color=color_stats, edgecolor='w', linewidth=1, stat='probability', alpha=1.)
+    sns.histplot(all_features_without_norm[(all_features_without_norm<max_val) & (all_features_without_norm>0)], bins=10, ax=ax[1], color=color_stats, edgecolor='w', linewidth=1, stat='probability', alpha=1.)
+    ax[0].set_title('With normalization', fontsize=FONTSIZE)
+    ax[1].set_title('Without normalization', fontsize=FONTSIZE)
+    ax[0].set_xlabel('Feature values', fontsize=FONTSIZE)
+    ax[1].set_xlabel('Feature values', fontsize=FONTSIZE)
+    ax[0].set_ylabel('Proportion', fontsize=FONTSIZE)
+    ax[1].set_ylabel('')
+    ax[0].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    ax[1].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    plt.tight_layout()
+    sns.despine()
+    plt.savefig(f'{SYS_PATH}/figures/features_{str(mode)}.svg', bbox_inches='tight')
+    plt.show()
+
+    # check what percentange of all_features_without_norm are integers or floats
+    print(f'Percentage of integers in all_features_without_norm: {np.sum(all_features_without_norm%1==0)/len(all_features_without_norm)*100}')
+    print(f'Percentage of floats in all_features_without_norm: {np.sum(all_features_without_norm%1!=0)/len(all_features_without_norm)*100}')
+
+    # among integer features plot how many are multiples of 5 and 10
+    print(f'Percentage of integer features that are multiples of 5: {np.sum(all_features_without_norm%5==0)/len(all_features_without_norm)*100}')
+    print(f'Percentage of integer features that are multiples of 10: {np.sum(all_features_without_norm%10==0)/len(all_features_without_norm)*100}')
+
+    # percentage of integer features that are less than 100
+    print(f'Percentage of integer features that are less than 100: {np.sum(all_features_without_norm<100)/len(all_features_without_norm)*100}')
+
+    # percentage of integer features that are less than 15
+    print(f'Percentage of integer features that are less than 15: {np.sum(all_features_without_norm<=15)/len(all_features_without_norm)*100}')
+
+    # percentage of integer features that are less than 0:
+    print(f'Percentage of integer features that are less than 0: {np.sum(all_features_without_norm<0)/len(all_features_without_norm)*100}')
+
+    # bins poins such that 0s are in one bin, between 0 and 1 are in one bin, 1s are in one bin repeat it until 10
+    values = []
+    labels = []
+    for i in range(0, max_val):
+        values.append(np.sum(all_features_without_norm==i)/len(all_features_without_norm)*100)
+        values.append(np.sum((all_features_without_norm>i) & (all_features_without_norm<i+1))/len(all_features_without_norm)*100)
+        labels.append(f'{i}')
+        labels.append(f'-')
+
+    # plot a bar plot of the above
+    fig, ax = plt.subplots(1, 1, figsize=(10, 4))
+    sns.barplot(x=np.arange(0, max_val*2, 1), y=values, ax=ax, color=color_stats, alpha=1.)
+    ax.set_xticklabels(labels, fontsize=FONTSIZE-2)
+    ax.set_xlabel('Feature values', fontsize=FONTSIZE)
+    ax.set_ylabel('Proportion', fontsize=FONTSIZE)
+    ax.tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    # label x-ticks with labels
+    plt.tight_layout()
+    sns.despine()
+    plt.savefig(f'{SYS_PATH}/figures/binned_features_{str(mode)}.svg', bbox_inches='tight')
+
     # save corr, gini, posterior_logprob, and all_accuraries_linear for each mode in one .npz file
     if not os.path.exists(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz'):
-        np.savez(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz', all_corr=all_corr, gini_coeff=gini_coeff, posterior_logprob=posterior_logprob, all_accuraries_linear=all_accuraries_linear)
+        np.savez(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz', all_corr=all_corr, gini_coeff=gini_coeff, posterior_logprob=posterior_logprob, all_accuraries_linear=all_accuraries_linear,
+                    all_accuraries_polynomial=all_accuraries_polynomial, all_features_without_norm=all_features_without_norm, all_features_with_norm=all_features_with_norm)
+    
+def unnormalized_realworlddata_stats():
+    import openml
+    from sklearn import preprocessing
+    from sklearn.feature_selection import SelectKBest, f_classif
+
+    benchmark_suite = openml.study.get_suite('OpenML-CC18')
+    num_points = 650
+    all_features_without_norm = []
+    for task_id in benchmark_suite.tasks:  # iterate over all tasks
+        task = openml.tasks.get_task(task_id)  # download the OpenML task
+        if (len(task.class_labels) == 2):
+            features, targets = task.get_X_and_y()  # get the data
+            if (features.shape[1] < 99999) and (not np.isnan(features).any()):
+                #TODO: if we don't scale the features and then do k-best selection, the features are not the same??
+                # scaler = preprocessing.MinMaxScaler(feature_range=(0, 1)).fit(features)
+                # features = scaler.transform(features)
+                features = SelectKBest(f_classif, k=4).fit_transform(features, targets)
+
+                if features.shape[0] < num_points:
+                    xs = [features]
+                    ys = [targets]
+                else:
+                    xs = np.array_split(features, features.shape[0] // num_points)
+                    ys = np.array_split(targets, targets.shape[0] // num_points)
+              
+                all_features_without_norm = np.concatenate([all_features_without_norm, xs[0].flatten()])
+
+    return all_features_without_norm
+
+    # # check what percentange of all_features_without_norm are integers or floats
+    # print(f'Percentage of integers in all_features_without_norm: {np.sum(all_features_without_norm%1==0)/len(all_features_without_norm)*100}')
+    # print(f'Percentage of floats in all_features_without_norm: {np.sum(all_features_without_norm%1!=0)/len(all_features_without_norm)*100}')
+
+    # # among integer features plot how many are multiples of 5 and 10
+    # print(f'Percentage of integer features that are multiples of 5: {np.sum(all_features_without_norm%5==0)/len(all_features_without_norm)*100}')
+    # print(f'Percentage of integer features that are multiples of 10: {np.sum(all_features_without_norm%10==0)/len(all_features_without_norm)*100}')
+
+    # # percentage of integer features that are less than 100
+    # print(f'Percentage of integer features that are less than 100: {np.sum(all_features_without_norm<100)/len(all_features_without_norm)*100}')
+
+    # # percentage of integer features that are less than 15
+    # print(f'Percentage of integer features that are less than 15: {np.sum(all_features_without_norm<=15)/len(all_features_without_norm)*100}')
+
+    # # histogram of all_features_without_norm that are integers
+    # fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+    # bins = np.arange(0, 15, 1) - 0.5
+    # sns.histplot(all_features_without_norm[(all_features_without_norm%1==0) & (all_features_without_norm<=15)], bins=bins, ax=ax, color=color_stats, edgecolor='w', linewidth=1, stat='probability')
+    # # sns.histplot(all_features_without_norm[(all_features_without_norm%1!=0) & (all_features_without_norm<10)], bins=bins, ax=ax, color='gray', edgecolor='w', linewidth=1, stat='probability', alpha=0.01)
+    # ax.set_title('Integer features', fontsize=FONTSIZE)
+    # ax.set_xlabel('Feature values', fontsize=FONTSIZE)
+    # ax.set_ylabel('Proportion', fontsize=FONTSIZE)
+    # ax.tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    # ax.set_xticks(np.arange(0, 11, 1))
+    # plt.tight_layout()
+    # sns.despine()
+    # plt.savefig(f'{SYS_PATH}/figures/integer_features_{str(2)}.svg', bbox_inches='tight')
+
+    # # bins poins such that 0s are in one bin, between 0 and 1 are in one bin, 1s are in one bin repeat it until 10
+    # values = []
+    # labels = []
+    # max_val = 15
+    # for i in range(0, 15):
+    #     values.append(np.sum(all_features_without_norm==i)/len(all_features_without_norm)*100)
+    #     values.append(np.sum((all_features_without_norm>i) & (all_features_without_norm<i+1))/len(all_features_without_norm)*100)
+    #     labels.append(f'{i}')
+    #     labels.append(f'-')
+
+    # # plot a bar plot of the above
+    # fig, ax = plt.subplots(1, 1, figsize=(10, 4))
+    # sns.barplot(x=np.arange(0, max_val*2, 1), y=values, ax=ax, color=color_stats)
+    # ax.set_xticklabels(labels, fontsize=FONTSIZE-2)
+    # ax.set_xlabel('Feature values', fontsize=FONTSIZE)
+    # ax.set_ylabel('Proportion', fontsize=FONTSIZE)
+    # ax.tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    # # label x-ticks with labels
+    # plt.tight_layout()
+    # sns.despine()
+    # plt.savefig(f'{SYS_PATH}/figures/binned_features_{str(2)}.svg', bbox_inches='tight')
+
+        
+
+    
