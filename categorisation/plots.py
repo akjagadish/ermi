@@ -680,6 +680,9 @@ def plot_dataset_statistics(mode=0):
     elif mode == 2: #first plot
         env_name = f'{SYS_PATH}/categorisation/data/real_data'
         color_stats = '#173b4f'#'#0D2C3D' #'#8b9da7'
+    elif mode == 3:
+        env_name = f'{SYS_PATH}/categorisation/data/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
+        color_stats = '#5d7684'
 
     # load data
     data = pd.read_csv(f'{env_name}.csv')
