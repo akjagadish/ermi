@@ -108,7 +108,7 @@ def run_llm_on_badham2017(mode='llm', model='claude-2', start_participant=0):
                             block_instructions += '- In trial '+ str(t_idx+1) +', you picked category ' + str(response) + ' for ' + object_name + ' and category ' + str(t) + ' was correct.\n'
         
             # save df with llm predicted category and true category
-            df.to_csv(dataset.replace('.csv', f'llm_choices{mode}.csv'), index=False)
+            df.to_csv(dataset.replace('.csv', f'llm_choices{mode}_{start_participant}.csv'), index=False)
 
 def run_llm_on_devraj2022(mode='llm', model='claude-2', start_participant=0):
     #TODO: feature names, task instruction and load values from dataset
@@ -224,7 +224,7 @@ def fit_llm_to_humans(num_runs, num_blocks, num_iter, opt_method, loss, task_nam
         df = df[df['condition'] == 'control'] # only pass 'control' condition
         NUM_TASKS, NUM_FEATURES = 1, 6
     elif task_name == 'badham2017':
-        df = pd.read_csv(f'{SYS_PATH}/categorisation/data/llm/badham2017deficits_llm_choiceshuman.csv')
+        df = pd.read_csv(f'{SYS_PATH}/categorisation/data/llm/badham2017deficits_llm_choiceshuman.csv')#match_ermi
         NUM_TASKS, NUM_FEATURES = 1, 3
     else:
         raise NotImplementedError
