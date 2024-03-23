@@ -36,7 +36,7 @@ def simulate_llm_on_shepard1961(mode='llm', model='claude-2', start_participant=
     for dataset in datasets:
         df = pd.read_csv(dataset)
         df['llm_category'], df['true_category'] = np.nan, np.nan # add new column to df to store the llm predicted category
-        num_participants = 2 #df.participant.max() + 1
+        num_participants = df.participant.max() + 1
         num_tasks = df.task.max() + 1
         num_blocks = 6 if from_env else df.block.max() + 1
         start_block = 4 if from_env else 0
