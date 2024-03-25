@@ -433,12 +433,14 @@ def model_simulations_shepard1961(plot='main', num_blocks=15, tasks=np.arange(1,
         if model == 'humans':
             betas.append(None)
         else:
+            #assert num_blocks==15, "Number of blocks fixed to 15"
+            NUM_BLOCKS=15 # number of blocks used to find best fit is fixed to 15
             model_name = 'ermi' if 'claude' in models[m_idx] else 'rmc' if 'rmc' in models[m_idx] else 'pfn' if 'synthetic_nonlinear' in models[m_idx] else 'mi'
-            mse_distances, beta_range = np.load(f'{SYS_PATH}/categorisation/data/fitted_simulation/shepard1961_{model_name}_num_runs={num_runs}_num_blocks={num_blocks}_num_trials_per_block={num_trials_per_block}.npy', allow_pickle=True)
-            block_errors = np.load(f'{SYS_PATH}/categorisation/data/fitted_simulation/shepard1961_{model_name}_num_runs={num_runs}_num_blocks={num_blocks}_num_trials_per_block={num_trials_per_block}_block_errors.npy', allow_pickle=True)
+            mse_distances, beta_range = np.load(f'{SYS_PATH}/categorisation/data/fitted_simulation/shepard1961_{model_name}_num_runs={num_runs}_num_blocks={NUM_BLOCKS}_num_trials_per_block={num_trials_per_block}.npy', allow_pickle=True)
+            block_errors = np.load(f'{SYS_PATH}/categorisation/data/fitted_simulation/shepard1961_{model_name}_num_runs={num_runs}_num_blocks={NUM_BLOCKS}_num_trials_per_block={num_trials_per_block}_block_errors.npy', allow_pickle=True)
             betas.append(beta_range[np.argmin(mse_distances)])
             # the block errors contain distance between humans and another model hence consider only idx==1
-            errors[m_idx] = block_errors[np.argmin(mse_distances), 1]
+            errors[m_idx] = block_errors[np.argmin(mse_distances), 1][:, :num_blocks]
             # print mean error for all six tasks
             print(f'{model_name} mean error: {np.mean(errors[m_idx], axis=1)}')
             # print min mse distance and corresponding beta
@@ -453,6 +455,16 @@ def model_simulations_shepard1961(plot='main', num_blocks=15, tasks=np.arange(1,
     colors = ['#E0E1DD', '#B6B9B9', '#8C9295', '#616A72','#37434E','#0D1B2A']
     # markers for the six types of rules in the plot: circle, cross, plus, inverted triangle, asterisk, triangle
     markers = ['o', 'x', '+', '*', 'v', '^']
+
+    mse_distance = np.zeros((len(models),))
+    for idx in np.arange(len(models)):
+        for t_idx, rule in enumerate(data.keys()):
+
+            block_errors = errors[idx, t_idx]
+            human_block_error = data[rule]['y'][:num_blocks]
+            # compute mse between human and model error rates for a model summed across tasks
+            mse_distance[idx] += np.mean((block_errors-human_block_error)**2)
+    print(f'MSE distance between humans and models: {mse_distance}')
 
     for idx, ax in enumerate(axes):
 
