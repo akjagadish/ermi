@@ -788,7 +788,7 @@ def plot_dataset_statistics(mode=0):
     axs[2].set_ylabel('')
     axs[3].set_ylabel('')
 
-    if mode == 1:
+    if mode == 3:
         axs[0].set_xlabel('Trials', fontsize=FONTSIZE)
         axs[1].set_xlabel('Pearson\'s r', fontsize=FONTSIZE)
         axs[2].set_xlabel('Gini Coefficient', fontsize=FONTSIZE)
@@ -906,19 +906,19 @@ def compare_data_statistics(modes):
     for mode in modes:
         if mode == 0:
             env_name = f'{SYS_PATH}/categorisation/data/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
-            color_stats = '#405A63' #'#2F4A5A'# '#173b4f'
-            labels.append('Ecologically-valid Data')
+            color_stats = '#ff7f0e' #'#405A63' #'#2F4A5A'# '#173b4f'
+            labels.append('LLM-generated tasks')
         elif mode == 1: #last plot
             env_name = f'{SYS_PATH}/categorisation/data/linear_data'
-            color_stats = '#66828F' #5d7684'# '#5d7684'
+            color_stats = '#2ca02c' #66828F' #5d7684'# '#5d7684'
             labels.append('MI')
         elif mode == 2: #first plot
             env_name = f'{SYS_PATH}/categorisation/data/real_data'
-            color_stats = '#173b4f'#'#0D2C3D' #'#8b9da7'
-            labels.append('Real-world Data')
+            color_stats = '#1f77b4' #173b4f'#'#0D2C3D' #'#8b9da7'
+            labels.append('Real-world classification tasks')
         elif mode == 3:
             env_name = f'{SYS_PATH}/categorisation/data/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
-            color_stats = '#5d7684'
+            color_stats = '#d62728'#5d7684'
             labels.append('PFN')
 
         # load data
@@ -939,7 +939,7 @@ def compare_data_statistics(modes):
         
         # axs[0].plot(all_accuraries_linear, color=color_stats, alpha=1., lw=3)
         #axs[0].plot(all_accuraries_polynomial, alpha=0.7)
-        sns.histplot(all_features_with_norm, ax=axs[0], bins=11, binrange=(0.0, 1.), color=color_stats, edgecolor='w', linewidth=1, stat='probability', alpha=1.)
+        sns.histplot(all_features_with_norm, ax=axs[0], bins=11, binrange=(0.0, 1.), edgecolor='w', linewidth=1, stat='probability', color=color_stats,  alpha=1.)
         sns.histplot(np.array(all_corr), ax=axs[1], bins=11, binrange=(-1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
         sns.histplot(gini_coeff, ax=axs[2], bins=11, binrange=(0, 0.8), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
         sns.histplot(posterior_logprob, ax=axs[3], bins=5, binrange=(0.0, 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
