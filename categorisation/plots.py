@@ -441,14 +441,23 @@ def model_simulations_smith1998():
 
 
 def model_simulations_shepard1961(plot='main', num_blocks=15, tasks=np.arange(1,7)):
-
-    models = ['humans',\
+    if plot == 'main':
+        models = ['humans',\
               'env=claude_generated_tasks_paramsNA_dim3_data100_tasks11518_pversion4_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0',
               'env=dim3synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0_synthetic',\
-               ] if plot == 'main' else ['humans',\
+               ] 
+    elif plot == 'supplementary':
+        models = ['humans',\
               'env=rmc_tasks_dim3_data100_tasks11499_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1_rmc',
               'env=dim3synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0_synthetic_nonlinear',\
                ] 
+    elif plot == 'rebuttals':
+         models = ['humans',\
+              'env=claude_generated_tasks_paramsNA_dim3_data100_tasks11518_pversion4_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0',
+              'LLM'] 
+    else:
+        raise ValueError('plot should be either main, supplementary or rebuttals')
+    
     #num_blocks = 15 # 16 blocks doesn't work for current ERMI model
     num_trials_per_block = 16
     num_runs = 50
@@ -456,6 +465,11 @@ def model_simulations_shepard1961(plot='main', num_blocks=15, tasks=np.arange(1,
     errors = np.ones((len(models), len(tasks), num_blocks))
     for m_idx, model in enumerate(models):
         if model == 'humans':
+            betas.append(None)
+
+        elif model == 'LLM':
+            block_errors = np.load(f'{SYS_PATH}/categorisation/data/stats/shepard1961_llm_simulations.npz', allow_pickle=True)  
+            errors[m_idx] = block_errors['block_errors']
             betas.append(None)
         else:
             #assert num_blocks==15, "Number of blocks fixed to 15"
@@ -504,7 +518,7 @@ def model_simulations_shepard1961(plot='main', num_blocks=15, tasks=np.arange(1,
             for t_idx, task in enumerate(tasks):
                 block_errors = errors[idx, t_idx]         
                 ax.plot(np.arange(1, num_blocks+1), block_errors, label=f'Type {task}', lw=3, color=colors[t_idx], marker=markers[t_idx], markersize=8)
-            model_name = 'ermi' if 'claude' in models[idx] else 'rmc' if 'rmc' in models[idx] else 'pfn' if 'synthetic_nonlinear' in models[idx] else 'mi'
+            model_name = 'ermi' if 'claude' in models[idx] else 'rmc' if 'rmc' in models[idx] else 'pfn' if 'synthetic_nonlinear' in models[idx] else 'mi'if 'synthetic' in models[idx] else 'LLM'
             if model_name=='ermi':
                 ax.set_title('ERMI', fontsize=FONTSIZE)
             elif model_name =='rmc':
@@ -513,6 +527,8 @@ def model_simulations_shepard1961(plot='main', num_blocks=15, tasks=np.arange(1,
                 ax.set_title('PFN', fontsize=FONTSIZE)
             elif model_name =='mi':
                 ax.set_title('MI', fontsize=FONTSIZE)
+            elif model_name =='LLM':
+                ax.set_title('LLM', fontsize=FONTSIZE)
         
         ax.set_xticks(np.arange(1, num_blocks+1))
         if idx==0:
