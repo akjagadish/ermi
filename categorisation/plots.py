@@ -12,6 +12,7 @@ sys.path.append(f"{SYS_PATH}/categorisation/data")
 # from evaluate import evaluate_metalearner
 import json
 from groupBMC.groupBMC import GroupBMC
+import torch.nn.functional as F
 FONTSIZE=20
 
 
@@ -85,7 +86,7 @@ def exceedance_probability(bics, models, horizontal=False, FIGSIZE=(5,5), task_n
     f, ax = plt.subplots(1, 1, figsize=FIGSIZE)
     if horizontal:
         # composed
-        ax.barh(np.arange(len(models)), result.exceedance_probability, align='center', color=colors, height=0.6)#, hatch='//', label='Compostional Subtask')
+        ax.barh(np.arange(len(models)), result.exceedance_probability, align='center', color=colors[:len(models)], height=0.6)#, hatch='//', label='Compostional Subtask')
         # plt.legend(fontsize=FONTSIZE-4, frameon=False)
         ax.set_ylabel('Models', fontsize=FONTSIZE)
         # ax.set_xlim(0, 0.7)
@@ -212,6 +213,30 @@ def model_comparison_badham2017(FIGSIZE=(6,5)):
     f.tight_layout()
     plt.show()
     f.savefig(f'{SYS_PATH}/figures/bic_badham2017.svg', bbox_inches='tight', dpi=300)
+
+
+    # compare mean BICS across models in a bar plot
+    f, ax = plt.subplots(1, 1, figsize=FIGSIZE)
+    bar_positions = np.arange(len(bics))*1.5
+    ax.bar(bar_positions, np.array(bics).sum(1), color=colors, width=1.)
+    # print bics for models and their names
+    for i, bic in enumerate(bics):
+        print(f'{MODELS[i]}: {bic.sum()}')
+    # add chance level line for 616 trials with binary choices
+    ax.axhline(y=-np.log(0.5)*num_trials*2*num_participants, color='k', linestyle='--', lw=3)
+    ax.set_xlabel('Models', fontsize=FONTSIZE)
+    ax.set_ylabel('BIC', fontsize=FONTSIZE)
+    ax.set_xticks(bar_positions)  # Set x-tick positions to bar_positions
+    ax.set_xticklabels(MODELS, fontsize=FONTSIZE-6)  # Assign category names to x-tick labels
+    # ax.set_title(f'Model comparison for Badham et al. (2017)', fontsize=FONTSIZE)
+    # plt.xticks(fontsize=FONTSIZE-2)
+    # set y lim
+    ax.set_ylim([35000, 65000])
+    plt.yticks(fontsize=FONTSIZE-2)
+    sns.despine()
+    f.tight_layout()
+    plt.show()
+    f.savefig(f'{SYS_PATH}/figures/totalbic_badham2017.svg', bbox_inches='tight', dpi=300)
 
     # compare mean r2s across models in a bar plot
     f, ax = plt.subplots(1, 1, figsize=FIGSIZE)
