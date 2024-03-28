@@ -885,19 +885,25 @@ def compare_data_statistics(modes):
     fig, axs = plt.subplots(1, 4,  figsize = (6*4,4))#figsize=(6.75, 1.5))
     # set env_name and color_stats based on mode
     labels = []
+    stats_for_mode = {}
+    names_for_modes = ['ecological_valid_data', 'MI', 'real_world_data', 'PFN']
     for mode in modes:
         if mode == 0:
             env_name = f'{SYS_PATH}/categorisation/data/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
             color_stats = '#405A63' #'#2F4A5A'# '#173b4f'
-            labels.append('Ecological Valid Data')
+            labels.append('Ecologically-valid Data')
         elif mode == 1: #last plot
             env_name = f'{SYS_PATH}/categorisation/data/linear_data'
             color_stats = '#66828F' #5d7684'# '#5d7684'
-            labels.append('Synthetic Linear Data')
+            labels.append('MI')
         elif mode == 2: #first plot
             env_name = f'{SYS_PATH}/categorisation/data/real_data'
             color_stats = '#173b4f'#'#0D2C3D' #'#8b9da7'
             labels.append('Real-world Data')
+        elif mode == 3:
+            env_name = f'{SYS_PATH}/categorisation/data/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
+            color_stats = '#5d7684'
+            labels.append('PFN')
 
         # load data
         data = pd.read_csv(f'{env_name}.csv')
@@ -908,30 +914,28 @@ def compare_data_statistics(modes):
             stats = np.load(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz', allow_pickle=True)
             all_corr, gini_coeff, posterior_logprob, all_accuraries_linear = stats['all_corr'], stats['gini_coeff'], stats['posterior_logprob'], stats['all_accuraries_linear']
             all_accuraries_polynomial, all_features_without_norm, all_features_with_norm = stats['all_accuraries_polynomial'], stats['all_features_without_norm'], stats['all_features_with_norm']
+             # store data statistics for each mode 
+            stats_for_mode[mode] = stats
         else:
-            all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial, all_features_without_norm, all_features_with_norm = return_data_stats(data)
-            gini_coeff = np.array(gini_coeff)
-            gini_coeff = gini_coeff[~np.isnan(gini_coeff)]
-            posterior_logprob = posterior_logprob[:, 0].exp().detach().numpy()
-            if mode==2:
-                all_features_without_norm = unnormalized_realworlddata_stats()
-
+            raise ValueError('Data statistics not computed for this mode')
+        
         FONTSIZE=22 #8
-        bin_max = np.max(gini_coeff)
-        axs[0].plot(all_accuraries_linear, color=color_stats, alpha=1., lw=3)
+        
+        # axs[0].plot(all_accuraries_linear, color=color_stats, alpha=1., lw=3)
         #axs[0].plot(all_accuraries_polynomial, alpha=0.7)
+        sns.histplot(all_features_with_norm, ax=axs[0], bins=11, binrange=(0.0, 1.), color=color_stats, edgecolor='w', linewidth=1, stat='probability', alpha=1.)
         sns.histplot(np.array(all_corr), ax=axs[1], bins=11, binrange=(-1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
-        sns.histplot(gini_coeff, ax=axs[2], bins=11, binrange=(0, bin_max), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+        sns.histplot(gini_coeff, ax=axs[2], bins=11, binrange=(0, 0.8), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
         sns.histplot(posterior_logprob, ax=axs[3], bins=5, binrange=(0.0, 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
 
     plt.legend(labels, fontsize=FONTSIZE-2, frameon=False, loc='upper left')
     axs[1].set_xlim(-1, 1)
-    axs[0].set_ylim(0.45, 1.05)
+    # axs[0].set_ylim(0.45, 1.05)
     axs[1].set_ylim(0, 0.4)
     axs[2].set_xlim(0., 0.76)
     axs[3].set_xlim(0., 1.05)
 
-    axs[0].set_yticks(np.arange(0.5, 1.05, 0.25))
+    # axs[0].set_yticks(np.arange(0.5, 1.05, 0.25))
     axs[1].set_yticks(np.arange(0, 0.45, 0.2))
     axs[2].set_yticks(np.arange(0, 0.4, 0.15))
     axs[3].set_yticks(np.arange(0, 1.05, 0.5))
@@ -942,16 +946,16 @@ def compare_data_statistics(modes):
     axs[2].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
     axs[3].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
 
-    axs[0].set_ylabel('Accuracy', fontsize=FONTSIZE)
-    axs[1].set_ylabel('Proportion', fontsize=FONTSIZE)
+    axs[0].set_ylabel('Proportion', fontsize=FONTSIZE)
+    axs[1].set_ylabel('', fontsize=FONTSIZE)
     axs[2].set_ylabel('')
     axs[3].set_ylabel('')
 
-    axs[0].set_xlabel('Trials', fontsize=FONTSIZE)
+    axs[0].set_xlabel('Normalized values', fontsize=FONTSIZE)
     axs[1].set_xlabel('Pearson\'s r', fontsize=FONTSIZE)
     axs[2].set_xlabel('Gini Coefficient', fontsize=FONTSIZE)
     axs[3].set_xlabel('Posterior probability ', fontsize=FONTSIZE)
-    axs[0].set_title('Performance', fontsize=FONTSIZE)
+    axs[0].set_title('Input features', fontsize=FONTSIZE)
     axs[1].set_title('Input correlation', fontsize=FONTSIZE)
     axs[2].set_title('Sparsity', fontsize=FONTSIZE)
     axs[3].set_title('Linearity', fontsize=FONTSIZE)
@@ -960,3 +964,36 @@ def compare_data_statistics(modes):
     sns.despine()
     plt.savefig(f'{SYS_PATH}/figures/compare_stats_' + str(mode) + '.svg', bbox_inches='tight')
     plt.show()
+
+    # compute KL divergence between the two distributions for: input feature values, correlations, gini coefficients, and posterior log probabilities 
+    def compute_kl_divergence(data1, data2, bin_range, num_bins):
+        hist1, _ = np.histogram(data1, bins=num_bins, range=bin_range, density=True)
+        hist2, _ = np.histogram(data2, bins=num_bins, range=bin_range, density=True)
+        # add small epsilon to# avoid log(0)
+        prob1 = hist1 / np.sum(hist1) + 1e-6
+        prob2 = hist2 / np.sum(hist2) + 1e-6
+        P = torch.tensor(prob1)
+        Q = torch.tensor(prob2)
+        kld = F.kl_div(Q.log(), P, None, None, 'sum')
+        
+        return kld
+    
+    mode1, mode2 = modes[0], modes[1]
+    stats1, stats2 = stats_for_mode[mode1], stats_for_mode[mode2]
+    # remove nans from all_corr
+    all_corr1 = stats1['all_corr'][~np.isnan(stats1['all_corr'])]
+    all_corr2 = stats2['all_corr'][~np.isnan(stats2['all_corr'])]
+    # compute kl divergence between the two distributions
+    kl_div_corr = compute_kl_divergence(all_corr1, all_corr2, (-1., 1.), 11)
+    kl_div_gini = compute_kl_divergence(stats1['gini_coeff'], stats2['gini_coeff'], (0., np.max(stats1['gini_coeff'])), 11)
+    kl_div_posterior = compute_kl_divergence(stats1['posterior_logprob'], stats2['posterior_logprob'], (0., 1.), 5)
+    kl_div_features = compute_kl_divergence(stats1['all_features_with_norm'], stats2['all_features_with_norm'], (0., 1.), 11)
+    # rpint kl divergence between the two distributions for models
+    print(f'Model comparison for {names_for_modes[mode1]} and {names_for_modes[mode2]}:')
+    print(f'KL divergence between the two distributions for input correlation: {kl_div_corr}')
+    print(f'KL divergence between the two distributions for gini coefficient: {kl_div_gini}')
+    print(f'KL divergence between the two distributions for posterior log probability: {kl_div_posterior}')
+    print(f'KL divergence between the two distributions for input features: {kl_div_features}')
+
+
+    
