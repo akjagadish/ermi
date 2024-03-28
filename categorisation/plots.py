@@ -660,13 +660,16 @@ def plot_dataset_statistics(mode=0):
                 if (y == 0).all() or (y == 1).all():
                     pass
                 else:
-                    X_linear = PolynomialFeatures(1).fit_transform(X)
+                    # X_linear = PolynomialFeatures(1).fit_transform(X)
+                    X_linear = PolynomialFeatures(1, include_bias=False).fit_transform(X)
+
                     log_reg = sm.Logit(y, X_linear).fit(method='bfgs', maxiter=10000, disp=0)
 
                     gini = gini_compute(np.abs(log_reg.params[1:]))
                     gini_coeff.append(gini)
 
-                    X_poly = PolynomialFeatures(poly_degree).fit_transform(X)
+                    # X_poly = PolynomialFeatures(poly_degree).fit_transform(X)
+                    X_poly = PolynomialFeatures(poly_degree, interaction_only=True, include_bias=False).fit_transform(X)
                     log_reg_quadratic = sm.Logit(y, X_poly).fit(method='bfgs', maxiter=10000, disp=0)
 
                     all_bics_linear.append(log_reg.bic)
@@ -743,9 +746,9 @@ def plot_dataset_statistics(mode=0):
     fig, axs = plt.subplots(1, 4,  figsize = (6*4,4))#figsize=(6.75, 1.5))
     axs[0].plot(all_accuraries_linear, color=color_stats, alpha=1., lw=3)
     #axs[0].plot(all_accuraries_polynomial, alpha=0.7)
-    sns.histplot(np.array(all_corr), ax=axs[1], bins=11, binrange=(-1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=0.5)
-    sns.histplot(gini_coeff, ax=axs[2], bins=11, binrange=(0, bin_max), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=.5)
-    sns.histplot(posterior_logprob, ax=axs[3], bins=5, binrange=(0.0, 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=.5)
+    sns.histplot(np.array(all_corr), ax=axs[1], bins=11, binrange=(-1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+    sns.histplot(gini_coeff, ax=axs[2], bins=11, binrange=(0, bin_max), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+    sns.histplot(posterior_logprob, ax=axs[3], bins=5, binrange=(0.0, 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
     axs[1].set_xlim(-1, 1)
 
     axs[0].set_ylim(0.45, 1.05)
