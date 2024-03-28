@@ -215,7 +215,7 @@ def run_llm_on_devraj2022(mode='llm', model='claude-2', start_participant=0):
                     # print(block_instructions)
                     
             # save df with llm predicted category and true category
-            df.to_csv(dataset.replace('.csv', f'llm_choices{mode}.csv'), index=False)
+            df.to_csv(dataset.replace('.csv', f'llm_choices{mode}_{start_participant}.csv'), index=False)
 
 def fit_llm_to_humans(num_runs, num_blocks, num_iter, opt_method, loss, task_name):
     
