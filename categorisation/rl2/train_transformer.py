@@ -17,7 +17,7 @@ def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic,
     if synthetic:
         env = SyntheticCategorisationTask(nonlinear=nonlinear, num_dims=num_dims, max_steps=max_steps, batch_size=batch_size, noise=noise, shuffle_trials=shuffle, device=device).to(device)
     elif rmc:
-        assert num_dims == 3, 'RMC only supports 3 dimensions'
+        assert num_dims == 3 or num_dims == 4 or num_dims == 6, 'RMC supports 3, 4, and 6 dimensions'
         env = RMCTask(data=env_name, num_dims=num_dims, max_steps=max_steps, batch_size=batch_size, noise=noise, shuffle_trials=shuffle, device=device).to(device)
     else:
         env = CategorisationTask(data=env_name, num_dims=num_dims, max_steps=max_steps, sample_to_match_max_steps=sample_to_match_max_steps, batch_size=batch_size, noise=noise, shuffle_trials=shuffle, shuffle_features=shuffle_features, device=device).to(device)
