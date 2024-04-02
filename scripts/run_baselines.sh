@@ -11,5 +11,13 @@ cd ~/ermi/categorisation/
 module load anaconda/3/2021.11
 pip3 install --user python-dotenv ipdb accelerate tqdm anthropic
 
-#python baselines/run_llm.py --mode 'human' --dataset 'badham2017'
-python baselines/run_llm.py --mode 'human' --dataset 'devraj2022'
+# python baselines/run_llm.py --mode 'human' --dataset 'devraj2022' --start-participant 56
+#python baselines/run_llm.py --mode 'human' --dataset 'devraj2022' --start-participant 75
+# python baselines/run_llm.py --mode 'human' --dataset 'devraj2022' --start-participant 77
+python baselines/run_llm.py --mode 'human' --dataset 'devraj2022' --start-participant 99
+# python baselines/run_llm.py --mode 'human' --dataset 'devraj2022' --start-participant 110
+
+
+# python baselines/run_llm.py --mode 'human' --dataset 'badham2017'
+# python baselines/run_llm.py --mode 'match_ermi' --dataset 'badham2017' --start-participant 72
+# python rl2/simulate_llm.py --mode 'match_ermi' --dataset 'badham2017' --from-env --start-participant 3
