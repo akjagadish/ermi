@@ -366,14 +366,14 @@ def model_comparison_devraj2022(FIGSIZE=(6,5)):
     plt.show() 
 
     task_name = 'Devraj et al. (2022)'
-    posterior_model_frequency(np.array(bics), MODELS, task_name=task_name)
-    exceedance_probability(np.array(bics), MODELS, task_name=task_name)
+    posterior_model_frequency(np.array(bics), MODELS, task_name=task_name, FIGSIZE=(7.5,5))
+    exceedance_probability(np.array(bics), MODELS, task_name=task_name, FIGSIZE=(7.5,5))
 
-def model_simulations_smith1998():
+def model_simulations_smith1998(plot='main'):
 
-    models = ['smith1998', 'ermi', 'synthetic',]# 'human', 'syntheticnonlinear']
+    models = ['smith1998', 'ermi', 'synthetic',] if plot == 'main' else ['smith1998', 'ermi', 'syntheticnonlinear']#'human'
     f, ax = plt.subplots(1, len(models), figsize=(5*len(models),5))
-    colors = ['#173b4f', '#37761e']
+    colors = ['#173b4f', '#748995'] ##5d7684']
     num_blocks = None
     for idx, model in enumerate(models):
         if model=='smith1998':
@@ -415,12 +415,11 @@ def model_simulations_smith1998():
         stds_pm = stds_pm[:num_blocks]
 
         # plot mean mses across participants for each trial segment for both models
-        sns.lineplot(x=np.arange(mses_pm.shape[1])+1, y=np.mean(mses_pm, axis=0), ax=ax[idx], color=colors[0], label='PM')
-        sns.lineplot(x=np.arange(mses_pm.shape[1])+1, y=np.mean(mses_gcm, axis=0), ax=ax[idx], color=colors[1], label='GCM')
+        sns.lineplot(x=np.arange(mses_pm.shape[1])+1, y=np.mean(mses_pm, axis=0), ax=ax[idx], color=colors[0], label='Protype-based', lw=3)
+        sns.lineplot(x=np.arange(mses_pm.shape[1])+1, y=np.mean(mses_gcm, axis=0), ax=ax[idx], color=colors[1], label='Exemplar-based', lw=3)
         # add standard error of mean as error bars
         ax[idx].fill_between(np.arange(mses_pm.shape[1])+1, np.mean(mses_pm, axis=0)-stds_pm, np.mean(mses_pm, axis=0)+stds_pm, alpha=0.2, color=colors[0])
         ax[idx].fill_between(np.arange(mses_pm.shape[1])+1, np.mean(mses_gcm, axis=0)-stds_gcm, np.mean(mses_gcm, axis=0)+stds_gcm, alpha=0.2, color=colors[1])
-        ax[idx].set_xlabel('Trial segment', fontsize=FONTSIZE)
         ax[idx].set_ylim([0, 1.])
         ax[idx].set_xticks(np.arange(mses_pm.shape[1])+1)
         # set y ticks font size
@@ -430,7 +429,14 @@ def model_simulations_smith1998():
             ax[idx].set_ylabel('Error', fontsize=FONTSIZE)
             # remove bounding box around the legend
             ax[idx].legend(frameon=False, fontsize=FONTSIZE-2)
-        else:
+            ax[idx].set_title('Human', fontsize=FONTSIZE)
+            ax[idx].set_xlabel('Block', fontsize=FONTSIZE) #Trial segment
+        elif idx==1:
+            ax[idx].set_title('ERMI', fontsize=FONTSIZE)
+        elif idx==2:
+            ax[idx].set_title('MI' if plot == "main" else 'PFN', fontsize=FONTSIZE)
+        
+        if idx!=0:
             # remove legend
             ax[idx].legend([], frameon=False, fontsize=FONTSIZE-2)
         
@@ -549,12 +555,14 @@ def model_simulations_shepard1961(plot='main', num_blocks=15, tasks=np.arange(1,
     f.savefig(f'{SYS_PATH}/figures/model_simulations_shepard1961.svg', bbox_inches='tight', dpi=300)
 
 
-def model_comparison_johanssen2002():
+def model_comparison_johanssen2002(plot='main', task_block=32):
+
     # choose  params for ermi simulations
-    ermi_beta = 0.9
-    mi_beta = 0.1
+    ermi_beta = np.load(f'{SYS_PATH}/categorisation/data/meta_learner/johanssen_categorisation_ermi_{task_block}_best_beta.npy')
+    mi_beta = np.load(f'{SYS_PATH}/categorisation/data/meta_learner/johanssen_categorisation_mi_{task_block}_best_beta.npy')
+    pfn_beta = np.load(f'{SYS_PATH}/categorisation/data/meta_learner/johanssen_categorisation_pfn_{task_block}_best_beta.npy')
+    task_block = task_block
     num_runs = 1
-    task_block = 32 # chose task block from ERMI to compare with human data
 
     data = pd.read_csv(f'{SYS_PATH}/categorisation/data/meta_learner/johanssen_categorisation__tasks8950_pversion5_stage1_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1_beta={ermi_beta}_num_trials=288_num_runs={num_runs}.csv')
     transfer_stimulus_ids = data[data['stimulus_id'].str.contains('T')]['stimulus_id']
@@ -568,6 +576,12 @@ def model_comparison_johanssen2002():
     # choose a subset of the transfer_data dataframe where the task_feature is equal to 1
     mi_transfer_data = mi_transfer_data[mi_transfer_data['task_feature'] == task_block]
 
+    pfn_data = pd.read_csv(f'{SYS_PATH}/categorisation/data/meta_learner/johanssen_categorisation_500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1_syntheticnonlinear_beta={pfn_beta}_num_trials=288_num_runs={num_runs}.csv')
+    pfn_transfer_stimulus_ids = pfn_data[pfn_data['stimulus_id'].str.contains('T')]['stimulus_id']
+    pfn_transfer_data = pfn_data[pfn_data['stimulus_id'].isin(pfn_transfer_stimulus_ids)]
+    # choose a subset of the transfer_data dataframe where the task_feature is equal to 1
+    pfn_transfer_data = pfn_transfer_data[pfn_transfer_data['task_feature'] == task_block]
+    
     import json
     with open(f'{SYS_PATH}/categorisation/data/human/johanssen2002.json') as f:
         human_data = json.load(f)
@@ -585,24 +599,34 @@ def model_comparison_johanssen2002():
     ermi_meta_learner_generalisation = (1-transfer_data.groupby('stimulus_id')['choice'].mean())
     ermi_meta_learner_generalisation = ermi_meta_learner_generalisation[human_generalisation.index]
     mi_meta_learner_generalisation = (1-mi_transfer_data.groupby('stimulus_id')['choice'].mean())
-    mi_meta_learner_generalisation = mi_meta_learner_generalisation[human_generalisation.index] # keep the same order of the stimulus_ids for both human_generalisation and meta_learner_generalisation
+    mi_meta_learner_generalisation = mi_meta_learner_generalisation[human_generalisation.index] # keep the same order of the stimulus_ids for both human_generalisation and mi model
+    pfn_meta_learner_generalisation = (1-pfn_transfer_data.groupby('stimulus_id')['choice'].mean())
+    pfn_meta_learner_generalisation = pfn_meta_learner_generalisation[human_generalisation.index] # keep the same order of the stimulus_ids for both human_generalisation and pfn model
 
+    # set the index of the human_generalisation to T1, T2, T3, T4, T5, T6, T7
+    human_generalisation.index = [f'T{i+1}' for i in range(len(human_generalisation))]
     # compare the meta_learner_generalisation with human_generalisation in two subplots side by side
     fig, ax = plt.subplots(1, 3, figsize=(5*3, 5))
     # plot the human_generalisation in the left subplot
-    human_generalisation.plot(kind='bar', ax=ax[0], color='#8b9da7', width=0.8)
+    human_generalisation.plot(kind='bar', ax=ax[0], color='#173B4F', width=0.8)
     # plot the meta_learner_generalisation in the right subplot
-    ermi_meta_learner_generalisation.plot(kind='bar', ax=ax[1], color='#173b4f', width=0.8)
-    mi_meta_learner_generalisation.plot(kind='bar', ax=ax[2], color='#5d7684', width=0.8)
+    ermi_meta_learner_generalisation.plot(kind='bar', ax=ax[1], color='#405A63', width=0.8)
+    if plot == 'main':
+        mi_meta_learner_generalisation.plot(kind='bar', ax=ax[2], color='#66828F', width=0.8)
+    else:
+        pfn_meta_learner_generalisation.plot(kind='bar', ax=ax[2], color='#66828F', width=0.8)
 
     # set the x-ticks for both subplots
     ax[0].set_xticks(np.arange(human_generalisation.shape[0]))
     ax[1].set_xticks(np.arange(ermi_meta_learner_generalisation.shape[0]))
-    ax[2].set_xticks(np.arange(mi_meta_learner_generalisation.shape[0]))
+    if plot == 'main':
+        ax[2].set_xticks(np.arange(mi_meta_learner_generalisation.shape[0]))
+    else:
+        ax[2].set_xticks(np.arange(pfn_meta_learner_generalisation.shape[0]))
     # set the x-tick labels for both subplots
     ax[0].set_xticklabels(human_generalisation.index, rotation=0)
-    ax[1].set_xticklabels(ermi_meta_learner_generalisation.index, rotation=0)
-    ax[2].set_xticklabels(mi_meta_learner_generalisation.index, rotation=0)
+    ax[1].set_xticklabels(human_generalisation.index, rotation=0)
+    ax[2].set_xticklabels(human_generalisation.index, rotation=0)
     # set the y-ticks for both subplotsand only keep alternating y-tick labels
     y_ticks = np.round(np.arange(0, 1.1, 0.1)[::2],1)
     ax[0].set_yticks(y_ticks)
@@ -627,13 +651,17 @@ def model_comparison_johanssen2002():
     ax[0].set_ylim([0, 1.0])
     ax[1].set_ylim([0, 1.0])
     ax[2].set_ylim([0, 1.0])
+    ax[0].set_title('Human', fontsize=FONTSIZE)
+    ax[1].set_title('ERMI', fontsize=FONTSIZE)
+    ax[2].set_title('MI' if plot == "main" else 'PFN', fontsize=FONTSIZE)
     # draw a horizontal line at y=0.5
     ax[0].axhline(y=0.5, linestyle='--', color='black')
     ax[1].axhline(y=0.5, linestyle='--', color='black')
     ax[2].axhline(y=0.5, linestyle='--', color='black')
     fig.tight_layout()
     sns.despine()
-    plt.show() 
+    plt.show()
+    fig.savefig(f'{SYS_PATH}/figures/model_comparison_johanssen2002.svg', bbox_inches='tight', dpi=300)
 
 
 def plot_dataset_statistics(mode=0):
