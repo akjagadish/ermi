@@ -135,6 +135,7 @@ def run_llm_on_devraj2022(mode='llm', model='claude-2', start_participant=0):
 
     for dataset in datasets:
         df = pd.read_csv(dataset)
+        df = df[df['condition'] == 'control'] # only pass 'control' condition
         df['llm_category'], df['true_category'] = np.nan, np.nan # add new column to df to store the llm predicted category
         num_participants = df.participant.max() + 1
         num_tasks = df.task.max() + 1
@@ -220,8 +221,9 @@ def run_llm_on_devraj2022(mode='llm', model='claude-2', start_participant=0):
 def fit_llm_to_humans(num_runs, num_blocks, num_iter, opt_method, loss, task_name):
     
     if task_name == 'devraj2022':
-        df = pd.read_csv(f'{SYS_PATH}/categorisation/data/llm/devraj2022rational.csv')
+        df = pd.read_csv(f'{SYS_PATH}/categorisation/data/llm/devraj2022rational_llm_choiceshuman.csv')
         df = df[df['condition'] == 'control'] # only pass 'control' condition
+        df['category'] = df['category'].astype(int)-1
         NUM_TASKS, NUM_FEATURES = 1, 6
     elif task_name == 'badham2017':
         df = pd.read_csv(f'{SYS_PATH}/categorisation/data/llm/badham2017deficits_llm_choiceshuman.csv')#match_ermi
