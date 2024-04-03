@@ -14,7 +14,7 @@ pip3 install --user python-dotenv ipdb accelerate tqdm anthropic
 # python baselines/run_llm.py --mode 'human' --dataset 'devraj2022' --start-participant 56
 #python baselines/run_llm.py --mode 'human' --dataset 'devraj2022' --start-participant 75
 # python baselines/run_llm.py --mode 'human' --dataset 'devraj2022' --start-participant 77
-python baselines/run_llm.py --mode 'human' --dataset 'devraj2022' --start-participant 99
+python baselines/run_llm.py --mode 'human' --dataset 'devraj2022' --start-participant 55
 # python baselines/run_llm.py --mode 'human' --dataset 'devraj2022' --start-participant 110
 
 
