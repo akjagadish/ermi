@@ -260,6 +260,7 @@ def model_comparison_badham2017(FIGSIZE=(6,5)):
 
 def model_comparison_devraj2022(FIGSIZE=(6,5)):
     models = ['devraj2022_env=claude_generated_tasks_paramsNA_dim6_data500_tasks12910_pversion5_stage2_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1_soft_sigmoid_differential_evolution', \
+              'devraj2022_llm_runs=1_iters=1_blocks=1_loss=nll', \
               'devraj2022_env=dim6synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=2_synthetic_soft_sigmoid_differential_evolution', \
               'devraj2022_env=dim6synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=2_syntheticnonlinear_soft_sigmoid_differential_evolution',\
               'devraj2022_gcm_runs=1_iters=1_blocks=1_loss=nll',\
@@ -274,7 +275,7 @@ def model_comparison_devraj2022(FIGSIZE=(6,5)):
     NUM_TRIALs = 616
     num_trials = NUM_TRIALs*NUM_TASKS
     # FONTSIZE = 16
-    MODELS = ['ERMI', 'MI', 'PFN', 'GCM', 'PM', 'Rulex', 'Rule']
+    MODELS = ['ERMI', 'LLM', 'MI', 'PFN', 'GCM', 'PM', 'Rulex', 'Rule']
 
     for model_name in models:
         fits =  np.load(f'{SYS_PATH}/categorisation/data/model_comparison/{model_name}.npz')
@@ -285,22 +286,28 @@ def model_comparison_devraj2022(FIGSIZE=(6,5)):
             pr2s_min_nll = np.array(pr2s).squeeze()
             fitted_betas.append(betas)
             num_parameters = 1 
-            bic = np.array(nlls_min_nlls)*2 + np.log(num_trials)*num_parameters
+
         elif ('gcm' in model_name) or ('pm' in model_name):
             betas, pnlls, pr2s = fits['params'], fits['lls'], fits['r2s']
             # summing the fits for the four conditions separately; hence the total number of parameters is model_parameters*NUM_TASKS
             nlls_min_nlls = np.array(pnlls).squeeze()
             pr2s_min_nll = np.array(pr2s).squeeze()
             num_parameters = 8*NUM_TASKS
-            bic = np.array(nlls_min_nlls)*2 + np.log(num_trials)*num_parameters
             fitted_betas.append(betas.squeeze()[:, 1])
+        elif 'llm' in model_name:
+            betas, pnlls, pr2s = fits['params'], fits['lls'], fits['r2s']
+            # summing the fits for the four conditions separately; hence the total number of parameters is model_parameters*NUM_TASKS
+            nlls_min_nlls = np.array(pnlls).squeeze()
+            pr2s_min_nll = np.array(pr2s).squeeze()
+            num_parameters = 1*NUM_TASKS 
+            fitted_betas.append(betas.squeeze())
         elif ('rulex' in model_name):
             betas, pnlls, pr2s = fits['params'], fits['lls'], fits['r2s']
             nlls_min_nlls = np.array(pnlls).squeeze()
             pr2s_min_nll = np.array(pr2s).squeeze()
             num_parameters = 2*NUM_TASKS
-            bic = np.array(nlls_min_nlls)*2 + np.log(num_trials)*num_parameters
 
+        bic = np.array(nlls_min_nlls)*2 + np.log(num_trials)*num_parameters
         nlls.append(nlls_min_nlls)
         r2s.append(pr2s_min_nll)
         bics.append(bic)
@@ -309,7 +316,7 @@ def model_comparison_devraj2022(FIGSIZE=(6,5)):
     num_participants = len(nlls[0])
     MODELS = MODELS[:len(nlls)]
     # set colors depending on number of models in MODELS
-    colors = ['#173b4f', '#8b9da7', '#5d7684', '#2f4a5a', '#0d2c3d', '#4d6a75', '#748995', '#a2c0a9'][:len(nlls)]
+    colors = ['#173b4f', '#8b9da7', '#5d7684', '#2f4a5a', '#0d2c3d', '#4d6a75', '#748995', '#a2c0a9', '#c4d9c2'][:len(nlls)]
 
 
     # compare mean nlls across models in a bar plot
@@ -348,6 +355,29 @@ def model_comparison_devraj2022(FIGSIZE=(6,5)):
     f.tight_layout()
     plt.show()
     f.savefig(f'{SYS_PATH}/figures/bic_devraj2022.svg', bbox_inches='tight', dpi=300)
+
+    # compare mean BICS across models in a bar plot
+    f, ax = plt.subplots(1, 1, figsize=FIGSIZE)
+    bar_positions = np.arange(len(bics))*1.5
+    ax.bar(bar_positions, np.array(bics).sum(1), color=colors, width=1.)
+    # print bics for models and their names
+    for i, bic in enumerate(bics):
+        print(f'{MODELS[i]}: {bic.sum()}')
+    # add chance level line for 616 trials with binary choices
+    ax.axhline(y=-np.log(0.5)*num_trials*2*num_participants, color='k', linestyle='--', lw=3)
+    ax.set_xlabel('Models', fontsize=FONTSIZE)
+    ax.set_ylabel('BIC', fontsize=FONTSIZE)
+    ax.set_xticks(bar_positions)  # Set x-tick positions to bar_positions
+    ax.set_xticklabels(MODELS, fontsize=FONTSIZE-6)  # Assign category names to x-tick labels
+    # ax.set_title(f'Model comparison for Badham et al. (2017)', fontsize=FONTSIZE)
+    # plt.xticks(fontsize=FONTSIZE-2)
+    # set y lim
+    ax.set_ylim([35000, 65000])
+    plt.yticks(fontsize=FONTSIZE-2)
+    sns.despine()
+    f.tight_layout()
+    plt.show()
+    f.savefig(f'{SYS_PATH}/figures/totalbic_devraj2022.svg', bbox_inches='tight', dpi=300)
 
     # compare mean r2s across models in a bar plot
     f, ax = plt.subplots(1, 1, figsize=FIGSIZE)

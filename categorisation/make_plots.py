@@ -9,9 +9,9 @@ from plots import model_comparison_badham2017, model_simulations_smith1998, mode
 # model_comparison_badham2017()
 # model_simulations_smith1998('main')
 # model_simulations_smith1998('supplementary')
-# model_comparison_devraj2022()
+model_comparison_devraj2022()
 # model_comparison_johanssen2002('main')
-model_comparison_johanssen2002('supplementary')
+# model_comparison_johanssen2002('supplementary')
 
 
 ## rebuttals
