@@ -128,6 +128,45 @@ class PrototypeModel():
         
         return fit_measure, r2, store_params
 
+    def fit_llm(self, df, num_blocks=1, reduce='sum'):
+        """ fit pm to llm choices and compute negative log likelihood 
+        
+        args:
+        df: dataframe containing the data
+        
+        returns:
+        nll: negative log likelihood for each participant"""
+
+        num_conditions = len(df['condition'].unique())
+        num_participants = len(df['participant'].unique())
+        fit_measure, r2 = np.zeros((num_participants, num_conditions, num_blocks)), np.zeros((num_participants, num_conditions, num_blocks))
+        self.bounds.extend(self.weight_bound * self.num_features)
+        store_params = np.zeros((num_participants, num_conditions, num_blocks, len(self.bounds))) # store params for each task feature and block
+
+        for p_idx, participant_id in enumerate(df['participant'].unique()[:num_participants]):
+            df_participant = df[(df['participant'] == participant_id)]
+            unique_values = df_participant['llm_category'].unique()
+            mapping = {k: v for v, k in enumerate(unique_values)}
+            df_participant['choice'] =  df_participant['llm_category'].map(mapping)
+            df_participant['correct_choice'] = df_participant['true_category'].map(mapping)
+            df_participant['category'] = df_participant['true_category'].map(mapping)
+            for c_idx, condition_id in enumerate(df['condition'].unique()):
+                df_condition = df_participant[(df_participant['condition'] == condition_id)]
+                num_trials_per_block = int(len(df_condition)/num_blocks)
+                for b_idx, block in enumerate(range(num_blocks)):
+                    offset_trial = df_condition.trial.min()
+                    df_condition_block = df_condition[(df_condition['trial'] < ((block+1)*num_trials_per_block + offset_trial)) & (df_condition['trial'] >= (block*num_trials_per_block + offset_trial))]
+                    best_params = self.fit_parameters(df_condition_block)
+                    fit_measure[p_idx, c_idx, b_idx] = self.loss_fn(best_params, df_condition_block)
+                    if self.loss == 'nll':
+                        num_trials = len(df_condition_block)*(df_condition_block.task.max()+1)
+                        num_trials = num_trials*0.5 if self.burn_in else num_trials
+                        r2[p_idx, c_idx, b_idx] = 1 - (fit_measure[p_idx, c_idx, b_idx]/(-num_trials*np.log(1/2)))
+                    store_params[p_idx, c_idx, b_idx] = best_params
+                
+        return fit_measure, r2, store_params
+
+
     def fit_parameters(self, df):
         """ fit parameters using scipy optimiser 
         
