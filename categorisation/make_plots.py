@@ -1,4 +1,4 @@
-from plots import model_comparison_badham2017, model_simulations_smith1998, model_simulations_shepard1961, model_comparison_devraj2022, model_comparison_johanssen2002, plot_dataset_statistics, compare_data_statistics, compare_inputfeatures
+from plots import model_comparison_badham2017, model_simulations_smith1998, model_simulations_shepard1961, model_comparison_devraj2022, model_comparison_johanssen2002, plot_dataset_statistics, compare_data_statistics, compare_inputfeatures, plot_frequency_tasklabels
 
 # plot_dataset_statistics(0)
 # plot_dataset_statistics(1)
@@ -9,10 +9,15 @@ from plots import model_comparison_badham2017, model_simulations_smith1998, mode
 # model_comparison_badham2017()
 # model_simulations_smith1998('main')
 # model_simulations_smith1998('supplementary')
-model_comparison_devraj2022()
+# model_comparison_devraj2022()
 # model_comparison_johanssen2002('main')
 # model_comparison_johanssen2002('supplementary')
-
+plot_frequency_tasklabels('claude_generated_tasklabels_paramsNA_dim3_tasks23421_pversion5', feature_names=False, pairs=False)
+# plot_frequency_tasklabels('claude_generated_tasklabels_paramsNA_dim3_tasks23421_pversion5', feature_names=True, pairs=False)
+# plot_frequency_tasklabels('claude_generated_tasklabels_paramsNA_dim4_tasks20690_pversion5', feature_names=False, pairs=False)
+# plot_frequency_tasklabels('claude_generated_tasklabels_paramsNA_dim4_tasks20690_pversion5', feature_names=True, pairs=False)
+# plot_frequency_tasklabels('claude_generated_tasklabels_paramsNA_dim6_tasks13693_pversion5', feature_names=False, pairs=False)
+# plot_frequency_tasklabels('claude_generated_tasklabels_paramsNA_dim6_tasks13693_pversion5', feature_names=True, pairs=False)
 
 ## rebuttals
 # model_simulations_shepard1961(num_blocks=6)
