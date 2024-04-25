@@ -209,3 +209,114 @@ def retrieve_tasklabel_prompt(model, version, num_dim=3, num_tasks=100):
     instructions['claude']['v5'] = claude_feature_names_prompt_v5
     
     return instructions[model][version]
+
+def synthesize_functionlearning_problems(model, version, num_dim=1, num_tasks=100):
+
+    instructions = {}
+    features_to_text = {1: 'a real-world feature is mapped to its corresponding target, with both feature and target taking on continuous values', 2: 'two real-world features are mapped to their corresponding target, with features and target taking on continuous values'}
+    format_to_text = {1: '- feature name, target name', 2: '- feature name 1, feature name 2, target name'}
+    synthesize_feature_names_prompt_v0  = f" I am a psychologist who wants to run a function learning experiment. "\
+                 f"In a function learning experiment, {features_to_text[num_dim]}."\
+                 f" Please generate names for features and its corresponding target for {str(num_tasks)} different function learning experiments: \n"\
+                 f"{format_to_text[num_dim]} \n"  
+    
+    instructions['claude'] = {}
+    instructions['claude']['v0'] = synthesize_feature_names_prompt_v0
+
+    
+    return instructions[model][version]
+
+def synthesize_decisionmaking_problems(model, version, num_dim=2, num_tasks=100):
+
+    instructions = {}
+    features_to_text = {1: 'a real-world feature is mapped to its corresponding target, with both feature and target taking on continuous values', 2: 'two real-world features are mapped to their corresponding target, with features and target taking on continuous values'}
+    format_to_text = {1: '- feature name, target name', 2: '- feature name 1, feature name 2, target name'}
+    synthesize_feature_names_prompt_v0  = f" I am a psychologist who wants to run a decision-making experiment. "\
+                 f"In a decision-making experiment, {features_to_text[num_dim]}."\
+                 f" Please generate names for features and its corresponding target for {str(num_tasks)} different decision-making experiments: \n"\
+                 f"{format_to_text[num_dim]} \n"  
+    
+    instructions['claude'] = {}
+    instructions['claude']['v0'] = synthesize_feature_names_prompt_v0
+
+    
+    return instructions[model][version]
+
+def generate_data_functionlearning_problems(model, version, num_data=20, num_dim=1, features=None, target=None):
+
+    instructions = {}
+    instructions['claude'] = {}
+    # feature, target = 'Game difficulty', 'Game engagement'
+    generate_data_prompt_v0 = f" I am a psychologist who wants to run a function learning experiment."\
+                          " For a function learning experiment, I need a list of feature and target pairs."\
+                         f" The feature and target in this case are {features[0].lower()} and {target.lower()} respectively."\
+                         f" {features[0].capitalize()} can take only numerical values and must be continuous."\
+                         f" {target.capitalize()} should be predictable from the {features[0].lower()} and must also take on continuous values."\
+                          " \n\n"\
+                        f" Please generate a list of {str(num_data)} feature-target pairs"\
+                         " sequentially using the following template for each row: \n"\
+                        f" 1: {features[0].lower()} value, {target.lower()} value \n"\
+                        f"Please do not skip any row; values taken by {features[0].lower()} and {target.lower()} do not need to be ordered."
+    
+    generate_data_prompt_v1 = f" I am a psychologist who wants to run a function learning experiment."\
+                          " For a function learning experiment, I need a list of feature and target pairs."\
+                         f" The feature and target in this case are {features[0].lower()} and {target.lower()} respectively."\
+                         f" The feature can take only numerical values and must be continuous."\
+                         f" {target.capitalize()} should be predictable from the feature and must also take on continuous values."\
+                          " \n\n"\
+                        f" Please generate a list of {str(num_data)} feature-target pairs"\
+                         " sequentially using the following template for each row: \n"\
+                        f" 1: {features[0].lower()} value, {target.lower()} value \n"\
+                        f"Please do not skip any row; values taken by features and target do not need to be ordered."
+    
+    def featurenames_to_text(features, num_dim):
+        if num_dim==1:
+            return f'feature in this case is {features[0].lower()}', 'The feature takes', '- feature value, target value'
+        elif num_dim==2:
+            return f'features in this case are {features[0].lower()} and {features[1].lower()}', 'These features take', '- feature value 1, feature value 2, target value'
+        
+    feature_text, style, template = featurenames_to_text(features, num_dim)
+    generate_data_prompt_v2 = f" I am a psychologist who wants to run a function learning experiment."\
+                          " For a function learning experiment, I need a list of features with their corresponding target."\
+                         f" The {feature_text}."\
+                         f" {style} on only numerical values and must be continuous."\
+                         f" The target, {target.lower()}, should be predictable from the feature values and must also take on continuous values."\
+                          " \n\n"\
+                         f" Please generate a list of {str(num_data)} feature-target pairs"\
+                          " sequentially using the following template for each row: \n"\
+                         f" {template} \n"\
+                         f" Please do not skip any row; values taken by features and targets do not need to be ordered."
+    
+    instructions['claude']['v0'] = generate_data_prompt_v0
+    instructions['claude']['v1'] = generate_data_prompt_v1
+    instructions['claude']['v2'] = generate_data_prompt_v2
+    
+    return instructions[model][version]
+
+def generate_data_decisionmaking_problems(model, version, num_dim=2, num_data=20, features=None, target=None):
+
+    instructions = {}
+    instructions['claude'] = {}
+
+    # feature, target = 'Game difficulty', 'Game engagement'
+    def featurenames_to_text(features, num_dim):
+        if num_dim==1:
+            return f'feature in this case is {features[0].lower()}', 'The feature takes', '- feature value, target value'
+        elif num_dim==2:
+            return f'features in this case are {features[0].lower()} and {features[1].lower()}', 'These features take', '- feature value 1, feature value 2, target value'
+        
+    feature_text, style, template = featurenames_to_text(features, num_dim)
+    generate_data_prompt_v0 = f" I am a psychologist who wants to run a decision-making experiment."\
+                          " For a decision-making experiment, I need a list of features with their corresponding target."\
+                         f" The {feature_text}."\
+                         f" {style} on only numerical values and must be continuous."\
+                         f" The target, {target.lower()}, should be predictable from the feature values and must also take on continuous values."\
+                          " \n\n"\
+                         f" Please generate a list of {str(num_data)} feature-target pairs"\
+                          " sequentially using the following template for each row: \n"\
+                         f" {template} \n"\
+                         f"  Please do not skip any row; values taken by features and targets do not need to be ordered."
+    
+    instructions['claude']['v0'] = generate_data_prompt_v0
+    
+    return instructions[model][version]
