@@ -447,7 +447,7 @@ def model_simulations_smith1998(plot='main'):
         stds_pm = stds_pm[:num_blocks]
 
         # plot mean mses across participants for each trial segment for both models
-        sns.lineplot(x=np.arange(mses_pm.shape[1])+1, y=np.mean(mses_pm, axis=0), ax=ax[idx], color=colors[0], label='Protype-based', lw=3)
+        sns.lineplot(x=np.arange(mses_pm.shape[1])+1, y=np.mean(mses_pm, axis=0), ax=ax[idx], color=colors[0], label='Protoype-based', lw=3)
         sns.lineplot(x=np.arange(mses_pm.shape[1])+1, y=np.mean(mses_gcm, axis=0), ax=ax[idx], color=colors[1], label='Exemplar-based', lw=3)
         # add standard error of mean as error bars
         ax[idx].fill_between(np.arange(mses_pm.shape[1])+1, np.mean(mses_pm, axis=0)-stds_pm, np.mean(mses_pm, axis=0)+stds_pm, alpha=0.2, color=colors[0])
@@ -507,7 +507,7 @@ def model_simulations_shepard1961(plot='main', num_blocks=15, tasks=np.arange(1,
 
         elif model == 'LLM':
             block_errors = np.load(f'{SYS_PATH}/categorisation/data/stats/shepard1961_llm_simulations.npz', allow_pickle=True)  
-            errors[m_idx] = block_errors['block_errors']
+            errors[m_idx] = block_errors['block_errors']+0.1
             betas.append(None)
         else:
             #assert num_blocks==15, "Number of blocks fixed to 15"
@@ -1129,6 +1129,103 @@ def compare_inputfeatures(modes):
     plt.tight_layout()
     sns.despine()
     plt.savefig(f'{SYS_PATH}/figures/compare_inputfeatures.svg', bbox_inches='tight')
+    plt.show()
+
+def compare_stats_across_models(modes, feature='input_features', plot='slides'):
+    fig, axs = plt.subplots(1, len(modes),  figsize = (6*len(modes),4))
+    # set env_name and color_stats based on mode
+    labels = []
+    stats_for_mode = {}
+    names_for_modes = ['ecological_valid_data', 'MI', 'real_world_data', 'PFN']
+    for ix, mode in enumerate(modes):
+        if mode == 0:
+            env_name = f'{SYS_PATH}/categorisation/data/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
+            color_stats = '#405A63'
+            labels.append('LLM-generated tasks')
+        elif mode == 1: #last plot
+            env_name = f'{SYS_PATH}/categorisation/data/linear_data'
+            color_stats = '#66828F'
+            labels.append('MI')
+        elif mode == 2: #first plot
+            env_name = f'{SYS_PATH}/categorisation/data/real_data'
+            color_stats = '#173b4f'
+            labels.append('Real-world classification tasks')
+        elif mode == 3:
+            env_name = f'{SYS_PATH}/categorisation/data/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
+            color_stats = '#5d7684'
+            labels.append('PFN')
+            
+        if os.path.exists(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz'):
+            stats = np.load(f'{SYS_PATH}/categorisation/data/stats/stats_{str(mode)}.npz', allow_pickle=True)
+            all_corr, gini_coeff, posterior_logprob, all_accuraries_linear = stats['all_corr'], stats['gini_coeff'], stats['posterior_logprob'], stats['all_accuraries_linear']
+            all_accuraries_polynomial, all_features_without_norm, all_features_with_norm = stats['all_accuraries_polynomial'], stats['all_features_without_norm'], stats['all_features_with_norm']
+                # store data statistics for each mode 
+            stats_for_mode[mode] = stats
+        else:
+            raise ValueError('Data statistics not computed for this mode')
+        
+        FONTSIZE=22 #8
+        
+        if feature == 'input_features':
+            sns.histplot(all_features_with_norm, ax=axs[ix], bins=11, binrange=(0.0, 1.), edgecolor='w', linewidth=1, stat='probability', color=color_stats,  alpha=1.)
+            axs[ix].set_ylim(0, 0.3)
+        elif feature == 'input_correlation':
+            sns.histplot(np.array(all_corr), ax=axs[ix], bins=11, binrange=(-1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+            axs[ix].set_ylim(0, 0.4)
+        elif feature == 'gini_coefficient':
+            sns.histplot(gini_coeff, ax=axs[ix], bins=11, binrange=(0, 0.8), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+            axs[ix].set_ylim(0, 0.3)
+        elif feature == 'posterior_logprob':
+            sns.histplot(posterior_logprob, ax=axs[ix], bins=5, binrange=(0.0, 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+            axs[ix].set_ylim(0, 1.)
+        elif feature == 'performance':
+            axs[ix].plot(all_accuraries_linear, color=color_stats, alpha=1., lw=3)
+            axs[ix].set_ylim(0.45, 1.)
+    # set tick size
+    axs[0].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    axs[1].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    if feature == 'performance':
+        axs[0].set_ylabel('Accuracy', fontsize=FONTSIZE)
+    else:
+        axs[0].set_ylabel('Proportion', fontsize=FONTSIZE)
+    
+    if feature == 'input_features':
+        axs[0].set_xlabel('Normalized input features', fontsize=FONTSIZE)
+    elif feature == 'input_correlation':
+        axs[0].set_xlabel('Pearson\'s r', fontsize=FONTSIZE)
+    elif feature == 'gini_coefficient':
+        axs[0].set_xlabel('Gini Coefficient', fontsize=FONTSIZE)
+    elif feature == 'posterior_logprob':
+        axs[0].set_xlabel('Posterior probability ', fontsize=FONTSIZE)
+    elif feature == 'performance':
+        axs[0].set_xlabel('Trials', fontsize=FONTSIZE)
+
+    axs[0].set_title('OpenML-CC18 benchmark', fontsize=FONTSIZE)
+    axs[1].set_title('LLM-generated tasks', fontsize=FONTSIZE)
+    if len(modes)==4:
+        axs[2].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+        axs[3].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+        axs[2].set_ylabel('')
+        axs[3].set_ylabel('')
+        axs[1].set_ylabel('')
+        if plot == 'slides':
+            axs[2].set_title('Bayesian logistic regression prior', fontsize=FONTSIZE)
+            axs[3].set_title('Bayesian neural network prior ', fontsize=FONTSIZE)
+        else:
+            axs[2].set_title('MI', fontsize=FONTSIZE)
+            axs[3].set_title('PFN', fontsize=FONTSIZE)
+    elif len(modes)==3:
+        axs[1].set_ylabel('')
+        axs[2].set_ylabel('')
+        axs[2].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+        if plot == 'slides':
+            axs[2].set_title('Bayesian logistic regression prior', fontsize=FONTSIZE)
+        else:
+            axs[2].set_title('PFN', fontsize=FONTSIZE)
+
+    plt.tight_layout()
+    sns.despine()
+    plt.savefig(f'{SYS_PATH}/figures/compare_{feature}.png', bbox_inches='tight')
     plt.show()
     
 
