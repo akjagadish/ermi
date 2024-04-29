@@ -274,7 +274,7 @@ def generate_data_functionlearning_problems(model, version, num_data=20, num_dim
             return f'feature in this case is {features[0].lower()}', 'The feature takes', '- feature value, target value'
         elif num_dim==2:
             return f'features in this case are {features[0].lower()} and {features[1].lower()}', 'These features take', '- feature value 1, feature value 2, target value'
-        
+
     feature_text, style, template = featurenames_to_text(features, num_dim)
     generate_data_prompt_v2 = f" I am a psychologist who wants to run a function learning experiment."\
                           " For a function learning experiment, I need a list of features with their corresponding target."\
@@ -285,7 +285,7 @@ def generate_data_functionlearning_problems(model, version, num_data=20, num_dim
                          f" Please generate a list of {str(num_data)} feature-target pairs"\
                           " sequentially using the following template for each row: \n"\
                          f" {template} \n"\
-                         f" Please do not skip any row; values taken by features and targets do not need to be ordered."
+                         f" Please do not produce any units; values taken by features and targets do not need to be ordered."
     
     instructions['claude']['v0'] = generate_data_prompt_v0
     instructions['claude']['v1'] = generate_data_prompt_v1
@@ -315,7 +315,7 @@ def generate_data_decisionmaking_problems(model, version, num_dim=2, num_data=20
                          f" Please generate a list of {str(num_data)} feature-target pairs"\
                           " sequentially using the following template for each row: \n"\
                          f" {template} \n"\
-                         f"  Please do not skip any row; values taken by features and targets do not need to be ordered."
+                         f"  Please do not produce any units; values taken by features and targets do not need to be ordered."
     
     instructions['claude']['v0'] = generate_data_prompt_v0
     
