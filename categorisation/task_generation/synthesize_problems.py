@@ -116,7 +116,7 @@ if __name__ == "__main__":
     parser.add_argument("--prompt-version", type=str,
                         required=False, default=None)
     parser.add_argument("--path", type=str, required=False,
-                        default='/u/ajagadish/ermi/categorisation/data/synthesise_problems')
+                        default='/u/ajagadish/ermi/categorisation/data/synthesize_problems')
     parser.add_argument("--pool", action='store_true',
                         required=False, default=False)
 
