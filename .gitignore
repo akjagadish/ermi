@@ -161,3 +161,4 @@ cython_debug/
 logs/*
 temp/*
 figures/*
+categorisation/data/synthesize_problems/archive/*
