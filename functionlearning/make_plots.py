@@ -1,8 +1,8 @@
 # , compare_data_statistics, compare_inputfeatures, plot_frequency_tasklabels, compare_stats_across_models
 from plots import plot_functionlearning_data_statistics
 
-# plot_functionlearning_data_statistics(0)
-plot_functionlearning_data_statistics(2)
+plot_functionlearning_data_statistics(0)
+# plot_functionlearning_data_statistics(2)
 # plot_dataset_statistics(1)
 # plot_dataset_statistics(3)
 # plot_frequency_tasklabels(

@@ -33,22 +33,25 @@ def plot_functionlearning_data_statistics(mode=0):
         # if bic is an array return item else return bic
         return bic.item() if isinstance(bic, np.ndarray) else bic
 
-    def return_data_stats(data, poly_degree=2):
+    def return_data_stats(data, poly_degree=2, first=False):
 
         df = data.copy()
-        max_tasks = 200
+        max_tasks = 400
         max_trial = 20
+        # sample tasks
+        tasks = range(0, max_tasks) if first else np.random.choice(
+            df.task_id.unique(), max_tasks, replace=False)
         all_corr, all_bics_linear, all_bics_quadratic, gini_coeff, all_accuraries_linear, all_accuraries_polynomial = [], [], [], [], [], []
         all_features_without_norm, all_features_with_norm, all_targets_with_norm = np.array(
             []), np.array([]), np.array([])
-        for i in range(0, max_tasks):
+        for i in tasks:
             df_task = df[df['task_id'] == i]
             if len(df_task) > 0:  # arbitary data size threshold
                 y = df_task['target'].to_numpy()
                 X = df_task["input"].to_numpy()
                 X = np.stack(X)
-                X = (X - X.min())/(X.max() - X.min()+1e-6)
-                y = (y - y.min())/(y.max() - y.min()+1e-6)
+                X = (X - X.min())/(X.max() - X.min() + 1e-6)
+                y = (y - y.min())/(y.max() - y.min() + 1e-6)
 
                 all_features_with_norm = np.concatenate(
                     [all_features_with_norm, X.flatten()])
@@ -62,13 +65,13 @@ def plot_functionlearning_data_statistics(mode=0):
                     X_linear = PolynomialFeatures(
                         1, include_bias=False).fit_transform(X)
 
-                    # linear regression from X_linear to y
-                    linear_regresion = sm.OLS(y, X_linear).fit()
+                    # # linear regression from X_linear to y
+                    # linear_regresion = sm.OLS(y, X_linear).fit()
 
-                    # polinomial regression from X_poly
-                    X_poly = PolynomialFeatures(
-                        poly_degree, interaction_only=True, include_bias=False).fit_transform(X)
-                    polynomial_regression = sm.OLS(y, X_poly).fit()
+                    # # polinomial regression from X_poly
+                    # X_poly = PolynomialFeatures(
+                    #     poly_degree, interaction_only=True, include_bias=False).fit_transform(X)
+                    # polynomial_regression = sm.OLS(y, X_poly).fit()
 
                     # fit gaussian process with linear kernel to X_linear and y
                     from sklearn.gaussian_process import GaussianProcessRegressor
@@ -83,8 +86,6 @@ def plot_functionlearning_data_statistics(mode=0):
                         kernel=1.0 * RBF(), n_restarts_optimizer=10)
                     GP_quadratic.fit(X_linear, y)
 
-                    # import ipdb
-                    # ipdb.set_trace()
                     rss = np.sum((y - GP_linear.predict(X_linear))**2)
                     all_bics_linear.append(calculate_bic(
                         len(y), rss, 1))  # linear_regresion.bic)
@@ -98,7 +99,7 @@ def plot_functionlearning_data_statistics(mode=0):
                         pass
                     else:
                         task_accuraries_linear = []
-                        task_accuraries_polynomial = []
+                        # task_accuraries_polynomial = []
                         for trial in range(max_trial):
                             X_linear_uptotrial = X_linear[:trial]
                             # X_poly_uptotrial = X_poly[:trial]
@@ -157,16 +158,17 @@ def plot_functionlearning_data_statistics(mode=0):
     if mode == 2:
         data.target = data['target'].apply(lambda x: np.array(eval(x)))
 
-    # if os.path.exists(f'{SYS_PATH}/functionlearning/data/stats/stats_{str(mode)}.npz'):
-    #     stats = np.load(
-    #         f'{SYS_PATH}/functionlearning/data/stats/stats_{str(mode)}.npz', allow_pickle=True)
-    #     all_corr, gini_coeff, posterior_logprob, all_accuraries_linear = stats['all_corr'], stats[
-    #         'gini_coeff'], stats['posterior_logprob'], stats['all_accuraries_linear']
-    #     all_accuraries_polynomial, all_features_without_norm, all_features_with_norm = stats[
-    #         'all_accuraries_polynomial'], stats['all_features_without_norm'], stats['all_features_with_norm']
-    # else:
-    all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial, all_targets_with_norm, all_features_with_norm = return_data_stats(
-        data)
+    if os.path.exists(f'{SYS_PATH}/functionlearning/data/stats/stats_{str(mode)}.npz'):
+        stats = np.load(
+            f'{SYS_PATH}/functionlearning/data/stats/stats_{str(mode)}.npz', allow_pickle=True)
+        all_corr, gini_coeff, posterior_logprob, all_accuraries_linear = stats['all_corr'], stats[
+            'gini_coeff'], stats['posterior_logprob'], stats['all_accuraries_linear']
+        all_accuraries_polynomial, all_targets_with_norm, all_features_with_norm = stats[
+            'all_accuraries_polynomial'], stats['all_targets_with_norm'], stats['all_features_with_norm']
+    else:
+        all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial, \
+            all_targets_with_norm, all_features_with_norm = return_data_stats(
+                data)
     # gini_coeff = np.array(gini_coeff)
     # gini_coeff = gini_coeff[~np.isnan(gini_coeff)]
     posterior_logprob = posterior_logprob[:, 0].exp().detach().numpy()
@@ -225,6 +227,6 @@ def plot_functionlearning_data_statistics(mode=0):
     plt.show()
 
     # # save corr, gini, posterior_logprob, and all_accuraries_linear for each mode in one .npz file
-    # if not os.path.exists(f'{SYS_PATH}/functionlearning/data/stats/stats_{str(mode)}.npz'):
-    #     np.savez(f'{SYS_PATH}/functionlearning/data/stats/stats_{str(mode)}.npz', all_corr=all_corr, gini_coeff=gini_coeff, posterior_logprob=posterior_logprob, all_accuraries_linear=all_accuraries_linear,
-    #              all_accuraries_polynomial=all_accuraries_polynomial, all_features_without_norm=all_features_without_norm, all_features_with_norm=all_features_with_norm)
+    if not os.path.exists(f'{SYS_PATH}/functionlearning/data/stats/stats_{str(mode)}.npz'):
+        np.savez(f'{SYS_PATH}/functionlearning/data/stats/stats_{str(mode)}.npz', all_corr=all_corr, gini_coeff=gini_coeff, posterior_logprob=posterior_logprob, all_accuraries_linear=all_accuraries_linear,
+                 all_accuraries_polynomial=all_accuraries_polynomial, all_targets_with_norm=all_targets_with_norm, all_features_with_norm=all_features_with_norm)
