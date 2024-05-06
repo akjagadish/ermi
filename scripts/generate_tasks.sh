@@ -18,7 +18,8 @@ export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 
 
 # python generate_tasks.py --model NA --task functionlearning --proc-id 0  --num-tasks 10 --start-task-id 0 --num-dim 1 --num-data 20 --max-length 100000 --run-gpt claude --prompt-version 2 --use-generated-tasklabels --file-name-tasklabels claude_synthesized_functionlearning_problems_paramsNA_dim1_tasks10_run0_procid0_pversion0  --path-tasklabels /u/ajagadish/ermi/categorisation/data/tasklabels
-python generate_data.py --model NA --task functionlearning --proc-id 0  --num-tasks 9991 --start-task-id 0 --num-dim 1 --num-data 20 --max-length 100000 --run-gpt claude --prompt-version 2 --file-name-tasklabels claude_synthesized_functionlearning_problems_paramsNA_dim1_tasks9991_pversion0  --path-tasklabels /u/ajagadish/ermi/functionlearning/data/synthesize_problems
+# python generate_data.py --model NA --task functionlearning --proc-id 0  --num-tasks 9991 --start-task-id 0 --num-dim 1 --num-data 20 --max-length 100000 --run-gpt claude --prompt-version 2 --file-name-tasklabels claude_synthesized_functionlearning_problems_paramsNA_dim1_tasks9991_pversion0  --path-tasklabels /u/ajagadish/ermi/functionlearning/data/synthesize_problems
+python generate_data.py --model NA --task functionlearning --proc-id 0  --num-tasks 9254 --start-task-id 0 --num-dim 2 --num-data 20 --max-length 100000 --run-gpt claude --prompt-version 2 --file-name-tasklabels claude_synthesized_functionlearning_problems_paramsNA_dim2_tasks9254_pversion0  --path-tasklabels /u/ajagadish/ermi/decisionmaking/data/synthesize_problems
 
 # prompt version 5, num-dim 4 iterative first and second stage
 
