@@ -33,6 +33,7 @@ pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropi
 clear
 tensorboard --logdir=runs/trained_models/ --port=6006
 
+## function learning or decision making
 module purge
 module load anaconda/3/2021.11
 module load gcc/11 impi/2021.6
