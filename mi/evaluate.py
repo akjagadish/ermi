@@ -1,11 +1,12 @@
 import numpy as np
 import torch
 from envs import FunctionlearningTask
+import torch.nn as nn
 # import argparse
 # from baseline_classifiers import LogisticRegressionModel, SVMModel
 
 
-def evaluate_regression(env_name=None, model_path=None, experiment='categorisation', env=None, model=None, mode='val', shuffle_trials=False, policy='binomial', beta=1., max_steps=70, nonlinear=False, num_dims=3, device='cpu', return_all=False):
+def evaluate_regression(env_name=None, model_path=None, experiment='llm_generated', env=None, model=None, mode='val', shuffle_trials=False, loss='mse', beta=1., max_steps=70, nonlinear=False, num_dims=3, device='cpu', return_all=False):
 
     if env is None:
         # load environment
@@ -23,20 +24,42 @@ def evaluate_regression(env_name=None, model_path=None, experiment='categorisati
     with torch.no_grad():
         model.eval()
         packed_inputs, sequence_lengths, targets = env.sample_batch()
-        model.beta = beta  # model beta is adjustable at test time
         model.device = device
-        model_choices = model(
-            packed_inputs.float().to(device), sequence_lengths)
 
-        # TODO: this reshaping limits the future possilibites chagne it
-        model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
-            sequence_lengths)], axis=0).squeeze().float()
-        true_choices = targets.reshape(-1).float().to(device) if (
-            experiment == 'synthetic') else torch.concat(targets, axis=0).float().to(device)
-        targets = None
-        accuracy = model.criterion(model_choices, true_choices)
+        # model_choices = model(
+        #     packed_inputs.float().to(device), sequence_lengths)
+        # # TODO: this reshaping limits the future possilibites chagne it
+        # model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
+        #     sequence_lengths)], axis=0).squeeze().float()
+        # true_choices = targets.reshape(-1).float().to(device) if (
+        #     experiment == 'synthetic') else torch.concat(targets, axis=0).float().to(device)
+        # target = None
+        # accuracy = model.criterion(model_choices, true_choices)
+
+        # predictive_posterior = model(
+        #     packed_inputs.float().to(device), sequence_lengths)
+        # accuracy = predictive_posterior.log_prob(
+        #     torch.stack(targets).unsqueeze(2).float().to(device)).mean()
+        # model_choices, true_choices = predictive_posterior.mean, torch.stack(
+        #     targets).float().to(device)
+        if loss == 'mse':
+            criterion = nn.MSELoss()
+            predictive_posterior = model(
+                packed_inputs, sequence_lengths)
+            model_preds = predictive_posterior.mean
+            model_preds = torch.concat([model_preds[i, :seq_len] for i, seq_len in enumerate(
+                sequence_lengths)], axis=0).squeeze().float()
+            true_targets = torch.concat(
+                targets, axis=0).float().to(device)
+            accuracy = criterion(model_preds, true_targets)
+        elif loss == 'nll':
+            predictive_posterior = model(
+                packed_inputs, sequence_lengths)
+            accuracy = - \
+                predictive_posterior.log_prob(
+                    torch.stack(targets).unsqueeze(2).float().to(device)).mean()
 
     if return_all:
-        return accuracy, model_choices, true_choices, sequence_lengths, targets
+        return accuracy, None, None, sequence_lengths, targets  # model_preds, true_targets
     else:
         return accuracy

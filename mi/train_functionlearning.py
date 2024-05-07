@@ -11,7 +11,7 @@ from tqdm import tqdm
 from evaluate import evaluate_regression
 
 
-def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic, nonlinear, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, save_dir, device, lr, batch_size=64):
+def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic, nonlinear, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss, save_dir, device, lr, batch_size=64):
 
     writer = SummaryWriter('runs/' + save_dir)
     if synthetic:
@@ -28,7 +28,7 @@ def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic,
         start_id = restart_episode_id
     else:
         model = TransformerDecoderRegression(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
-                                             num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=max_steps, device=device).to(device)
+                                             num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=max_steps, loss=loss, device=device).to(device)
         start_id = 0
 
     # setup optimizer
@@ -38,15 +38,24 @@ def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic,
 
     # train for num_episodes
     for t in tqdm(range(start_id, int(num_episodes))):
-
+        # TODO: nll loss only works for sample_to_match_max_steps=True
         packed_inputs, sequence_lengths, targets = env.sample_batch()
-        model_choices = model(packed_inputs, sequence_lengths)
-        model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
-            sequence_lengths)], axis=0).squeeze().float()
-        true_choices = torch.concat(targets, axis=0).float().to(device)
+        # if loss == 'mse':  # mse loss
+        #     model_choices = model(packed_inputs, sequence_lengths)
+        #     model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
+        #         sequence_lengths)], axis=0).squeeze().float()
+        #     true_choices = torch.concat(targets, axis=0).float().to(device)
+        #     loss = model.compute_loss(model_choices, true_choices)
+        # elif loss == 'nll':  # nll loss
+        #     predictive_posterior = model(packed_inputs, sequence_lengths)
+        #     loss = - \
+        #         predictive_posterior.log_prob(
+        #             torch.stack(targets).unsqueeze(2).float().to(device)).mean()
+        # else:
+        #     raise ValueError('loss must be either mse or nll')
+        loss = model.compute_loss(packed_inputs, targets, sequence_lengths)
 
-        # gradient step
-        loss = model.compute_loss(model_choices, true_choices)
+        # backprop
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -61,9 +70,9 @@ def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic,
             torch.save([t, model], save_dir)
             experiment = 'synthetic' if synthetic else 'llm_generated'
             acc = evaluate_regression(env_name=env_name, model_path=save_dir, experiment=experiment,
-                                      env=env, model=model, mode='val', shuffle_trials=shuffle, max_steps=max_steps, nonlinear=nonlinear, num_dims=num_dims, device=device)
+                                      env=env, model=model, mode='val', loss='mse', shuffle_trials=shuffle, max_steps=max_steps, nonlinear=nonlinear, num_dims=num_dims, device=device)
             accuracy.append(acc)
-            writer.add_scalar('Val. Acc.', acc, t)
+            writer.add_scalar('MSE', acc, t)
 
     return losses, accuracy
 
@@ -96,6 +105,7 @@ if __name__ == "__main__":
                         help='dimension of the model')
     parser.add_argument('--num_head', type=int,
                         default=4, help='number of heads')
+    parser.add_argument('--loss', default='nll', help='loss function')
     parser.add_argument('--no-cuda', action='store_true',
                         default=False, help='disables CUDA training')
     parser.add_argument(
@@ -142,4 +152,4 @@ if __name__ == "__main__":
             '.pt', '_test.pt') if args.test else save_dir
 
         run(env_name, args.restart_training, args.restart_episode_id, args.num_episodes, args.synthetic, args.nonlinear, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
-            args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, save_dir, device, args.lr, args.batch_size)
+            args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, args.batch_size)
