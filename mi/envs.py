@@ -218,3 +218,87 @@ class DecisionmakingTask(nn.Module):
 
         return packed_inputs.to(self.device), sequence_lengths, stacked_targets
 
+
+
+class Binz2022(nn.Module):
+    """
+    load human data from Binz et al. 2022
+    """
+
+    def __init__(self, noise=0., experiment_id=3, device='cpu'):
+        super(Binz2022, self).__init__()
+        DATA_PATH = f'{SYS_PATH}/decisionmaking/data/human'
+        self.device = torch.device(device)
+        self.experiment_id = experiment_id
+        self.data = pd.read_csv(
+            f'{DATA_PATH}/binz2022heuristics_exp{experiment_id}.csv')
+        self.num_choices = 1
+        self.num_dims = 2 if experiment_id == 3 else 4
+        self.noise = noise
+
+    def sample_batch(self, participant):
+
+        stacked_task_features, stacked_targets, stacked_human_targets = self.get_participant_data(
+            participant)
+        sequence_lengths = [len(data)for data in stacked_task_features]
+        packed_inputs = rnn_utils.pad_sequence(
+            stacked_task_features, batch_first=True)
+        padded_targets = rnn_utils.pad_sequence(
+            stacked_targets, batch_first=True)
+        padded_human_targets = rnn_utils.pad_sequence(
+            stacked_human_targets, batch_first=True)
+
+        return packed_inputs, sequence_lengths, padded_targets, padded_human_targets, None
+
+    def get_participant_data(self, participant):
+
+        inputs_list, targets_list, human_targets_list = [], [], []
+
+        # get data for the participant
+        data_participant = self.data[self.data['participant'] == participant]
+
+        for task_id in data_participant.task.unique():
+
+            # filter data for the task
+            data_participant_per_task = data_participant[data_participant.task == task_id]
+
+            # get features and targets for the task
+            input_features = data_participant_per_task[[
+                'x0', 'x1']].values if self.experiment_id == 3 else data_participant_per_task[['x0', 'x1', 'x2', 'x3']].values
+            human_targets = data_participant_per_task.choice.values
+            targets = data_participant_per_task.target.values
+
+            # max-min normalization each feature
+            input_features = (input_features - input_features.min(axis=0)) / \
+                (input_features.max(axis=0) - input_features.min(axis=0) + 1e-6)
+
+            # flip targets and humans choices
+            # if np.random.rand(1) > 0.5:
+            #     targets = 1. - targets
+            #     human_targets = 1. - human_targets
+
+            # concatenate all features and targets into one array with placed holder for shifted target
+            sampled_data = np.concatenate(
+                (input_features, targets.reshape(-1, 1), targets.reshape(-1, 1)), axis=1)
+
+            # replace placeholder with shifted targets to the sampled data array
+            sampled_data[:, self.num_dims] = np.concatenate((np.array(
+                [0. if np.random.rand(1) > 0.5 else 1.]), sampled_data[:-1, self.num_dims]))
+
+            # stacking all the sampled data across all tasks
+            inputs_list.append(torch.from_numpy(
+                sampled_data[:, :(self.num_dims+1)]))
+            targets_list.append(torch.from_numpy(
+                sampled_data[:, [self.num_dims+1]]))
+            human_targets_list.append(
+                torch.from_numpy(human_targets.reshape(-1, 1)))
+
+        return inputs_list, targets_list, human_targets_list
+
+
+class Devraj2022(nn.Module):
+    pass
+
+
+class Badham2017(nn.Module):
+    pass
