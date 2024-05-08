@@ -175,39 +175,22 @@ class DecisionmakingTask(nn.Module):
         data = data.groupby('task_id').agg(
             {'input': list, 'target': list}).reset_index()
 
-        # # off set targets by 1 trial and randomly add zeros or ones in the beggining
-        # data['shifted_target'] = data['target'].apply(
-        #     lambda x: [torch.randn(1).item()] + x[:-1])
-
         def stacked_normalized(data):
             data = np.stack(data)
-            return (data - data.min())/(data.max() - data.min() + 1e-6)
-
-        # stacked_task_features = [
-        #     torch.from_numpy(
-        #         np.concatenate(
-        #             (
-        #                 np.diff(stacked_normalized(task_input_features).reshape(2, self.max_steps //
-        #                                                                         2, self.num_dims), axis=0).squeeze() if self.normalize else np.stack(
-        #                     task_input_features),
-        #                 np.diff(stacked_normalized(
-        #                     task_targets).reshape(-1, 1).reshape(2, self.max_steps //
-        #                                                          2, 1), axis=0).squeeze(0) if self.normalize else np.stack(task_targets).reshape(-1, 1)
-        #             ), axis=1)
-        #     )
-        #     for task_input_features, task_targets in zip(data.input.values, data.target.values)
-        # ]
+            return (data - data.min(axis=0))/(data.max(axis=0) - data.min(axis=0) + 1e-6)
 
         stacked_task_features = []
         for task_input_features, task_targets in zip(data.input.values, data.target.values):
             if self.normalize:
-                input_features = np.diff(stacked_normalized(task_input_features).reshape(
-                    2, self.max_steps // 2, self.num_dims), axis=0).squeeze()
-                targets = np.diff(stacked_normalized(
-                    task_targets).reshape(-1, 1).reshape(2, self.max_steps // 2, 1), axis=0).squeeze(0)
+                input_features = stacked_normalized(np.diff(np.stack(task_input_features).reshape(
+                    2, self.max_steps // 2, self.num_dims), axis=0).squeeze())
+                targets = stacked_normalized(np.diff(
+                    np.stack(task_targets).reshape(-1, 1).reshape(2, self.max_steps // 2, 1), axis=0).squeeze(0))
             else:
-                input_features = np.stack(task_input_features)
-                targets = np.stack(task_targets).reshape(-1, 1)
+                input_features = np.diff(np.stack(task_input_features).reshape(
+                    2, self.max_steps // 2, self.num_dims), axis=0).squeeze()
+                targets = np.diff(
+                    np.stack(task_targets).reshape(-1, 1).reshape(2, self.max_steps // 2, 1), axis=0).squeeze(0)
 
             concatenated_features = np.concatenate(
                 (input_features, targets), axis=1)
@@ -222,10 +205,6 @@ class DecisionmakingTask(nn.Module):
             (stacked_targets[:, 0].unsqueeze(1) * torch.bernoulli(torch.tensor(0.5)), stacked_targets[:, :-1]), dim=1)
         sequence_lengths = [len(task_input_features)
                             for task_input_features in stacked_targets]
-        # stacked_targets = [torch.from_numpy(
-        #     stacked_normalized(task_targets) if self.normalize else np.stack(task_targets)) for task_targets in data.target.values]
-        # sequence_lengths = [len(task_input_features)
-        #                     for task_input_features in data.input.values]
 
         packed_inputs = rnn_utils.pad_sequence(
             stacked_task_features, batch_first=True)
@@ -238,3 +217,4 @@ class DecisionmakingTask(nn.Module):
             packed_inputs[..., :-1] = task_features
 
         return packed_inputs.to(self.device), sequence_lengths, stacked_targets
+
