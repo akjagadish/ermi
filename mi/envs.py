@@ -198,7 +198,7 @@ class DecisionmakingTask(nn.Module):
             stacked_task_features.append(torch_features)
 
         stacked_task_features = torch.stack(stacked_task_features)
-        stacked_task_features[..., -1] = stacked_task_features[..., -1] > 0.
+        stacked_task_features[..., -1] = stacked_task_features[..., -1] > 0.5
         stacked_targets = stacked_task_features[..., -1].clone()
         # shift the targets by 1 step for all tasks
         stacked_task_features[..., -1] = torch.cat(
