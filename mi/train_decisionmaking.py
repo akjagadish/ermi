@@ -4,7 +4,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import os
 from torch.utils.tensorboard import SummaryWriter
-from envs import DecisionmakingTask
+from envs import DecisionmakingTask, SyntheticDecisionmakingTask
 from model import TransformerDecoderClassification
 import argparse
 from tqdm import tqdm
@@ -15,10 +15,13 @@ def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic,
 
     writer = SummaryWriter('runs/' + save_dir)
     if synthetic:
-        raise NotImplementedError
+        env = SyntheticDecisionmakingTask(num_dims=num_dims, max_steps=max_steps, batch_size=batch_size, noise=noise,
+                                          device=device).to(device)
+        model_max_steps = env.max_steps
     else:
         env = DecisionmakingTask(data=env_name, num_dims=num_dims, max_steps=max_steps, sample_to_match_max_steps=sample_to_match_max_steps,
                                  batch_size=batch_size, noise=noise, shuffle_trials=shuffle, shuffle_features=shuffle_features, device=device).to(device)
+        model_max_steps = env.max_steps//2
 
     # setup model
     if restart_training and os.path.exists(save_dir):
@@ -28,7 +31,7 @@ def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic,
         start_id = restart_episode_id
     else:
         model = TransformerDecoderClassification(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
-                                                 num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=max_steps//2, loss=loss_fn, device=device).to(device)
+                                                 num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
         start_id = 0
 
     # setup optimizer
@@ -41,7 +44,6 @@ def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic,
 
         # TODO: nll loss only works for sample_to_match_max_steps=True
         packed_inputs, sequence_lengths, targets = env.sample_batch()
-
         loss = model.compute_loss(packed_inputs, targets, sequence_lengths)
 
         # backprop
@@ -98,9 +100,9 @@ if __name__ == "__main__":
     parser.add_argument('--no-cuda', action='store_true',
                         default=False, help='disables CUDA training')
     parser.add_argument(
-        '--env-name', required=True, help='name of the environment')
+        '--env-name', required=False, help='name of the environment')
     parser.add_argument(
-        '--env-dir', help='name of the environment', required=True)
+        '--env-dir', help='name of the environment', required=False)
     parser.add_argument(
         '--save-dir', help='directory to save models', required=True)
     parser.add_argument('--test', action='store_true',
@@ -128,11 +130,11 @@ if __name__ == "__main__":
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")  # "cpu" #
     # if args.env_name is None else args.env_name
-    env_name = f'/{args.env_dir}/{args.env_name}.csv'
+    env_name = 'synthetic' if args.synthetic else f'/{args.env_dir}/{args.env_name}.csv'
 
     for i in range(args.runs):
 
-        save_dir = f'{args.save_dir}env={args.env_name}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_run={str(args.first_run_id + i)}.pt'
+        save_dir = f'{args.save_dir}env={env_name}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_run={str(args.first_run_id + i)}.pt'
 
         if args.synthetic:
             save_dir = save_dir.replace(

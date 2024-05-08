@@ -3,9 +3,11 @@ import pandas as pd
 import torch.nn as nn
 import torch
 import torch.nn.utils.rnn as rnn_utils
-from torch.distributions import Beta, Bernoulli, Categorical
+from torch.distributions import Beta, Bernoulli, Categorical, MultivariateNormal
 import torch.multiprocessing as mp
 from model_utils import MLP
+import math
+from pyro.distributions.lkj import LKJCorrCholesky
 SYS_PATH = '/u/ajagadish/ermi/'
 
 
@@ -216,8 +218,106 @@ class DecisionmakingTask(nn.Module):
                 task_features.shape[2])]
             packed_inputs[..., :-1] = task_features
 
-        return packed_inputs.to(self.device), sequence_lengths, stacked_targets
+        return packed_inputs.detach().to(self.device), sequence_lengths, stacked_targets.detach().to(self.device)
 
+
+class SyntheticDecisionmakingTask(nn.Module):
+    " Synthetic decision making task"
+
+    def __init__(self, num_dims=2, num_choices=1, direction=False, ranking=False, dichotomized=False, max_steps=10, batch_size=64, mode='train', num_tasks=10000, split=[0.8, 0.1, 0.1], noise=0., device='cpu'):
+        " Initialize the environment"
+        super(SyntheticDecisionmakingTask, self).__init__()
+        self.num_dims = num_dims
+        self.num_choices = num_choices
+        self.max_steps = max_steps
+
+        self.direction = direction
+        self.ranking = ranking
+        self.dichotomized = dichotomized
+
+        self.sigma = math.sqrt(0.01)
+        self.theta = 1.0 * torch.ones(num_dims)
+        self.cov_prior = LKJCorrCholesky(num_dims, eta=2.0 * torch.ones(1))
+
+        self.mode = mode
+        self.batch_size = batch_size if mode == 'train' else 1000
+        # TODO: now we are not controlling for the number of tasks as we are generating task on the fly
+        self.num_tasks = num_tasks
+        self.split = (torch.tensor(
+            [split[0], split[0]+split[1], split[0]+split[1]+split[2]]) * self.num_tasks).int()
+        self.noise = noise
+        self.device = torch.device(device)
+
+    def sample_pair(self, weights, L):
+        L = L.squeeze()
+        inputs_a = MultivariateNormal(torch.zeros(self.num_dims), scale_tril=torch.mm(
+            torch.diag(torch.sqrt(self.theta)), L)).sample()
+        inputs_b = MultivariateNormal(torch.zeros(self.num_dims), scale_tril=torch.mm(
+            torch.diag(torch.sqrt(self.theta)), L)).sample()
+        if self.dichotomized:
+            inputs_a = (inputs_a > 0).float()
+            inputs_b = (inputs_b > 0).float()
+        inputs = inputs_a - inputs_b
+        targets = torch.bernoulli(
+            0.5 * torch.erfc(-(weights * inputs).sum(-1, keepdim=True) / (2 * self.sigma)))
+
+        return inputs, targets, inputs_a, inputs_b
+
+    def sample_batch(self):
+        support_inputs = torch.zeros(
+            self.max_steps, self.batch_size, self.num_dims)
+        stacked_task_features = torch.zeros(
+            self.max_steps, self.batch_size, self.num_dims+self.num_choices)
+        support_inputs_a = torch.zeros(
+            self.max_steps, self.batch_size, self.num_dims)
+        support_inputs_b = torch.zeros(
+            self.max_steps, self.batch_size, self.num_dims)
+        support_targets = torch.zeros(
+            self.max_steps, self.batch_size, self.num_choices)
+        self.weights = torch.zeros(self.batch_size, self.num_dims)
+
+        for i in range(self.batch_size):
+            if self.direction:
+                weights = torch.randn(self.num_dims).abs()
+            else:
+                weights = torch.randn(self.num_dims)
+
+            if self.ranking:
+                absolutes = torch.abs(weights)
+                _, feature_perm = torch.sort(absolutes, dim=0, descending=True)
+                weights = weights[feature_perm]
+
+            L = self.cov_prior.sample()
+            self.weights[i] = weights.clone()
+            for j in range(self.max_steps):
+                support_inputs[j, i], support_targets[j, i], support_inputs_a[j,
+                                                                              i], support_inputs_b[j, i] = self.sample_pair(weights, L)
+
+        # this is a shitty hack to fix an earlier bug
+        if self.direction:
+            support_targets = 1 - support_targets
+
+        sequence_lengths = [self.max_steps] * self.batch_size
+
+        # max-min normalization each feature
+        support_inputs = (support_inputs - support_inputs.min(axis=0).values) / \
+            (support_inputs.max(axis=0).values -
+             support_inputs.min(axis=0).values + 1e-6)
+
+        stacked_task_features[..., :self.num_dims] = support_inputs
+
+        # permute the order of features to have batch_size as the first dimension
+        stacked_task_features = stacked_task_features.permute(1, 0, 2)
+        stacked_targets = support_targets.permute(1, 0, 2)
+        stacked_task_features[..., [-1]] = torch.cat(
+            (stacked_targets[:, -1].unsqueeze(1) * torch.bernoulli(torch.tensor(0.5)), stacked_targets[:, :-1]), dim=1)
+
+        # pad the sequence to have the same length
+        packed_inputs = rnn_utils.pad_sequence(
+            stacked_task_features, batch_first=True)
+
+        # support_inputs_a.detach().to(device), support_inputs_b.detach().to(device)
+        return packed_inputs.detach().to(self.device), sequence_lengths, stacked_targets.detach().to(self.device)
 
 
 class Binz2022(nn.Module):

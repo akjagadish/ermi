@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from envs import FunctionlearningTask, DecisionmakingTask
+from envs import FunctionlearningTask, DecisionmakingTask, SyntheticDecisionmakingTask
 import torch.nn as nn
 # import argparse
 # from baseline_classifiers import LogisticRegressionModel, SVMModel
@@ -70,7 +70,8 @@ def evaluate_classification(env_name=None, model_path=None, experiment='llm_gene
     if env is None:
         # load environment
         if experiment == 'synthetic':
-            raise NotImplementedError
+            env = SyntheticDecisionmakingTask(num_dims=num_dims,  mode=mode, max_steps=max_steps,
+                                              device=device).to(device)
         elif experiment == 'llm_generated':
             env = DecisionmakingTask(data=env_name, num_dims=num_dims,
                                      mode=mode, max_steps=max_steps, shuffle_trials=shuffle_trials)
