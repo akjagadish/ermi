@@ -177,11 +177,10 @@ def optimize(args):
         raise NotImplementedError
 
     pr2s, nlls, accs, parameters = [], [], [], []
-    NUM_ITERS = 5
     participants = env.data.participant.unique()
     for participant in participants:
         res_fun = np.inf
-        for _ in tqdm(range(NUM_ITERS)):
+        for _ in tqdm(range(args.num_iters)):
 
             # x0 = [np.random.uniform(x, y) for x, y in bounds]
             # result = minimize(objective, x0, args=(participant), bounds=bounds, method='SLSQP')
@@ -223,6 +222,8 @@ if __name__ == '__main__':
                         help='method for computing model choice probabilities')
     parser.add_argument('--optimizer', action='store_true',
                         default=False, help='find optimal beta using optimizer')
+    parser.add_argument('--num-iters', type=int, default=5)
+
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
