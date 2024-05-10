@@ -130,12 +130,11 @@ if __name__ == "__main__":
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")  # "cpu" #
     # if args.env_name is None else args.env_name
-    env_name = 'synthetic' if args.synthetic else f'/{args.env_dir}/{args.env_name}.csv'
+    env_name = f'/{args.env_dir}/{args.env_name}.csv'
 
     for i in range(args.runs):
 
-        save_dir = f'{args.save_dir}env={env_name}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_run={str(args.first_run_id + i)}.pt'
-
+        save_dir = f'{args.save_dir}env={args.env_name}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_run={str(args.first_run_id + i)}.pt'
         if args.synthetic:
             save_dir = save_dir.replace(
                 '.pt', f'_synthetic{"nonlinear" if args.nonlinear else ""}.pt')
