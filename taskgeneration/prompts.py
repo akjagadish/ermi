@@ -219,16 +219,26 @@ def synthesize_functionlearning_problems(model, version, num_dim=1, num_tasks=10
 
     instructions = {}
     features_to_text = {1: 'a real-world feature is mapped to its corresponding target, with both feature and target taking on continuous values',
-                        2: 'two real-world features are mapped to their corresponding target, with features and target taking on continuous values'}
+                        2: 'two real-world features are mapped to their corresponding target, with features and target taking on continuous values',
+                        4: 'four real-world features are mapped to their corresponding target, with features and target taking on continuous values'}
     format_to_text = {1: '- feature name, target name',
-                      2: '- feature name 1, feature name 2, target name'}
-    synthesize_feature_names_prompt_v0 = f" I am a psychologist who wants to run a function learning experiment. "\
-        f"In a function learning experiment, {features_to_text[num_dim]}."\
-        f" Please generate names for features and its corresponding target for {str(num_tasks)} different function learning experiments: \n"\
+                      2: '- feature name 1, feature name 2, target name',
+                      4: '- feature name 1, feature name 2, feature name 3, feature name 4, target name'}
+
+    order_of_features = {'v0': '',
+                         'vranked': '. Additionally, order the feature names according to how well they predict the target',
+                         'vdirection': '. Additionally, the features should be such that higher feature values lead to higher target values',
+                         }
+
+    synthesize_feature_names_prompt_v0 = f" I am a psychologist who wants to run a function learning experiment."\
+        f" In a function learning experiment, {features_to_text[num_dim]}."\
+        f" Please generate names for features and its corresponding target for {str(num_tasks)} different function learning experiments{order_of_features[version]}: \n"\
         f"{format_to_text[num_dim]} \n"
 
     instructions['claude'] = {}
     instructions['claude']['v0'] = synthesize_feature_names_prompt_v0
+    instructions['claude']['vranked'] = synthesize_feature_names_prompt_v0
+    instructions['claude']['vdirection'] = synthesize_feature_names_prompt_v0
 
     return instructions[model][version]
 

@@ -144,7 +144,9 @@ if __name__ == "__main__":
         patterns = [
             # r'\d+\.(.+?)\n',
             r'([A-Za-z&]+),([A-Za-z&]+)',
-            r'([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+)'
+            r'([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+)',
+            None,
+            r'([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+)'
         ]
 
         # load LLaMA model and instructions
