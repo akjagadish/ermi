@@ -293,7 +293,8 @@ def generate_data_functionlearning_problems(model, version, num_data=20, num_dim
             return f'feature in this case is {features[0].lower()}', 'The feature takes', '- feature value, target value'
         elif num_dim == 2:
             return f'features in this case are {features[0].lower()} and {features[1].lower()}', 'These features take', '- feature value 1, feature value 2, target value'
-
+        elif num_dim == 4:
+            return f'features in this case are {features[0].lower()}, {features[1].lower()}, {features[2].lower()}, and {features[3].lower()}', 'These features take', '- feature value 1, feature value 2, feature value 3, feature value 4, target value'
     feature_text, style, template = featurenames_to_text(features, num_dim)
     generate_data_prompt_v2 = f" I am a psychologist who wants to run a function learning experiment."\
         " For a function learning experiment, I need a list of features with their corresponding target."\

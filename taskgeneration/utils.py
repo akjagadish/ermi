@@ -325,27 +325,12 @@ def get_all_regex_patterns(num_dim, prompt_version, task_name):
     Returns:
         patterns: list of regex patterns
     '''
-    if (num_dim == 1 and prompt_version == 2) and task_name == 'functionlearning':
-        regex_expressions = [r'([\d.]+),([\d.]+)',
-                             # r'([\w\-]+),([\w]+)',
-                             # r'([\w\-]+),([\d.]+)',
-                             # r'([-\w\d,.]+),([-\w\d,.]+)',
-                             #  r'([^,]+),([^,]+)',
-                             #  r'([^,\n]+),([^,\n]+)',
-                             #  r'(?:.*?:)?([^,-]+),([^,-]+)',
-                             #  r'([^,-]+),([^,-]+)',
-                             ]
 
-    elif (num_dim == 2 and prompt_version == 2) and task_name == 'functionlearning':
-        regex_expressions = [r'([\d.]+),([\d.]+),([\d.]+)',
-                             #  r'([\w\-]+),([\w\-]+),([\w]+)',
-                             #  r'([-\w\d,.]+),([-\w\d,.]+),([-\w\d,.]+)',
-                             #  r'([^,]+),([^,]+),([^,]+)',
-                             #  r'([^,\n]+),([^,\n]+),([^,\n]+)',
-                             #  r'(?:.*?:)?([^,-]+),([^,-]+),([^,-]+)',
-                             #  r'([^,-]+),([^,-]+),([^,-]+)',
-                             ]
-
+    if task_name == 'functionlearning':
+        assert (prompt_version == 2), 'only prompt version 2 is supported'
+        regex_expressions = [r'([\d.]+),' * num_dim + r'([\d.]+)']
+    else:
+        raise NotImplementedError
     patterns = regex_expressions
 
     return patterns
