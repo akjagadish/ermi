@@ -1,6 +1,6 @@
 import openml
 from sklearn import preprocessing
-from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.feature_selection import SelectKBest, f_regression
 import numpy as np
 import pandas as pd
 
@@ -29,7 +29,7 @@ def save_real_data(k=2, num_points=650):
 
             # Select the best feature
             features = SelectKBest(
-                f_classif, k=k).fit_transform(features, targets)
+                f_regression, k=k).fit_transform(features, targets)
 
             if features.shape[0] < num_points:
                 xs = [features]
