@@ -181,7 +181,7 @@ if __name__ == "__main__":
 
     # get regex patterns
     patterns = get_all_regex_patterns(
-        num_dim=num_dim, prompt_version=int(prompt_version), task_name=args.task)
+        num_dim=num_dim, prompt_version=prompt_version, task_name=args.task)
 
     # load LLaMA model and instructions
     if run_gpt == 'llama':

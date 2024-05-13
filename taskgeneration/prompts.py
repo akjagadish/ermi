@@ -307,9 +307,44 @@ def generate_data_functionlearning_problems(model, version, num_data=20, num_dim
         f" {template} \n"\
         f" Please do not produce any units; values taken by features and targets do not need to be ordered."
 
+    order_of_features = {'v2': '',
+                         'vranked': 'Note that the features are listed according to how well each of them can predict the target.',
+                         'vdirection': 'Note that the values taken by the features should be such that higher feature values lead to higher target values.',
+                         }
+    generate_data_prompt_v3 = " I am a psychologist who wants to run a function learning experiment."\
+        " For a function learning experiment, I need a list of features with their corresponding target."\
+        f" The {feature_text}."\
+        f" {style} on only numerical values and must be continuous."\
+        f" The target, {target.lower()}, should be predictable from the feature values and must also take on continuous values."\
+        f" {order_of_features[version]}"\
+        " \n\n"\
+        f" Please generate a list of {str(num_data)} feature-target pairs"\
+        " sequentially using the following template for each row: \n"\
+        f" {template} \n"\
+        " Please do not produce any units; values taken by features and targets do not need to be sorted."
+
+    order_of_features = {'vunknown': '',
+                         'vranked': 'Note that the features are listed according to how well each of them can predict the target. The first feature is most useful to predict the target, the second feature is the second most useful, and so on.',
+                         'vdirection': 'Note that the values taken by the features should be such that higher feature values lead to higher target values.',
+                         }
+    generate_data_prompt_v4 = " I am a psychologist who wants to run a function learning experiment."\
+        " For a function learning experiment, I need a list of features with their corresponding target."\
+        f" The {feature_text}."\
+        f" {style} on only numerical values and must be continuous."\
+        f" The target, {target.lower()}, should be predictable from the feature values and must also take on continuous values."\
+        f" {order_of_features[version]}"\
+        " \n\n"\
+        f" Please generate a list of {str(num_data)} feature-target pairs"\
+        " sequentially using the following template for each row: \n"\
+        f" {template} \n"\
+        " Please do not produce any units and shuffle the order of items in the list."
+
     instructions['claude']['v0'] = generate_data_prompt_v0
     instructions['claude']['v1'] = generate_data_prompt_v1
     instructions['claude']['v2'] = generate_data_prompt_v2
+    instructions['claude']['vranked'] = generate_data_prompt_v4
+    instructions['claude']['vdirection'] = generate_data_prompt_v4
+    instructions['claude']['vunknown'] = generate_data_prompt_v4
 
     return instructions[model][version]
 

@@ -327,7 +327,9 @@ def get_all_regex_patterns(num_dim, prompt_version, task_name):
     '''
 
     if task_name == 'functionlearning':
-        assert (prompt_version == 2), 'only prompt version 2 is supported'
+        assert (prompt_version == 2) or (prompt_version ==
+                                         'ranked') or (prompt_version ==
+                                                       'direction'), 'only prompt versions 2, ranked and direction are supported for function learning'
         regex_expressions = [r'([\d.]+),' * num_dim + r'([\d.]+)']
     else:
         raise NotImplementedError
