@@ -18,7 +18,7 @@ sys.path.append(f"{SYS_PATH}/decisionmaking/data")
 FONTSIZE = 20
 
 
-def plot_decisionmaking_data_statistics(mode=0):
+def plot_decisionmaking_data_statistics(mode=0, dim=4, condition='unkown'):
 
     from sklearn.preprocessing import PolynomialFeatures
     import statsmodels.api as sm
@@ -33,7 +33,7 @@ def plot_decisionmaking_data_statistics(mode=0):
         # if bic is an array return item else return bic
         return bic.item() if isinstance(bic, np.ndarray) else bic
 
-    def return_data_stats(data, poly_degree=2, first=False):
+    def return_data_stats(data, poly_degree=2, first=False, dim=dim, include_bias=True):
 
         df = data.copy()
         max_tasks = 400
@@ -42,6 +42,7 @@ def plot_decisionmaking_data_statistics(mode=0):
         tasks = range(0, max_tasks) if first else np.random.choice(
             df.task_id.unique(), max_tasks, replace=False)
         all_corr, all_bics_linear, all_bics_quadratic, gini_coeff, all_accuraries_linear, all_accuraries_polynomial = [], [], [], [], [], []
+        sign_coeff, direction_coeff = [], []
         all_features_without_norm, all_features_with_norm, all_targets_with_norm = np.array(
             []), np.array([]), np.array([])
         for i in tasks:
@@ -50,15 +51,16 @@ def plot_decisionmaking_data_statistics(mode=0):
                 y = df_task['target'].to_numpy()
                 X = df_task["input"].to_numpy()
                 X = np.stack(X)
-                X = (X - X.min())/(X.max() - X.min() + 1e-6)
-                y = (y - y.min())/(y.max() - y.min() + 1e-6)
+                X = (X - X.min(axis=0))/(X.max(axis=0) - X.min(axis=0) + 1e-6)
+                y = (y - y.min(axis=0))/(y.max(axis=0) - y.min(axis=0) + 1e-6)
 
-                all_corr.append(np.corrcoef(X[:, 0], X[:, 1])[0, 1])
+                # all_corr.append(np.corrcoef(X[:, 0], X[:, 1])[0, 1])
                 # all_corr.append(np.corrcoef(X[:, 0], X[:, 2])[0, 1])
-                # all_corr.append(np.corrcoef(X[:, 1], X[:, 2])[0, 1])
                 # all_corr.append(np.corrcoef(X[:, 0], X[:, 3])[0, 1])
+                # all_corr.append(np.corrcoef(X[:, 1], X[:, 2])[0, 1])
                 # all_corr.append(np.corrcoef(X[:, 1], X[:, 3])[0, 1])
                 # all_corr.append(np.corrcoef(X[:, 2], X[:, 3])[0, 1])
+                all_corr.append(np.corrcoef(X.T)[np.triu_indices(dim, k=1)])
 
                 all_features_with_norm = np.concatenate(
                     [all_features_with_norm, X.flatten()])
@@ -70,7 +72,7 @@ def plot_decisionmaking_data_statistics(mode=0):
                 else:
                     # X_linear = PolynomialFeatures(1).fit_transform(X)
                     X_linear = PolynomialFeatures(
-                        1, include_bias=False).fit_transform(X)
+                        1, include_bias=include_bias).fit_transform(X)
 
                     # # linear regression from X_linear to y
                     # linear_regresion = sm.OLS(y, X_linear).fit()
@@ -79,6 +81,22 @@ def plot_decisionmaking_data_statistics(mode=0):
                     # X_poly = PolynomialFeatures(
                     #     poly_degree, interaction_only=True, include_bias=False).fit_transform(X)
                     # polynomial_regression = sm.OLS(y, X_poly).fit()
+
+                    # gini coefficient from linear regression coefficients
+                    params = sm.OLS(y, X_linear).fit().params
+                    gini_coeff.append(gini_compute(
+                        np.abs(params[1 if include_bias else 0:])))
+
+                    per_feature_params = np.zeros((dim))
+                    for i in range(dim):
+                        per_feature_params[i] = sm.OLS(
+                            y, X_linear[:, [0, i+1]]).fit().params[1 if include_bias else 0]
+
+                    # sign of the coefficients
+                    sign_coeff.append(np.sign(per_feature_params))
+
+                    # direction of the coefficients
+                    direction_coeff.append(per_feature_params)
 
                     # fit gaussian process with linear kernel to X_linear and y
                     from sklearn.gaussian_process import GaussianProcessRegressor
@@ -143,11 +161,16 @@ def plot_decisionmaking_data_statistics(mode=0):
         marginal_logprob = torch.logsumexp(joint_logprob, dim=1, keepdim=True)
         posterior_logprob = joint_logprob - marginal_logprob
 
-        return all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial, all_targets_with_norm, all_features_with_norm
+        return all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial, all_targets_with_norm, all_features_with_norm, sign_coeff, direction_coeff
 
     # set env_name and color_stats based on mode
     if mode == 0:
-        env_name = f'{SYS_PATH}/decisionmaking/data/claude_generated_functionlearningtasks_paramsNA_dim2_data20_tasks9254_run0_procid0_pversion2'
+        if dim == 2:
+            env_name = f'{SYS_PATH}/decisionmaking/data/claude_generated_functionlearningtasks_paramsNA_dim2_data20_tasks9254_run0_procid0_pversion2_{condition}'
+        elif dim == 4:
+            num_tasks = 8770 if condition == 'ranked' else 8220
+            # env_name = f'{SYS_PATH}/decisionmaking/data/claude_generated_functionlearningtasks_paramsNA_dim4_data20_tasks{num_tasks}_run0_procid0_pversion2_{condition}'
+            env_name = f'{SYS_PATH}/decisionmaking/data/claude_generated_functionlearningtasks_paramsNA_dim4_data20_tasks{num_tasks}_run0_procid0_pversion{condition}'
         color_stats = '#405A63'  # '#2F4A5A'# '#173b4f'
     # elif mode == 1:  # last plot
     #     env_name = f'{SYS_PATH}/decisionmaking/data/linear_data'
@@ -165,43 +188,48 @@ def plot_decisionmaking_data_statistics(mode=0):
     if mode == 2:
         data.target = data['target'].apply(lambda x: np.array(eval(x)))
 
-    if os.path.exists(f'{SYS_PATH}/decisionmaking/data/stats/stats_{str(mode)}.npz'):
+    if os.path.exists(f'{SYS_PATH}/decisionmaking/data/stats/stats_{str(mode)}_{str(dim)}_{condition}.npz'):
         stats = np.load(
-            f'{SYS_PATH}/decisionmaking/data/stats/stats_{str(mode)}.npz', allow_pickle=True)
+            f'{SYS_PATH}/decisionmaking/data/stats/stats_{str(mode)}_{str(dim)}_{condition}.npz', allow_pickle=True)
         all_corr, gini_coeff, posterior_logprob, all_accuraries_linear = stats['all_corr'], stats[
             'gini_coeff'], stats['posterior_logprob'], stats['all_accuraries_linear']
-        all_accuraries_polynomial, all_targets_with_norm, all_features_with_norm = stats[
-            'all_accuraries_polynomial'], stats['all_targets_with_norm'], stats['all_features_with_norm']
+        all_accuraries_polynomial, all_targets_with_norm, all_features_with_norm, sign_coeff, direction_coeff = stats[
+            'all_accuraries_polynomial'], stats['all_targets_with_norm'], stats['all_features_with_norm'], stats['sign_coeff'], stats['direction_coeff']
     else:
         all_corr, gini_coeff, posterior_logprob, all_accuraries_linear, all_accuraries_polynomial, \
-            all_targets_with_norm, all_features_with_norm = return_data_stats(
-                data)
-    # gini_coeff = np.array(gini_coeff)
-    # gini_coeff = gini_coeff[~np.isnan(gini_coeff)]
-    posterior_logprob = posterior_logprob[:, 0].exp().detach().numpy()
+            all_targets_with_norm, all_features_with_norm, sign_coeff, direction_coeff = return_data_stats(
+                data, dim=dim)
+
+    gini_coeff = np.array(gini_coeff)
+    gini_coeff = gini_coeff[~np.isnan(gini_coeff)]
+    all_corr = np.array(all_corr)
+    sign_coeff = np.array(sign_coeff)
+    # posterior_logprob = posterior_logprob[:, 0].exp().detach().numpy()
 
     FONTSIZE = 22  # 8
     fig, axs = plt.subplots(1, 4,  figsize=(6*4, 4))  # figsize=(6.75, 1.5))
-    axs[0].plot(all_accuraries_linear, color=color_stats, alpha=1., lw=3)
-    # axs[0].plot(all_accuraries_polynomial, alpha=0.7)
-    sns.histplot(np.array(all_features_with_norm), ax=axs[1], bins=11, binrange=(
+    sns.histplot(all_corr.reshape(-1), ax=axs[0], bins=11, binrange=(
         0., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
-    sns.histplot(np.stack(all_targets_with_norm).reshape(-1), ax=axs[2], bins=11, binrange=(
-        0., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
-    sns.histplot(posterior_logprob, ax=axs[3], bins=5, binrange=(
-        0.0, 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
-    # axs[1].set_xlim(-1, 1)
+    sns.histplot(gini_coeff, ax=axs[1], bins=11, binrange=(
+        0., gini_coeff.max()), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+    sns.histplot(np.argmax(np.stack(direction_coeff), axis=1), ax=axs[2], bins=dim, binrange=(
+        -0.5, dim-0.5), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+    sns.histplot(sign_coeff.reshape(-1), ax=axs[3], bins=3, binrange=(
+        -1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
 
-    axs[0].set_ylim(0., 1.05)
+    axs[0].set_ylim(0., 0.2)
     axs[1].set_ylim(0,  0.2)
-    axs[2].set_ylim(0,  0.2)
-    axs[2].set_xlim(0., 1.05)
-    axs[3].set_xlim(0., 1.05)
+    # axs[3].set_ylim(0,  0.75)
 
     # axs[0].set_yticks(np.arange(0.5, 1.05, 0.25))
     # axs[1].set_yticks(np.arange(0, 0.45, 0.2))
     # axs[2].set_yticks(np.arange(0, 0.4, 0.15))
-    axs[3].set_yticks(np.arange(0, 1.05, 0.5))
+    # axs[3].set_yticks(np.arange(0, 1.05, 0.5))
+
+    axs[2].set_xticks(np.arange(0, dim, 1))
+    axs[2].set_xticklabels([f"coef{i+1}" for i in range(dim)])
+    axs[3].set_xticks(np.arange(-1, 2, 1))
+    axs[3].set_xticklabels(['negative', '', 'positive'])
 
     # set tick size
     axs[0].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
@@ -209,31 +237,86 @@ def plot_decisionmaking_data_statistics(mode=0):
     axs[2].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
     axs[3].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
 
-    axs[0].set_ylabel('Squared Error', fontsize=FONTSIZE)
-    axs[1].set_ylabel('Proportion', fontsize=FONTSIZE)
+    axs[0].set_ylabel('Proportion', fontsize=FONTSIZE)
+    axs[1].set_ylabel('', fontsize=FONTSIZE)
     axs[2].set_ylabel('')
     axs[3].set_ylabel('')
 
     if mode == 3:
-        axs[0].set_xlabel('Trials', fontsize=FONTSIZE)
-        axs[1].set_xlabel('Input', fontsize=FONTSIZE)
-        axs[2].set_xlabel('Target', fontsize=FONTSIZE)
-        axs[3].set_xlabel('Posterior probability ', fontsize=FONTSIZE)
+        axs[0].set_xlabel('Pearson\'s r', fontsize=FONTSIZE)
+        axs[1].set_xlabel('Gini coefficient', fontsize=FONTSIZE)
+        axs[2].set_xlabel('Regression coefficient', fontsize=FONTSIZE)
+        axs[3].set_xlabel('Sign of regression coefficient', fontsize=FONTSIZE)
 
     # set title
     if mode == 2:
-        axs[0].set_title('Performance', fontsize=FONTSIZE)
-        axs[1].set_title('Input distribution', fontsize=FONTSIZE)
-        axs[2].set_title('Target distribution', fontsize=FONTSIZE)
-        axs[3].set_title('Linearity', fontsize=FONTSIZE)
+        axs[0].set_title('Input Correlation', fontsize=FONTSIZE)
+        axs[1].set_title('Sparsity', fontsize=FONTSIZE)
+        axs[2].set_title('Ranking', fontsize=FONTSIZE)
+        axs[3].set_title('Direction', fontsize=FONTSIZE)
 
     plt.tight_layout()
     sns.despine()
-    plt.savefig(f'{SYS_PATH}/figures/decisionmaking_stats_' +
-                str(mode) + '.svg', bbox_inches='tight')
+    plt.savefig(
+        f'{SYS_PATH}/figures/decisionmaking_stats_{str(mode)}_{str(dim)}_{condition}.svg', bbox_inches='tight')
     plt.show()
 
-    # # save corr, gini, posterior_logprob, and all_accuraries_linear for each mode in one .npz file
-    if not os.path.exists(f'{SYS_PATH}/decisionmaking/data/stats/stats_{str(mode)}.npz'):
-        np.savez(f'{SYS_PATH}/decisionmaking/data/stats/stats_{str(mode)}.npz', all_corr=all_corr, gini_coeff=gini_coeff, posterior_logprob=posterior_logprob, all_accuraries_linear=all_accuraries_linear,
-                 all_accuraries_polynomial=all_accuraries_polynomial, all_targets_with_norm=all_targets_with_norm, all_features_with_norm=all_features_with_norm)
+    # FONTSIZE = 22  # 8
+    # fig, axs = plt.subplots(1, 4,  figsize=(6*4, 4))  # figsize=(6.75, 1.5))
+    # axs[0].plot(all_accuraries_linear, color=color_stats, alpha=1., lw=3)
+    # # axs[0].plot(all_accuraries_polynomial, alpha=0.7)
+    # sns.histplot(np.stack(all_corr), ax=axs[1], bins=11, binrange=(
+    #     0., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+    # sns.histplot(np.stack(all_targets_with_norm).reshape(-1), ax=axs[2], bins=11, binrange=(
+    #     0., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+    # sns.histplot(posterior_logprob, ax=axs[3], bins=5, binrange=(
+    #     0.0, 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+    # # axs[1].set_xlim(-1, 1)
+
+    # axs[0].set_ylim(0., 1.05)
+    # axs[1].set_ylim(0,  0.2)
+    # axs[2].set_ylim(0,  0.2)
+    # axs[2].set_xlim(0., 1.05)
+    # axs[3].set_xlim(0., 1.05)
+
+    # # axs[0].set_yticks(np.arange(0.5, 1.05, 0.25))
+    # # axs[1].set_yticks(np.arange(0, 0.45, 0.2))
+    # # axs[2].set_yticks(np.arange(0, 0.4, 0.15))
+    # axs[3].set_yticks(np.arange(0, 1.05, 0.5))
+
+    # # set tick size
+    # axs[0].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    # axs[1].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    # axs[2].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+    # axs[3].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)
+
+    # axs[0].set_ylabel('Squared Error', fontsize=FONTSIZE)
+    # axs[1].set_ylabel('Proportion', fontsize=FONTSIZE)
+    # axs[2].set_ylabel('')
+    # axs[3].set_ylabel('')
+
+    # if mode == 3:
+    #     axs[0].set_xlabel('Trials', fontsize=FONTSIZE)
+    #     axs[1].set_xlabel('Input', fontsize=FONTSIZE)
+    #     axs[2].set_xlabel('Target', fontsize=FONTSIZE)
+    #     axs[3].set_xlabel('Posterior probability ', fontsize=FONTSIZE)
+
+    # # set title
+    # if mode == 2:
+    #     axs[0].set_title('Performance', fontsize=FONTSIZE)
+    #     axs[1].set_title('Input distribution', fontsize=FONTSIZE)
+    #     axs[2].set_title('Target distribution', fontsize=FONTSIZE)
+    #     axs[3].set_title('Linearity', fontsize=FONTSIZE)
+
+    # plt.tight_layout()
+    # sns.despine()
+    # plt.savefig(
+    #     f'{SYS_PATH}/figures/supp_decisionmaking_stats_{str(mode)}_{str(dim)}_{condition}_test.svg', bbox_inches='tight')
+    # plt.show()
+
+    # save computed stats in one .npz file
+    if not os.path.exists(f'{SYS_PATH}/decisionmaking/data/stats/stats_{str(mode)}_{str(dim)}_{condition}_test.npz'):
+        np.savez(f'{SYS_PATH}/decisionmaking/data/stats/stats_{str(mode)}_{str(dim)}_{condition}.npz', all_corr=all_corr, gini_coeff=gini_coeff, posterior_logprob=posterior_logprob, all_accuraries_linear=all_accuraries_linear,
+                 all_accuraries_polynomial=all_accuraries_polynomial, all_targets_with_norm=all_targets_with_norm, all_features_with_norm=all_features_with_norm, sign_coeff=sign_coeff, direction_coeff=direction_coeff)
+
+
