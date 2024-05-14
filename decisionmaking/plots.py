@@ -325,3 +325,45 @@ def plot_decisionmaking_data_statistics(mode=0, dim=4, condition='unkown'):
                  all_accuraries_polynomial=all_accuraries_polynomial, all_targets_with_norm=all_targets_with_norm, all_features_with_norm=all_features_with_norm, sign_coeff=sign_coeff, direction_coeff=direction_coeff)
 
 
+def world_cloud(file_name, path='/u/ajagadish/ermi/decisionmaking/data/synthesize_problems', feature_names=True, pairs=False, top_labels=50):
+
+    df = pd.read_csv(f'{path}/{file_name}.csv')
+    dim = int(file_name.split("_dim")[1].split("_")[0])
+    df.feature_names = df['feature_names'].apply(lambda x: list(eval(x)[:dim]))
+
+    def to_lower(ff):
+        return [x.lower() for x in ff]
+
+    # name of the column containing the feature names
+    column_name = 'feature_names' if feature_names else 'target_names'
+    # count of number of times a type of features occurs
+    list_counts = Counter([tuple(features) for features in df[column_name]]
+                          if pairs else np.stack(df[column_name].values).reshape(-1))
+
+    # sort the Counter by counts in descending order
+    sorted_list_counts = sorted(
+        list_counts.items(), key=lambda x: x[1], reverse=True)
+
+    # extract the counts and names for the top 50 labels
+    task_labels = np.array([task_label[0]
+                            for task_label in sorted_list_counts[:top_labels]])
+    label_counts = np.array([task_label[1]
+                             for task_label in sorted_list_counts[:top_labels]])
+    label_names = ['-'.join(task_labels[idx])
+                   for idx in range(len(task_labels))] if pairs else task_labels
+
+    # make a dict with task labels and counts
+    word_freq = {}
+    for idx in range(len(label_names)):
+        word_freq[label_names[idx]] = label_counts[idx]
+
+    # generate word cloud
+    # wordcloud = WordCloud(width=800, height=400, max_words=50, background_color='white').generate_from_frequencies(word_freq)
+    wordcloud = WordCloud(width=1300, height=700, background_color='white', max_font_size=100,
+                          collocations=False, colormap='inferno', prefer_horizontal=1).generate_from_frequencies(word_freq)
+    plt.figure(figsize=(13, 7), dpi=1000)
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    plt.show()
+    wordcloud.to_file(
+        f'{SYS_PATH}/figures/wordcloud_{column_name}_paired={pairs}_top{top_labels}.png')
