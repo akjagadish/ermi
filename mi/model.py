@@ -250,7 +250,7 @@ class TransformerDecoderLinearWeights(nn.Module):
         ).to(self.device), tgt_mask=tgt_mask.to(self.device), memory_mask=tgt_mask.to(self.device))
 
         w = self.linear(output.to(self.device))
-        y = torch.sum(w*current_inputs, dim=2).to(self.device)
+        y = torch.sum(w*current_inputs, dim=2).to(self.device).unsqueeze(2)
 
         return self.sigmoid(self.beta*y)
 

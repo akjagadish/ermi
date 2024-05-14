@@ -345,10 +345,10 @@ class Binz2022(nn.Module):
         self.num_dims = 2 if experiment_id == 3 else 4
         self.noise = noise
 
-    def sample_batch(self, participant):
+    def sample_batch(self, participant, paired=False):
 
         stacked_task_features, stacked_targets, stacked_human_targets = self.get_participant_data(
-            participant)
+            participant, paired)
         sequence_lengths = [len(data)for data in stacked_task_features]
         packed_inputs = rnn_utils.pad_sequence(
             stacked_task_features, batch_first=True)
@@ -359,7 +359,7 @@ class Binz2022(nn.Module):
 
         return packed_inputs, sequence_lengths, padded_targets, padded_human_targets, None
 
-    def get_participant_data(self, participant):
+    def get_participant_data(self, participant, paired=False):
 
         inputs_list, targets_list, human_targets_list = [], [], []
 
@@ -390,9 +390,10 @@ class Binz2022(nn.Module):
             sampled_data = np.concatenate(
                 (input_features, targets.reshape(-1, 1), targets.reshape(-1, 1)), axis=1)
 
-            # replace placeholder with shifted targets to the sampled data array
-            sampled_data[:, self.num_dims] = np.concatenate((np.array(
-                [0. if np.random.rand(1) > 0.5 else 1.]), sampled_data[:-1, self.num_dims]))
+            if not paired:
+                # replace placeholder with shifted targets to the sampled data array
+                sampled_data[:, self.num_dims] = np.concatenate((np.array(
+                    [0. if np.random.rand(1) > 0.5 else 1.]), sampled_data[:-1, self.num_dims]))
 
             # stacking all the sampled data across all tasks
             inputs_list.append(torch.from_numpy(

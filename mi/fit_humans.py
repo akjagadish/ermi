@@ -9,7 +9,7 @@ sys.path.insert(0, '/u/ajagadish/ermi/mi')
 SYS_PATH = '/u/ajagadish/ermi'
 
 
-def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, participant=0, beta=1., epsilon=0., method='soft_sigmoid', device='cpu', **kwargs):
+def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, participant=0, beta=1., epsilon=0., method='soft_sigmoid', device='cpu', paired=False, **kwargs):
 
     # load model
     model = torch.load(model_path)[1].to(device) if device == 'cuda' else torch.load(
@@ -23,7 +23,7 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
         model.device = device
 
         # env setup: sample batch from environment and unpack
-        outputs = env.sample_batch(participant)
+        outputs = env.sample_batch(participant, paired=paired)
 
         if not hasattr(env, 'return_prototype'):
             packed_inputs, sequence_lengths, correct_choices, human_choices, _ = outputs
@@ -164,7 +164,7 @@ def optimize(args):
             epsilon = x[0]
             beta = x[1]
         ll, _, _ = compute_loglikelihood_human_choices_under_model(env=env, model_path=model_path, participant=participant, shuffle_trials=True,
-                                                                   beta=beta, epsilon=epsilon, method=args.method, **task_features)
+                                                                   beta=beta, epsilon=epsilon, method=args.method, paired=args.paired, ** task_features)
         return -ll.numpy()
 
     if args.method == 'soft_sigmoid':
@@ -199,7 +199,7 @@ def optimize(args):
             beta = res.x[1]
 
         ll, chance_ll, acc = compute_loglikelihood_human_choices_under_model(env=env, model_path=model_path, participant=participant, shuffle_trials=True,
-                                                                             beta=beta, epsilon=epsilon, method=args.method, **task_features)
+                                                                             beta=beta, epsilon=epsilon, method=args.method, paired=args.paired, **task_features)
         nlls.append(-ll)
         pr2s.append(1 - (ll/chance_ll))
         accs.append(acc)
@@ -223,6 +223,8 @@ if __name__ == '__main__':
     parser.add_argument('--optimizer', action='store_true',
                         default=False, help='find optimal beta using optimizer')
     parser.add_argument('--num-iters', type=int, default=5)
+    parser.add_argument('--paired', action='store_true',
+                        default=False, help='paired')
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
