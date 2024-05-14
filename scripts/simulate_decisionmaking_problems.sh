@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=18
 
 
-cd ~/ermi/decisionmaking/mi/
+cd ~/ermi/mi/
 
 module purge
 module load anaconda/3/2023.03
