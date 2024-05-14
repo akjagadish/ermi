@@ -217,7 +217,7 @@ class DecisionmakingTask(nn.Module):
 
         # permute the order of features in packed inputs but keep the last dimension as is
         if self.shuffle_features:
-            task_features = packed_inputs[..., -1]
+            task_features = packed_inputs[..., :-1].clone()
             task_features = task_features[..., np.random.permutation(
                 task_features.shape[2])]
             packed_inputs[..., :-1] = task_features
