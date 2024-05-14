@@ -170,13 +170,13 @@ def plot_decisionmaking_data_statistics(mode=0, dim=4, condition='unkown'):
         elif dim == 4:
             num_tasks = 8770 if condition == 'ranked' else 8220
             # env_name = f'{SYS_PATH}/decisionmaking/data/claude_generated_functionlearningtasks_paramsNA_dim4_data20_tasks{num_tasks}_run0_procid0_pversion2_{condition}'
-            env_name = f'{SYS_PATH}/decisionmaking/data/claude_generated_functionlearningtasks_paramsNA_dim4_data20_tasks{num_tasks}_run0_procid0_pversion{condition}'
+            env_name = f'{SYS_PATH}/decisionmaking/data/claude_generated_functionlearningtasks_paramsNA_dim4_data20_tasks{num_tasks}_run0_procid1_pversion{condition}'
         color_stats = '#405A63'  # '#2F4A5A'# '#173b4f'
-    # elif mode == 1:  # last plot
-    #     env_name = f'{SYS_PATH}/decisionmaking/data/linear_data'
-    #     color_stats = '#66828F'  # 5d7684'# '#5d7684'
+    elif mode == 1:  # last plot
+        env_name = f'{SYS_PATH}/decisionmaking/data/synthetic_decisionmaking_tasks_dim2_data20_tasks10000'
+        color_stats = '#66828F'  # 5d7684'# '#5d7684'
     elif mode == 2:  # first plot
-        env_name = f'{SYS_PATH}/decisionmaking/data/real_data'
+        env_name = f'{SYS_PATH}/decisionmaking/data/real_data_dim{dim}'
         color_stats = '#173b4f'  # '#0D2C3D' #'#8b9da7'
     # elif mode == 3:
     #     env_name = f'{SYS_PATH}/decisionmaking/data/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
@@ -185,8 +185,10 @@ def plot_decisionmaking_data_statistics(mode=0, dim=4, condition='unkown'):
     # load data
     data = pd.read_csv(f'{env_name}.csv')
     data.input = data['input'].apply(lambda x: np.array(eval(x)))
-    if mode == 2:
+    if mode == 2 or mode == 1:
         data.target = data['target'].apply(lambda x: np.array(eval(x)))
+        # TODO: shuffle order of input features (but it is artifiically inducing lack of ranking)
+        data.input = data.input.apply(np.random.permutation)
 
     if os.path.exists(f'{SYS_PATH}/decisionmaking/data/stats/stats_{str(mode)}_{str(dim)}_{condition}.npz'):
         stats = np.load(
@@ -204,21 +206,24 @@ def plot_decisionmaking_data_statistics(mode=0, dim=4, condition='unkown'):
     gini_coeff = gini_coeff[~np.isnan(gini_coeff)]
     all_corr = np.array(all_corr)
     sign_coeff = np.array(sign_coeff)
+    direction_coeff = np.stack(direction_coeff)
     # posterior_logprob = posterior_logprob[:, 0].exp().detach().numpy()
 
     FONTSIZE = 22  # 8
     fig, axs = plt.subplots(1, 4,  figsize=(6*4, 4))  # figsize=(6.75, 1.5))
     sns.histplot(all_corr.reshape(-1), ax=axs[0], bins=11, binrange=(
-        0., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+        -1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
     sns.histplot(gini_coeff, ax=axs[1], bins=11, binrange=(
         0., gini_coeff.max()), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
-    sns.histplot(np.argmax(np.stack(direction_coeff), axis=1), ax=axs[2], bins=dim, binrange=(
+    sns.histplot(np.argmax(np.abs(direction_coeff), axis=1), ax=axs[2], bins=dim, binrange=(
         -0.5, dim-0.5), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
     sns.histplot(sign_coeff.reshape(-1), ax=axs[3], bins=3, binrange=(
-        -1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
+        -1.5, 1.5), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
 
-    axs[0].set_ylim(0., 0.2)
-    axs[1].set_ylim(0,  0.2)
+    axs[0].set_ylim(0, .4)
+    axs[1].set_ylim(0, .4)
+    axs[2].set_ylim(0, .6)
+    axs[3].set_ylim(0, 1.)
     # axs[3].set_ylim(0,  0.75)
 
     # axs[0].set_yticks(np.arange(0.5, 1.05, 0.25))
@@ -229,7 +234,7 @@ def plot_decisionmaking_data_statistics(mode=0, dim=4, condition='unkown'):
     axs[2].set_xticks(np.arange(0, dim, 1))
     axs[2].set_xticklabels([f"coef{i+1}" for i in range(dim)])
     axs[3].set_xticks(np.arange(-1, 2, 1))
-    axs[3].set_xticklabels(['negative', '', 'positive'])
+    axs[3].set_xticklabels(['negative', 'unsigned', 'positive'])
 
     # set tick size
     axs[0].tick_params(axis='both', which='major', labelsize=FONTSIZE-2)

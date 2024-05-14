@@ -3,11 +3,15 @@ from plots import plot_decisionmaking_data_statistics
 from utils import save_real_data
 
 
-# save_real_data(k=2, num_points=650)
-plot_decisionmaking_data_statistics(0)
-plot_decisionmaking_data_statistics(2)
-# plot_dataset_statistics(1)
-# plot_dataset_statistics(3)
+# save_real_data(k=4, num_points=20)
+# plot_decisionmaking_data_statistics(0, dim=2, condition='unknown')
+# plot_decisionmaking_data_statistics(2, dim=2, condition='real')
+plot_decisionmaking_data_statistics(1, dim=2, condition='synthetic')
+
+# plot_decisionmaking_data_statistics(0, dim=4, condition='ranked')
+# plot_decisionmaking_data_statistics(0, dim=4, condition='direction')
+# plot_decisionmaking_data_statistics(2, dim=4, condition='real')
+
 # plot_frequency_tasklabels(
 #     'claude_generated_tasklabels_paramsNA_dim3_tasks23421_pversion5', feature_names=False, pairs=False)
 # plot_frequency_tasklabels(
