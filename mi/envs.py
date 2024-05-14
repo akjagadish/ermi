@@ -228,7 +228,7 @@ class DecisionmakingTask(nn.Module):
 class SyntheticDecisionmakingTask(nn.Module):
     " Synthetic decision making task"
 
-    def __init__(self, num_dims=2, num_choices=1, direction=False, ranking=False, dichotomized=False, max_steps=10, batch_size=64, mode='train', num_tasks=10000, split=[0.8, 0.1, 0.1], noise=0., device='cpu'):
+    def __init__(self, num_dims=2, num_choices=1, direction=False, ranking=False, dichotomized=False, max_steps=10, batch_size=64, mode='train', num_tasks=10000, synthesize_tasks=False, split=[0.8, 0.1, 0.1], noise=0., device='cpu'):
         " Initialize the environment"
         super(SyntheticDecisionmakingTask, self).__init__()
         self.num_dims = num_dims
@@ -251,6 +251,7 @@ class SyntheticDecisionmakingTask(nn.Module):
             [split[0], split[0]+split[1], split[0]+split[1]+split[2]]) * self.num_tasks).int()
         self.noise = noise
         self.device = torch.device(device)
+        self.synthesize_tasks = synthesize_tasks
 
     def sample_pair(self, weights, L):
         L = L.squeeze()
@@ -261,9 +262,10 @@ class SyntheticDecisionmakingTask(nn.Module):
         if self.dichotomized:
             inputs_a = (inputs_a > 0).float()
             inputs_b = (inputs_b > 0).float()
-        inputs = inputs_a - inputs_b
-        targets = torch.bernoulli(
-            0.5 * torch.erfc(-(weights * inputs).sum(-1, keepdim=True) / (2 * self.sigma)))
+        inputs = inputs_a if self.synthesize_tasks else inputs_a - inputs_b
+        preds = (weights * inputs).sum(-1, keepdim=True)
+        targets = preds if self.synthesize_tasks else torch.bernoulli(
+            0.5 * torch.erfc(-preds / (2 * self.sigma)))
 
         return inputs, targets, inputs_a, inputs_b
 
@@ -298,7 +300,7 @@ class SyntheticDecisionmakingTask(nn.Module):
                                                                               i], support_inputs_b[j, i] = self.sample_pair(weights, L)
 
         # this is a shitty hack to fix an earlier bug
-        if self.direction:
+        if self.direction and not self.synthesize_tasks:
             support_targets = 1 - support_targets
 
         sequence_lengths = [self.max_steps] * self.batch_size
@@ -320,13 +322,43 @@ class SyntheticDecisionmakingTask(nn.Module):
                 (stacked_targets[:, -1].unsqueeze(1) * torch.bernoulli(torch.tensor(0.5)), stacked_targets[:, :-1]), dim=1)
         else:
             stacked_task_features[..., [-1]] = stacked_targets
-            
+
         # pad the sequence to have the same length
         packed_inputs = rnn_utils.pad_sequence(
             stacked_task_features, batch_first=True)
 
         # support_inputs_a.detach().to(device), support_inputs_b.detach().to(device)
         return packed_inputs.detach().to(self.device), sequence_lengths, stacked_targets.detach().to(self.device)
+
+    def save_synthetic_data(self, num_tasks=5000, paired=True):
+
+        # generate synthetic data
+        num_batches = num_tasks//self.batch_size
+
+        last_task_id = 0
+        # prepare dataframe
+        data = pd.DataFrame(
+            columns=['task_id', 'trial_id', 'input', 'target'])
+
+        for _ in range(num_batches):
+
+            # generate synthetic data
+            inputs, _, targets = self.sample_batch(paired)
+            inputs = inputs[..., :self.num_dims]
+
+            # save inputs and targets into the data dataframe: inputs is of shape (num_tasks, max_steps, num_dims) and targets is of shape (num_tasks, max_steps)
+            for task_id, (task_inputs, task_targets) in enumerate(zip(inputs, targets)):
+                for trial_id, (input, target) in enumerate(zip(task_inputs, task_targets)):
+                    data = pd.concat([data, pd.DataFrame({'task_id': task_id+last_task_id, 'trial_id': trial_id,
+                                                          'input': str(input.cpu().numpy().tolist()),
+                                                          'target': [target.cpu().numpy().tolist()]})], ignore_index=True)
+
+            # update last task id
+            last_task_id = data['task_id'].max()+1
+
+            # save data to csv file
+            data.to_csv(
+                f'{SYS_PATH}/decisionmaking/data/synthetic_decisionmaking_tasks_dim{self.num_dims}_data{self.max_steps}_tasks{num_tasks}.csv', index=False)
 
 
 class Binz2022(nn.Module):
