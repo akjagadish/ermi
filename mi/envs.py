@@ -153,7 +153,7 @@ class DecisionmakingTask(nn.Module):
 
         return tasks
 
-    def sample_batch(self):
+    def sample_batch(self, paired=False):
 
         data = self.data[self.data.task_id.isin(self.return_tasks())]
         data['input'] = data['input'].apply(
@@ -202,9 +202,13 @@ class DecisionmakingTask(nn.Module):
         stacked_task_features = torch.stack(stacked_task_features)
         stacked_task_features[..., -1] = stacked_task_features[..., -1] > 0.5
         stacked_targets = stacked_task_features[..., -1].clone()
-        # shift the targets by 1 step for all tasks
-        stacked_task_features[..., -1] = torch.cat(
-            (stacked_targets[:, 0].unsqueeze(1) * torch.bernoulli(torch.tensor(0.5)), stacked_targets[:, :-1]), dim=1)
+
+        if not paired:
+            # shift the targets by 1 step for all tasks
+            stacked_task_features[..., -1] = torch.cat(
+                (stacked_targets[:, 0].unsqueeze(1) * torch.bernoulli(torch.tensor(0.5)), stacked_targets[:, :-1]), dim=1
+            )
+
         sequence_lengths = [len(task_input_features)
                             for task_input_features in stacked_targets]
 
@@ -263,7 +267,7 @@ class SyntheticDecisionmakingTask(nn.Module):
 
         return inputs, targets, inputs_a, inputs_b
 
-    def sample_batch(self):
+    def sample_batch(self, paired=False):
         support_inputs = torch.zeros(
             self.max_steps, self.batch_size, self.num_dims)
         stacked_task_features = torch.zeros(
@@ -309,9 +313,14 @@ class SyntheticDecisionmakingTask(nn.Module):
         # permute the order of features to have batch_size as the first dimension
         stacked_task_features = stacked_task_features.permute(1, 0, 2)
         stacked_targets = support_targets.permute(1, 0, 2)
-        stacked_task_features[..., [-1]] = torch.cat(
-            (stacked_targets[:, -1].unsqueeze(1) * torch.bernoulli(torch.tensor(0.5)), stacked_targets[:, :-1]), dim=1)
 
+        if not paired:
+            # shift the targets by 1 step for all tasks
+            stacked_task_features[..., [-1]] = torch.cat(
+                (stacked_targets[:, -1].unsqueeze(1) * torch.bernoulli(torch.tensor(0.5)), stacked_targets[:, :-1]), dim=1)
+        else:
+            stacked_task_features[..., [-1]] = stacked_targets
+            
         # pad the sequence to have the same length
         packed_inputs = rnn_utils.pad_sequence(
             stacked_task_features, batch_first=True)
