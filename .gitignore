@@ -162,3 +162,5 @@ logs/*
 temp/*
 figures/*
 categorisation/data/synthesize_problems/archive/*
+runs/*
+scripts/*raven.sh
