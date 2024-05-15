@@ -23,6 +23,16 @@ pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropi
 clear
 jupyter-lab
 
+cd ~/ermi/
+module purge
+module load anaconda/3/2023.03
+module load gcc/13 impi/2021.9
+module load cuda/12.1
+module load pytorch/gpu-cuda-12.1/2.2.0
+pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropic openml wordcloud mycolorpy Pillow pyro-ppl 
+clear
+jupyter-lab
+
 cd ~/ermi/categorisation/
 module purge
 module load anaconda/3/2021.11
