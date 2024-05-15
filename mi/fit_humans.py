@@ -238,5 +238,5 @@ if __name__ == '__main__':
         optimizer = 'grid_search'
 
     # save list of results
-    save_path = f"{SYS_PATH}/{args.paradigm}/data/model_comparison/{args.task_name}_{args.model_name[:200]}_{args.method}_{optimizer}.npz"
+    save_path = f"{SYS_PATH}/{args.paradigm}/data/model_comparison/{args.task_name}_{args.model_name[:200]}_paired{args.paired}_{args.method}_{optimizer}.npz"
     np.savez(save_path, betas=parameters, nlls=nlls, pr2s=pr2s, accs=accs)
