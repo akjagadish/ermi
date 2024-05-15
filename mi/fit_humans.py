@@ -232,10 +232,10 @@ if __name__ == '__main__':
 
     if args.optimizer:
         pr2s, nlls, accs, parameters = optimize(args)
-        optimizer = 'differential_evolution'
+        optimizer = 'de'
     else:
         pr2s, nlls, accs, parameters = grid_search(args)
-        optimizer = 'grid_search'
+        optimizer = 'grid'
 
     # save list of results
     save_path = f"{SYS_PATH}/{args.paradigm}/data/model_comparison/{args.task_name}_{args.model_name[:200]}_paired{args.paired}_{args.method}_{optimizer}.npz"
