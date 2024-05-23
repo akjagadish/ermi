@@ -1,5 +1,5 @@
-# Human-like category learning by injecting ecological priors \\ from large language models into neural networks
-This repository contains the code for the project Human-like category learning by injecting ecological priors \\ from large language models into neural networks. 
+# Human-like category learning by injecting ecological priors from large language models into neural networks
+This repository contains the code for the project Human-like category learning by injecting ecological priors from large language models into neural networks. 
 
 
 <p align="center">
@@ -13,15 +13,39 @@ Link to the paper: [ArXiv](https://arxiv.org/abs/2402.01821)
 
 
 ## Project Structure
-The project has several directories:
 
-xx: yy.\
-xx: yy.
+```
+.
+├── categorisation
+│   ├── baselines
+│   ├── data
+│   │   ├── fitted_simulation
+│   │   ├── generated_tasks
+│   │   ├── human
+│   │   ├── llm
+│   │   ├── meta_learner
+│   │   ├── model_comparison
+│   │   ├── openMLCC18
+│   │   ├── stats
+│   │   └── task_labels
+│   ├── make_plots.py
+│   ├── plots.py
+│   ├── rl2
+│   ├── task_generation
+│   ├── trained_models
+│   └── utils.py
+├── figures
+└── scripts
+├── logs
+├── LICENSE
+├── notebooks
+├── .git
+├── .gitattributes
+├── .gitignore
+└── README.md
 
-The src directory contains the main scripts for the project:
 
-xx: yy.\
-xx: yy.
+```
 
 The project also contains a .env file for storing environment variables and a requirements.txt file for installing the required Python libraries.
 
