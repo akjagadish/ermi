@@ -161,3 +161,8 @@ cython_debug/
 logs/*
 temp/*
 figures/*
+functionlearning/*
+decisionmaking/*
+runs/u/ajagadish/ermi/functionlearning/*
+runs/u/ajagadish/ermi/decisionmaking/*
+man/*
