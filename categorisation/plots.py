@@ -505,7 +505,7 @@ def model_simulations_smith1998(plot='main'):
                              stds_pm, np.mean(mses_pm, axis=0)+stds_pm, alpha=0.2, color=colors[0])
         ax[idx].fill_between(np.arange(mses_pm.shape[1])+1, np.mean(mses_gcm, axis=0) -
                              stds_gcm, np.mean(mses_gcm, axis=0)+stds_gcm, alpha=0.2, color=colors[1])
-        ax[idx].set_ylim([0, 1.])
+        ax[idx].set_ylim([-0.05, 1.])
         ax[idx].set_xticks(np.arange(mses_pm.shape[1])+1)
         # set y ticks font size
         ax[idx].tick_params(axis='y', labelsize=FONTSIZE-2)
@@ -523,7 +523,7 @@ def model_simulations_smith1998(plot='main'):
             ax[idx].set_title(
                 'MI' if plot == "main" else 'PFN' if plot == 'supplementary' else 'LLM', fontsize=FONTSIZE)
             ax[idx].set_ylim([0, 1.] if plot == 'main' or plot ==
-                             'supplementary' else [0, 3.])
+                             'supplementary' else [-0.05, 3.])
 
         if idx != 0:
             # remove legend
