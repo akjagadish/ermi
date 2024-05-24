@@ -17,7 +17,7 @@ export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 # python run_pm.py --num-iter 1 --prototypes from_data --task-name devraj2022 --loss mse_transfer --num-blocks 33  --model-name env=claude_generated_tasks_paramsNA_dim6_data500_tasks12910_pversion5_stage2_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1  --method soft_sigmoid
 # python run_pm.py --num-iter 10 --prototypes from_data --task-name devraj2022 --loss mse_transfer --num-blocks 22  --model-name env=dim6synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=2_synthetic  --method soft_sigmoid
 # python run_pm.py --num-iter 10 --prototypes from_data --task-name devraj2022 --loss mse_transfer --num-blocks 22  --model-name env=dim6synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=2_syntheticnonlinear  --method soft_sigmoid
-python run_pm.py --num-iter 1 --prototypes from_data --task-name devraj2022 --loss mse_transfer --num-blocks 11 --fit-llm 
+python run_pm.py --num-iter 10 --prototypes from_data --task-name devraj2022 --loss mse_transfer --num-blocks 11 --fit-llm 
 
 
 ## devraj et al 2022 fit to humas
