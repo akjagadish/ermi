@@ -33,11 +33,6 @@ pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropi
 clear
 tensorboard --logdir=runs/trained_models/ --port=6006
 
-python query.py --llama-path /ptmp/mbinz/new --model 7B
-python query.py --llama-path /ptmp/mbinz/new --model 65B
-
-python generate_tasks.py --llama-path /ptmp/mbinz/new --model 7B
-python generate_tasks.py --llama-path /ptmp/mbinz/new --model 65B
 
 #srun --time=00:10:00  --cpus-per-task=18 --gres=gpu:a100:1 --mem=50G --pty bash
 #srun --time=01:00:00  --cpus-per-task=18 --gres=gpu:a100:1 --mem=80G --pty bash
