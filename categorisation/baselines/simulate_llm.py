@@ -10,6 +10,7 @@ import argparse
 load_dotenv()  # load environment variables from .env
 SYS_PATH = '/u/ajagadish/ermi'
 sys.path.append(f'{SYS_PATH}/categorisation/data')
+sys.path.append(f'{SYS_PATH}/categorisation/mi')
 
 
 def randomized_choice_options(num_choices):
