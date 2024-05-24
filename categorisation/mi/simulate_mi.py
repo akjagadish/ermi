@@ -3,6 +3,7 @@ import torch
 from envs import CategorisationTask, ShepardsTask, NosofskysTask, LeveringsTask, SyntheticCategorisationTask, SmithsTask, JohanssensTask
 import pandas as pd
 import argparse
+SYS_PATH = '/u/ajagadish/ermi'
 
 
 def simulate(task_feature=None, model_path=None, experiment='categorisation', env=None, model=None, mode='val', shuffle_trials=True, policy='binomial', beta=1., max_steps=100, batch_size=1, device='cpu'):
@@ -102,7 +103,7 @@ def simulate_metalearners_choices(task_feature, model_path, experiment='categori
 
 def simulate_task(model_name=None, experiment=None, tasks=[None], beta=1., num_runs=1, num_trials=100, batch_size=1, device='cpu'):
 
-    model_path = f"/u/ajagadish/vanilla-llama/categorisation/trained_models/{model_name}.pt"
+    model_path = f"{SYS_PATH}/categorisation/trained_models/{model_name}.pt"
     for task_feature in tasks:
 
         df = simulate_metalearners_choices(task_feature, model_path, experiment,
@@ -117,7 +118,7 @@ def simulate_task(model_name=None, experiment=None, tasks=[None], beta=1., num_r
 
     # save to csv
     df_all.to_csv(
-        f'/u/ajagadish/vanilla-llama/categorisation/data/meta_learner/{experiment}_{model_name[48:]}_beta={beta}_num_trials={num_trials}_num_runs={num_runs}.csv', index=False)
+        f'{SYS_PATH}/categorisation/data/meta_learner/{experiment}_{model_name[48:]}_beta={beta}_num_trials={num_trials}_num_runs={num_runs}.csv', index=False)
 
 
 if __name__ == '__main__':
