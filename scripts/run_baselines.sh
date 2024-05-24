@@ -20,4 +20,4 @@ python baselines/run_llm.py --mode 'human' --dataset 'devraj2022' --start-partic
 
 # python baselines/run_llm.py --mode 'human' --dataset 'badham2017'
 # python baselines/run_llm.py --mode 'match_ermi' --dataset 'badham2017' --start-participant 72
-# python rl2/simulate_llm.py --mode 'match_ermi' --dataset 'badham2017' --from-env --start-participant 3
+# python mi/simulate_llm.py --mode 'match_ermi' --dataset 'badham2017' --from-env --start-participant 3
