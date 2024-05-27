@@ -1,8 +1,8 @@
 import numpy as np
 import torch
-from .envs import CategorisationTask, ShepardsTask, NosofskysTask, SyntheticCategorisationTask, SmithsTask, RMCTask
+from envs import CategorisationTask, ShepardsTask, NosofskysTask, SyntheticCategorisationTask, SmithsTask, RMCTask
 import argparse
-from .baseline_classifiers import LogisticRegressionModel, SVMModel
+from baseline_classifiers import LogisticRegressionModel, SVMModel
 
 # evaluate a model
 

@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from envs import CategorisationTask, ShepardsTask, NosofskysTask, LeveringsTask, SyntheticCategorisationTask, SmithsTask, JohanssensTask
+from envs import CategorisationTask, ShepardsTask, NosofskysTask, SyntheticCategorisationTask, SmithsTask, JohanssensTask
 import pandas as pd
 import argparse
 SYS_PATH = '/u/ajagadish/ermi'
@@ -21,8 +21,6 @@ def simulate(task_feature=None, model_path=None, experiment='categorisation', en
                                batch_size=batch_size, max_steps=max_steps, shuffle_trials=shuffle_trials)
         elif experiment == 'nosofsky_categorisation':
             env = NosofskysTask(task=task_feature)
-        elif experiment == 'levering_categorisation':
-            env = LeveringsTask(task=task_feature)
         elif experiment == 'smith_categorisation':
             env = SmithsTask(rule=task_feature, return_prototype=True, batch_size=batch_size,
                              max_steps=max_steps, shuffle_trials=shuffle_trials, use_existing_stimuli=True)
