@@ -12,7 +12,7 @@ import sys
 import os
 SYS_PATH = '/u/ajagadish/ermi'
 sys.path.append(f"{SYS_PATH}/categorisation/")
-sys.path.append(f"{SYS_PATH}/categorisation/rl2")
+sys.path.append(f"{SYS_PATH}/categorisation/mi")
 sys.path.append(f"{SYS_PATH}/categorisation/data")
 # from evaluate import evaluate_metalearner
 FONTSIZE = 20
@@ -894,16 +894,16 @@ def plot_dataset_statistics(mode=0):
 
     # set env_name and color_stats based on mode
     if mode == 0:
-        env_name = f'{SYS_PATH}/categorisation/data/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
+        env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
         color_stats = '#405A63'  # '#2F4A5A'# '#173b4f'
     elif mode == 1:
-        env_name = f'{SYS_PATH}/categorisation/data/linear_data'
+        env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/linear_data'
         color_stats = '#66828F'  # 5d7684'# '#5d7684'
     elif mode == 2:  # first plot
-        env_name = f'{SYS_PATH}/categorisation/data/real_data'
+        env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/real_data'
         color_stats = '#173b4f'  # '#0D2C3D' #'#8b9da7'
     elif mode == 3:  # last plot
-        env_name = f'{SYS_PATH}/categorisation/data/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
+        env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
         color_stats = '#5d7684'
 
     # load data
@@ -1102,19 +1102,19 @@ def compare_data_statistics(modes):
     names_for_modes = ['ecological_valid_data', 'MI', 'real_world_data', 'PFN']
     for mode in modes:
         if mode == 0:
-            env_name = f'{SYS_PATH}/categorisation/data/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
+            env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
             color_stats = '#ff7f0e'  # '#405A63' #'#2F4A5A'# '#173b4f'
             labels.append('LLM-generated tasks')
         elif mode == 1:  # last plot
-            env_name = f'{SYS_PATH}/categorisation/data/linear_data'
+            env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/linear_data'
             color_stats = '#2ca02c'  # 66828F' #5d7684'# '#5d7684'
             labels.append('MI')
         elif mode == 2:  # first plot
-            env_name = f'{SYS_PATH}/categorisation/data/real_data'
+            env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/real_data'
             color_stats = '#1f77b4'  # 173b4f'#'#0D2C3D' #'#8b9da7'
             labels.append('Real-world classification tasks')
         elif mode == 3:
-            env_name = f'{SYS_PATH}/categorisation/data/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
+            env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
             color_stats = '#d62728'  # 5d7684'
             labels.append('PFN')
 
@@ -1237,19 +1237,19 @@ def compare_inputfeatures(modes):
     names_for_modes = ['ecological_valid_data', 'MI', 'real_world_data', 'PFN']
     for ix, mode in enumerate(modes):
         if mode == 0:
-            env_name = f'{SYS_PATH}/categorisation/data/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
+            env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
             color_stats = '#405A63'
             labels.append('LLM-generated tasks')
         elif mode == 1:  # last plot
-            env_name = f'{SYS_PATH}/categorisation/data/linear_data'
+            env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/linear_data'
             color_stats = '#66828F'
             labels.append('MI')
         elif mode == 2:  # first plot
-            env_name = f'{SYS_PATH}/categorisation/data/real_data'
+            env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/real_data'
             color_stats = '#173b4f'
             labels.append('Real-world classification tasks')
         elif mode == 3:
-            env_name = f'{SYS_PATH}/categorisation/data/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
+            env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
             color_stats = '#5d7684'
             labels.append('PFN')
 
@@ -1302,19 +1302,19 @@ def compare_stats_across_models(modes, feature='input_features', plot='slides'):
     names_for_modes = ['ecological_valid_data', 'MI', 'real_world_data', 'PFN']
     for ix, mode in enumerate(modes):
         if mode == 0:
-            env_name = f'{SYS_PATH}/categorisation/data/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
+            env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
             color_stats = '#405A63'
             labels.append('LLM-generated tasks')
         elif mode == 1:  # last plot
-            env_name = f'{SYS_PATH}/categorisation/data/linear_data'
+            env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/linear_data'
             color_stats = '#66828F'
             labels.append('MI')
         elif mode == 2:  # first plot
-            env_name = f'{SYS_PATH}/categorisation/data/real_data'
+            env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/real_data'
             color_stats = '#173b4f'
             labels.append('Real-world classification tasks')
         elif mode == 3:
-            env_name = f'{SYS_PATH}/categorisation/data/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
+            env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
             color_stats = '#5d7684'
             labels.append('PFN')
 
