@@ -1,4 +1,4 @@
-from envs import ShepardsTask
+from mi.envs import ShepardsTask
 import sys
 import time
 import numpy as np
@@ -9,8 +9,6 @@ from dotenv import load_dotenv
 import argparse
 load_dotenv()  # load environment variables from .env
 SYS_PATH = '/u/ajagadish/ermi'
-sys.path.append(f'{SYS_PATH}/categorisation/data')
-sys.path.append(f'{SYS_PATH}/categorisation/mi')
 
 
 def randomized_choice_options(num_choices):
