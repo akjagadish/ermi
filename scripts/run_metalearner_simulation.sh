@@ -34,4 +34,4 @@ python mi/simulate_mi.py --job-id ${SLURM_ARRAY_TASK_ID} --experiment johanssen_
 # python mi/simulate_mi.py --experiment smith_categorisation --num-runs 10 --beta 1.0 --model-name env=claude_generated_tasks_paramsNA_dim6_data500_tasks12910_pversion5_stage2_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1
 
 ## shepard task
-# python mi/simulate_mi.py --experiment shepard_categorisation --model-name env=claude_generated_tasks_paramsNA_dim3_data100_tasks11518_pversion4_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1
+# python mi/simulate_mi.py --experiment shepard_categorisation --model-name env=claude_generated_tasks_paramsNA_dim3_data100_tasks11518_pversion4_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0
