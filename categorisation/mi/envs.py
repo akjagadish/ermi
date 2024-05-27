@@ -5,7 +5,7 @@ import torch
 import torch.nn.utils.rnn as rnn_utils
 from torch.distributions import Beta, Bernoulli, Categorical
 import torch.multiprocessing as mp
-from model_utils import MLP
+from .model_utils import MLP
 SYS_PATH = '/u/ajagadish/ermi/'
 
 

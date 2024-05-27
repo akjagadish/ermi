@@ -1,8 +1,8 @@
 import numpy as np
 import torch
-from envs import CategorisationTask, ShepardsTask, NosofskysTask, LeveringsTask, SyntheticCategorisationTask, SmithsTask, RMCTask
+from .envs import CategorisationTask, ShepardsTask, NosofskysTask, SyntheticCategorisationTask, SmithsTask, RMCTask
 import argparse
-from baseline_classifiers import LogisticRegressionModel, SVMModel
+from .baseline_classifiers import LogisticRegressionModel, SVMModel
 
 # evaluate a model
 
@@ -25,8 +25,6 @@ def evaluate_1d(env_name=None, model_path=None, experiment='categorisation', env
                                shuffle_trials=shuffle_trials)
         elif experiment == 'nosofsky_categorisation':
             env = NosofskysTask(task=env_name)
-        elif experiment == 'levering_categorisation':
-            env = LeveringsTask(task=env_name)
         elif experiment == 'smith_categorisation':
             env = SmithsTask(rule=env_name, max_steps=max_steps)
 

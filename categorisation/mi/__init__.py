@@ -1,4 +1,3 @@
-from mi.model import TransforerDecoder
-from mi.evaluate import evaluate1d
-from mi.envs import CategorisationTask, SyntheticCategorisationTask, ShepardTask, NosofskysTask, SmithsTask, RMCTask, JohanssensTask
+from mi.model import TransformerDecoder
+from mi.envs import CategorisationTask, SyntheticCategorisationTask, ShepardsTask, NosofskysTask, SmithsTask, RMCTask, JohanssensTask
 from mi.model_utils import PositionalEncoding
