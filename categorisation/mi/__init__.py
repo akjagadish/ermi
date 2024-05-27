@@ -1,4 +1,4 @@
-from mi.model import MetaLearner, NoisyMetaLearner, Transformer
-from mi.evaluate import evaluate
-from mi.envs import CategorisationTask, SyntheticCategorisationTask
+from mi.model import TransforerDecoder
+from mi.evaluate import evaluate1d
+from mi.envs import CategorisationTask, SyntheticCategorisationTask, ShepardTask, NosofskysTask, SmithsTask, RMCTask, JohanssensTask
 from mi.model_utils import PositionalEncoding
