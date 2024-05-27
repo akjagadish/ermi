@@ -120,17 +120,16 @@ class ERMI:
         return model_choices.squeeze()[-1], model_choice_probs.squeeze()[-1]
 
 
-df = pd.read_csv('../data/benchmark/benchmarking_data.csv')
+df = pd.read_csv('data/benchmark/benchmarking_data.csv')
 df.input = df['input'].apply(lambda x: np.array(eval(x)))
-ermi_model_path_pfn_matched = '../trained_models/env=claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1_model=transformer_num_episodes500000_num_hidden=1024_lr0.0001_num_layers=12_d_model=512_num_head=4_noise0.0_shuffleTrue_run=0.pt'
-ermi_model_path = '../trained_models/env=claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1.pt'
-mi_model_path = '../trained_models/env=dim4synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1_synthetic.pt'
-pfn_model_path = '../trained_models/env=dim4synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1_syntheticnonlinear.pt'
+ermi_model_path = 'trained_models/env=claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1.pt'
+mi_model_path = 'trained_models/env=dim4synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1_synthetic.pt'
+pfn_model_path = 'trained_models/env=dim4synthetic_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=1_syntheticnonlinear.pt'
 
 models = [LogisticRegression(), SVC(probability=True), XGBModel(), TabPFNModel(), ERMI(
-    ermi_model_path), ERMI(ermi_model_path_pfn_matched), ERMI(mi_model_path), ERMI(pfn_model_path)]
+    ermi_model_path), ERMI(mi_model_path), ERMI(pfn_model_path)]
 model_names = ['Logistic Regression', 'SVM', 'XGBoost', 'TabPFN',
-               'ERMI', 'ERMI (PFN-matched)', 'ERMI (MI)', 'ERMI (PFN)']
+               'ERMI', 'ERMI (MI)', 'ERMI (PFN)']
 num_tasks = len(df['task_idx'].unique())
 num_sets = len(df['set_idx'].unique())
 performance = np.zeros((len(models), num_tasks, num_sets))
