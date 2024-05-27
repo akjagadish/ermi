@@ -1,0 +1,15 @@
+groupBMC==1.0
+python-dotenv 
+ipdb 
+tqdm 
+anthropic
+transformers
+torch
+tensorboard
+gym
+openai
+wordcloud
+mycolorpy
+Pillow
+tabpfn 
+xgboost
