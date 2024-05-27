@@ -7,8 +7,6 @@ import numpy as np
 import torch
 import statsmodels.discrete.discrete_model as sm
 import ipdb
-
-#prototype stimuli are set by the experimenter depending on the type of rule used for categorisation
     
 class PrototypeModel():
     """ Prototype model for categorisation task """

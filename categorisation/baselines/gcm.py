@@ -9,10 +9,6 @@ import statsmodels.discrete.discrete_model as sm
 import ipdb
 from scipy.optimize import LinearConstraint, Bounds
 
-# TODO: bias term? an additional guessing-rate parameter was added to the exemplar model wihich assumed that some proportion of the time (G) participants simply guessed Category A or B haphazardly.
-# TODO: hill-climbing search for the best weights run 4 times
-# NOTE: model usually fitted to blocks of trials for example 2 blocks of 28 trials each
-
 
 class GeneralizedContextModel():
     """ Generalized Context Model (GCM) """
