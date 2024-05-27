@@ -24,16 +24,10 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
 
         # env setup: sample batch from environment and unpack
         outputs = env.sample_batch(participant)
-        # print(participant)
         if (env.return_prototype is True) and hasattr(env, 'return_prototype'):
             packed_inputs, sequence_lengths, correct_choices, human_choices, stacked_prototypes, _ = outputs
         else:
             packed_inputs, sequence_lengths, correct_choices, human_choices, _ = outputs
-
-        # set human choices to correct choices
-        # human_choices = correct_choices
-        # randomise human choices
-        # human_choices = torch.randint(0, 2, human_choices.shape).to(device)
 
         # get model choices
         model_choice_probs = model(
@@ -169,9 +163,6 @@ def optimize(args):
     for participant in participants:
         res_fun = np.inf
         for _ in tqdm(range(NUM_ITERS)):
-
-            # x0 = [np.random.uniform(x, y) for x, y in bounds]
-            # result = minimize(objective, x0, args=(participant), bounds=bounds, method='SLSQP')
             result = differential_evolution(
                 func=objective, args=(participant,), bounds=bounds)
 
