@@ -20,7 +20,7 @@ Ecological rationality refers to the notion that humans are rational agents adap
 ├── categorisation
 │   ├── baselines # baseline models: GCM, Prototype, Rule, Rulex, and LLM
 │   ├── benchmark # evaluate ERMI and other baseline models on OpenML-CC18 benchmark
-│   ├── data
+│   ├── data # contains directories with data and results
 │   │   ├── benchmark # results from benchmarking
 │   │   ├── fitted_simulation # simulate data from MI models using parameters fitted to humans
 │   │   ├── generated_tasks # generated tasks from LLM, synthetic, and OpenML-CC18
@@ -31,8 +31,28 @@ Ecological rationality refers to the notion that humans are rational agents adap
 │   │   ├── stats # statistics from generated tasks
 │   │   └── task_labels  # LLM synthesized problems
 │   ├── mi # train, evaluate, and simulate meta-learned inference models: ERMI, MI and PFN
+│   │   ├── baseline_classifiers.py # baseline classifiers
+│   │   ├── envs.py # environment classes
+│   │   ├── evaluate.py # evaluation functions
+│   │   ├── fit_humans.py # fit human data to MI models
+│   │   ├── fitted_simulations.py # simulate data from MI, ERMI and PFN models using parameters fitted to humans
+│   │   ├── human_envs.py # environment classes simulating human experiments
+│   │   ├── model.py # model classes
+│   │   ├── model_utils.py # utility functions for models
+│   │   ├── simulate_johanssen2002.py # simulate data from Johanssen et al. 2002
+│   │   ├── simulate_mi.py # simulate data for different experiments from ERMI, MI and PFN models
+│   │   ├── simulate_shepard1961.py # simulate data from Shepard et al. 1961
+│   │   └── train_transformer.py # train ERMI, MI and PFN models
 │   ├── task_generation # category learning tasks from large language models, synthetic tasks, and OpenML-CC18 tasks
-│   ├── trained_models 
+│   │   ├── generate_linear_data.py # generate category learning tasks with linear decision boundaries
+│   │   ├── generate_real_data.py # save category learning tasks from OpenML-CC18 benchmark
+│   │   ├── generate_synthetic_data.py # generate synthetic category learning tasks
+│   │   ├── generate_tasklabels.py # generate task labels for LLM synthesized problems
+│   │   ├── generate_tasks.py # generate category learning tasks from large language models
+│   │   ├── parse_generated_tasks.py # parse generated tasks from large language models
+│   │   ├── prompts.py # prompts for large language models to generate category learning tasks
+│   │   └── utils.py
+│   ├── trained_models  # trained ERMI, MI and PFN models
 │   ├── make_plots.py # replicate plots used in the paper
 │   ├── plots.py # plot functions
 │   └── utils.py
