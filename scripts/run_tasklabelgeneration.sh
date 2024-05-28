@@ -19,4 +19,4 @@ export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 ## generate task labels
 # python generate_tasklabels.py --model NA --proc-id 0 --num-runs 100 --num-tasks 250 --num-dim 3 --max-length 10000 --run-gpt claude --prompt-version 5 
 ## pool generated task labels
-python generate_tasklabels.py --model NA --proc-id 0 --num-runs 100 --num-tasks 250 --num-dim 3 --max-length 10000 --run-gpt claude --prompt-version 5 --pool --path /u/ajagadish/vanilla-llama/categorisation/data/tasklabels
+python generate_tasklabels.py --model NA --proc-id 0 --num-runs 100 --num-tasks 250 --num-dim 3 --max-length 10000 --run-gpt claude --prompt-version 5 --pool --path /u/ajagadish/ermi/categorisation/data/tasklabels
