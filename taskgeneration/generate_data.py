@@ -1,3 +1,5 @@
+from os.path import join
+from os import getenv
 import openai
 import gym
 import time
@@ -6,7 +8,7 @@ import numpy as np
 import torch
 import argparse
 import sys
-# from inference import LLaMAInference
+from llms import get_llm
 from prompts import retrieve_prompt, generate_data_functionlearning_problems, generate_data_decisionmaking_problems
 from utils import retrieve_features_and_categories, get_all_regex_patterns, retrieve_features_and_targets
 import ipdb
@@ -18,11 +20,11 @@ import anthropic
 load_dotenv()  # load environment variables from .env
 TOKEN_COUNTER = 0
 
-SYS_PATH = '/u/ajagadish/ermi/categorisation'
+SYS_PATH = getenv('BERMI_DIR')
 # generate action using LLaMA or GPT-3
 
 
-def act(text=None, run_gpt='llama', temperature=1., max_length=300):
+def act(text=None, run_gpt='llama-2', temperature=1., max_length=300):
     """
     Generate text using different GPT models based on the specified parameters.
 
@@ -42,9 +44,15 @@ def act(text=None, run_gpt='llama', temperature=1., max_length=300):
 
     global TOKEN_COUNTER
 
-    if run_gpt == 'llama':
+    if run_gpt == 'llama-2':
+        llm, Q_, A_ = get_llm(run_gpt, max_tokens=max_length,
+                              temp=temperature)
+        import ipdb
+        ipdb.set_trace()
+        response = llm.generate(text).replace(
+            ' ', '').replace('.', '').replace(',', '').replace('\n', '').replace(':', '')[0]
 
-        raise NotImplementedError
+        # raise NotImplementedError
 
     elif run_gpt == 'gpt4':
 
@@ -133,14 +141,14 @@ def check_if_parsable(action, patterns):
 
 
 if __name__ == "__main__":
-    models = ["7B", "13B", "30B", "65B", "NA"]
+    models = ["7B", "8B", "13B", "30B", "65B", "NA"]
     parser = argparse.ArgumentParser()
     parser.add_argument("--llama-path", type=str, required=False, default=None)
     parser.add_argument("--model", type=str, required=False, choices=models)
     parser.add_argument("--task", type=str, required=False,
                         default='categorylearning')
     parser.add_argument("--run-gpt", type=str, required=True,
-                        choices=['llama', 'gpt3', 'gpt4', 'claude', 'claude_2.1'])
+                        choices=['llama-2', 'gpt3', 'gpt4', 'claude', 'claude_2.1'])
     parser.add_argument("--num-tasks", type=int, required=True, default=1000)
     parser.add_argument("--num-dim", type=int, required=True, default=3)
     parser.add_argument("--num-data", type=int, required=True, default=8)
@@ -164,7 +172,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     start_loading = time.time()
     run_gpt = args.run_gpt
-    assert args.model == 'NA'if args.run_gpt == 'gpt3' or args.run_gpt == 'gpt4' or args.run_gpt == 'claude' or args.run_gpt == 'claude_2.1' else False, "Only NA model is supported for GPT3"
+    assert args.model == 'NA' if args.run_gpt == 'gpt3' or args.run_gpt == 'gpt4' or args.run_gpt == 'claude' or args.run_gpt == 'claude_2.1' else args.model, "Only NA model is supported for GPT3"
     # model parameters
     temperature = args.temperature
     max_length = args.max_length
@@ -246,6 +254,17 @@ if __name__ == "__main__":
                         features) == num_dim, "Number of features does not match the number of dimensions"
                     instructions = generate_data_functionlearning_problems(
                         'claude', version=f'v{prompt_version}', num_dim=num_dim, num_data=num_data, features=features, target=target)
+            if run_gpt == 'llama-2':
+                if args.task == 'functionlearning':
+
+                    features, target, task_id = retrieve_features_and_targets(path=args.path_tasklabels,
+                                                                              file_name=args.file_name_tasklabels,
+                                                                              task_id=t)
+
+                    assert len(
+                        features) == num_dim, "Number of features does not match the number of dimensions"
+                    instructions = generate_data_functionlearning_problems(
+                        'llama-2', version=f'v{prompt_version}', num_dim=num_dim, num_data=num_data, features=features, target=target)
 
             # generate tasks in one or two stages
             if args.stage == 2:

@@ -324,7 +324,8 @@ def generate_data_functionlearning_problems(model, version, num_data=20, num_dim
         f" {template} \n"\
         " Please do not produce any units; values taken by features and targets do not need to be sorted."
 
-    order_of_features = {'vunknown': '',
+    order_of_features = {'v2': '',
+                         'vunknown': '',
                          'vranked': 'Note that the features are listed according to how well each of them can predict the target. The first feature is most useful to predict the target, the second feature is the second most useful, and so on.',
                          'vdirection': 'Note that the values taken by the features should be such that higher feature values lead to higher target values.',
                          }
@@ -346,6 +347,9 @@ def generate_data_functionlearning_problems(model, version, num_data=20, num_dim
     instructions['claude']['vranked'] = generate_data_prompt_v4
     instructions['claude']['vdirection'] = generate_data_prompt_v4
     instructions['claude']['vunknown'] = generate_data_prompt_v4
+
+    instructions['llama-2'] = {}
+    instructions['llama-2']['v2'] = generate_data_prompt_v2
 
     return instructions[model][version]
 
