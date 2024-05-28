@@ -101,7 +101,7 @@ Replace your_anthropic_api_key with your actual Anthropic API key. You can obtai
 
 ## Usage
 
-I will run through how to generate category learning tasks from Claude-v2 for three dimensional stimuli, train ERMI model on this task, simulate data  from the trained model, and fit the model to human data from Badham et al. 2017 task. But the same steps can be used for other tasks and models as well. I will also show how to fit a baseline model on Badham et al. 2017 task and how to run benchmarking on OpenML-CC18 benchmark. All scripts used for running experiments are located in the scripts directory. Note that all the *.sh files in there are written for the HPC cluster we use, therefore it likely won't run out of the box on other systems. The python scripts should be portable as is.
+I will run through how to generate category learning tasks from Claude-v2 for three dimensional stimuli, train ERMI model on this task, simulate data  from the trained model, and fit the model to human data from Badham et al. 2017 task. But the same steps can be used for other tasks and models (MI and PFN) as well. I will also show how to fit a baseline model on Badham et al. 2017 task and how to run benchmarking on OpenML-CC18 benchmark. All scripts used for running experiments are located in the scripts directory. Note that all the *.sh files in there are written for the HPC cluster we use, therefore it likely won't run out of the box on other systems. The python scripts should be portable as is.
 
 
 ### Generate category learning tasks from Claude-v2
@@ -144,7 +144,7 @@ python mi/fitted_simulations.py --model-name env=claude_generated_tasks_paramsNA
 
 ```
 
-## Baseline models
+### Fit baseline models to human data for model comparison
 
 To run a baseline model on Badham et al. 2017 task, use the following command:
 ```bash
