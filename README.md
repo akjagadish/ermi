@@ -101,7 +101,8 @@ Replace your_anthropic_api_key with your actual Anthropic API key. You can obtai
 
 ## Usage
 
-I will run through how to generate category learning tasks from Claude-v2 for three dimensional stimuli, train ERMI model on this task, simulate data  from the trained model, and fit the model to human data from Badham et al. 2017 task. But the same steps can be used for other tasks and models as well. I will also show how to fit a baseline model on Badham et al. 2017 task and how to run benchmarking on OpenML-CC18 benchmark.
+I will run through how to generate category learning tasks from Claude-v2 for three dimensional stimuli, train ERMI model on this task, simulate data  from the trained model, and fit the model to human data from Badham et al. 2017 task. But the same steps can be used for other tasks and models as well. I will also show how to fit a baseline model on Badham et al. 2017 task and how to run benchmarking on OpenML-CC18 benchmark. All scripts used for running experiments are located in the scripts directory. Note that all the *.sh files in there are written for the HPC cluster we use, therefore it likely won't run out of the box on other systems. The python scripts should be portable as is.
+
 
 ### Generate category learning tasks from Claude-v2
 To generate category learning tasks from Claude-v2, there are two steps. 
@@ -132,7 +133,7 @@ python mi/train_transformer.py --num-episodes 500000 --save-every 100 --print-ev
 
 To fit ERMI model to human data from Badham et al. 2017 task, use the following command:
 ```bash
-python mi/fit_humans.py --model-name env=claude_generated_tasks_paramsNA_dim3_data100_tasks11518_pversion4_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=3 --task-name badham2017 --optimizer
+python mi/fit_humans.py --model-name env=claude_generated_tasks_paramsNA_dim3_data100_tasks11518_pversion4_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0 --task-name badham2017 --optimizer
 ```
 
 ### Simulate data from ERMI model using fitted parameters
@@ -161,9 +162,6 @@ To evaluate ERMI model on OpenML-CC18 benchmark, use the following command:
 python benchmark/eval.py
 
 ```
-
-### Note
-Additionally all the *.sh files in scripts directory are written for the HPC cluster we use, therefore it likely won't run out of the box on other systems. The python scripts should be portable as is.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
