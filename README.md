@@ -19,7 +19,18 @@ Ecological rationality refers to the notion that humans are rational agents adap
 .
 ├── categorisation
 │   ├── baselines # baseline models: GCM, Prototype, Rule, Rulex, and LLM
-│   ├── benchmark # evaluate ERMI and other baseline models on OpenML-CC18 benchmark
+│   │   ├── gcm.py # Generalized Context Model
+│   │   ├── llm.py # Claude-v2 as a cognitive model
+│   │   ├── pm.py # Prototype Model
+│   │   ├── rulex.py # Rulex model 
+│   │   ├── run_gcm.py # run GCM
+│   │   ├── run_llm.py # run LLM
+│   │   ├── run_pm.py # run PM
+│   │   ├── run_rulex.py # run Rulex
+│   │   └── simulate_llm.py # simulate data from LLM
+│   ├── benchmark 
+│   │   ├── eval.py # evaluate ERMI and other baseline models on OpenML-CC18 benchmark
+│   │   └── save_eval_data.py # save openml-cc18 data for evaluation in a format used by Hollman et al. 2022 
 │   ├── data # contains directories with data and results
 │   │   ├── benchmark # results from benchmarking
 │   │   ├── fitted_simulation # simulate data from MI models using parameters fitted to humans
@@ -90,6 +101,69 @@ Replace your_anthropic_api_key with your actual Anthropic API key. You can obtai
 
 ## Usage
 
+I will run through how to generate category learning tasks from Claude-v2 for three dimensional stimuli, train ERMI model on this task, simulate data  from the trained model, and fit the model to human data from Badham et al. 2017 task. But the same steps can be used for other tasks and models as well. I will also show how to fit a baseline model on Badham et al. 2017 task and how to run benchmarking on OpenML-CC18 benchmark.
+
+### Generate category learning tasks from Claude-v2
+To generate category learning tasks from Claude-v2, there are two steps. 
+
+Step 1: Generate task labels using the following command:
+```bash
+# Generate task labels in 100 separte runs for category learning tasks from Claude-v2
+python task_generation/generate_tasklabels.py --model NA --proc-id 0 --num-runs 100 --num-tasks 250 --num-dim 3 --max-length 10000 --run-gpt claude --prompt-version 5 
+
+# Pool the generated task labels into a single pandas dataframe
+python task_generation/generate_tasklabels.py --model NA --proc-id 0 --num-runs 100 --num-tasks 250 --num-dim 3 --max-length 10000 --run-gpt claude --prompt-version 5 --pool --path /PATH/to/dir/categorisation/data/tasklabels
+
+``` 
+
+Step 2: Generate category learning tasks using the following command:
+```bash
+python task_generation/generate_tasks.py --model NA --proc-id 0  --num-tasks 10000 --start-task-id 0 --num-dim 3 --num-data 100 --max-length 4000 --run-gpt claude --prompt-version 4 --use-generated-tasklabels --file-name-tasklabels claude_generated_tasklabels_paramsNA_dim3_tasks23426_pversion5 --path-tasklabels /PATH/to/dir/categorisation/data/tasklabels
+```
+
+### Train ERMI model
+
+To train ERMI model on the generated tasks, use the following command:
+```bash
+python mi/train_transformer.py --num-episodes 500000 --save-every 100 --print-every 100 --max-steps 250 --env-name claude_generated_tasks_paramsNA_dim3_data100_tasks11518_pversion4 --noise 0.0 --model-name transformer --num_hidden 256 --num_layers 6 --d_model 64 --num_head 8 --batch_size 64 --shuffle --env-dir /PATH/to/dir/categorisation/data/generated_tasks --shuffle-features --first-run-id 0
+```
+
+### Fit ERMI model to human data
+
+To fit ERMI model to human data from Badham et al. 2017 task, use the following command:
+```bash
+python mi/fit_humans.py --model-name env=claude_generated_tasks_paramsNA_dim3_data100_tasks11518_pversion4_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=3 --task-name badham2017 --optimizer
+```
+
+### Simulate data from ERMI model using fitted parameters
+
+To simulate data from ERMI model using fitted parameters, use the following command:
+```bash
+python mi/fitted_simulations.py --model-name env=claude_generated_tasks_paramsNA_dim3_data100_tasks11518_pversion4_model=transformer_num_episodes500000_num_hidden=256_lr0.0003_num_layers=6_d_model=64_num_head=8_noise0.0_shuffleTrue_run=0 --task-name badham2017 --optimizer differential_evolution
+
+```
+
+## Baseline models
+
+To run a baseline model on Badham et al. 2017 task, use the following command:
+```bash
+python baselines/run_gcm.py --num-iter 1 --loss 'nll' --num-blocks 1 --fit-human-data --task-name badham2017 
+python baselines/run_pm.py --num-iter 1 --loss 'nll' --num-blocks 1 --fit-human-data --prototypes from_data --task-name badham2017
+python baselines/run_rulex.py --num-iter 1 --loss 'nll' --num-blocks 1 --fit-human-data --task-name badham2017
+python baselines/run_rulex.py --num-iter 1 --loss 'nll' --num-blocks 1 --fit-human-data --exception --task-name badham2017
+python baselines/run_llm.py --num-iter 1 --loss 'nll' --num-blocks 1 --fit-human-data --dataset badham2017
+```
+
+### Evaluate ERMI model on OpenML-CC18 benchmark
+
+To evaluate ERMI model on OpenML-CC18 benchmark, use the following command:
+```bash
+python benchmark/eval.py
+
+```
+
+### Note
+Additionally all the *.sh files in scripts directory are written for the HPC cluster we use, therefore it likely won't run out of the box on other systems. The python scripts should be portable as is.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
