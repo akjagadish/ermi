@@ -10,9 +10,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 import os
-SYS_PATH = '/u/ajagadish/ermi'
+from os import getenv
+from os.path import join
+
+SYS_PATH = getenv('BERMI_DIR')
 sys.path.append(f"{SYS_PATH}/decisionmaking/")
-# sys.path.append(f"{SYS_PATH}/categorisation/rl2")
 sys.path.append(f"{SYS_PATH}/decisionmaking/data")
 # from evaluate import evaluate_metalearner
 FONTSIZE = 20
