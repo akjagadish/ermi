@@ -303,18 +303,16 @@ if __name__ == "__main__":
             raw_data.append(action)
             matches = check_if_parsable(action, patterns)
             if matches is not None:
-                data.append(matches)
-                task_ids.append(task_id)
 
                 for trial_id, data in enumerate(matches):
                     inputs, targets = data[:-1], data[-1]
                     try:
                         inputs = str([float(i) for i in inputs])
-                        data = pd.DataFrame({'input': inputs, 'target': targets, 'trial_id': trial_id, 'task_id': t}, index=[
+                        dataframe = pd.DataFrame({'input': inputs, 'target': targets, 'trial_id': trial_id, 'task_id': task_id}, index=[
                                             0], columns=['input', 'target', 'trial_id', 'task_id'])
                         # only append if the task_id is not already present in the dataframe
-                        df = data if df is None else pd.concat(
-                            [df, data], ignore_index=True)
+                        df = dataframe if df is None else pd.concat(
+                            [df, dataframe], ignore_index=True)
                     except:
                         print(data)
                         print("Error")
