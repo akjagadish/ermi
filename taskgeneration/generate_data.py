@@ -17,6 +17,7 @@ import re
 import os
 from dotenv import load_dotenv
 import anthropic
+import json
 load_dotenv()  # load environment variables from .env
 TOKEN_COUNTER = 0
 
@@ -24,7 +25,7 @@ SYS_PATH = getenv('BERMI_DIR')
 # generate action using LLaMA or GPT-3
 
 
-def act(text=None, run_gpt='llama-2', temperature=1., max_length=300):
+def act(text=None, run_gpt='llama-3', temperature=1., max_length=300, llm=None):
     """
     Generate text using different GPT models based on the specified parameters.
 
@@ -44,15 +45,23 @@ def act(text=None, run_gpt='llama-2', temperature=1., max_length=300):
 
     global TOKEN_COUNTER
 
-    if run_gpt == 'llama-2':
-        llm, Q_, A_ = get_llm(run_gpt, max_tokens=max_length,
-                              temp=temperature)
-        import ipdb
-        ipdb.set_trace()
-        response = llm.generate(text).replace(
-            ' ', '').replace('.', '').replace(',', '').replace('\n', '').replace(':', '')[0]
+    if run_gpt == 'llama-3':
+        if llm.instruct:
+            prompt = [
+                {"role": "system", 
+                "content": "You are an oracle that can generate data whose statistics match real-world data."},
+                {"role": "user", "content": text},
+                                ]
+            
+            text = llm.tokenizer.apply_chat_template(
+                prompt,
+                add_generation_prompt=True,
+                return_tensors="pt"
+            ).to("cuda")
+        response = llm.generate(text)
+        #.replace(' ', '').replace('.', '').replace(',', '').replace('\n', '').replace(':', '')
 
-        # raise NotImplementedError
+        return response
 
     elif run_gpt == 'gpt4':
 
@@ -146,9 +155,9 @@ if __name__ == "__main__":
     parser.add_argument("--llama-path", type=str, required=False, default=None)
     parser.add_argument("--model", type=str, required=False, choices=models)
     parser.add_argument("--task", type=str, required=False,
-                        default='categorylearning')
+                        default='categorisation')
     parser.add_argument("--run-gpt", type=str, required=True,
-                        choices=['llama-2', 'gpt3', 'gpt4', 'claude', 'claude_2.1'])
+                        choices=['llama-3', 'gpt3', 'gpt4', 'claude', 'claude_2.1'])
     parser.add_argument("--num-tasks", type=int, required=True, default=1000)
     parser.add_argument("--num-dim", type=int, required=True, default=3)
     parser.add_argument("--num-data", type=int, required=True, default=8)
@@ -186,16 +195,15 @@ if __name__ == "__main__":
     num_runs = args.num_runs
     prompt_version = args.prompt_version
     num_categories = 2
+    llm = None
 
     # get regex patterns
     patterns = get_all_regex_patterns(
         num_dim=num_dim, prompt_version=prompt_version, task_name=args.task)
 
     # load LLaMA model and instructions
-    if run_gpt == 'llama':
-        # llama = LLaMAInference(args.llama_path, args.model, max_batch_size=2)
-        # instructions = retrieve_prompt('llama', version='v0', num_dim=num_dim, num_data=num_data)
-        raise NotImplementedError
+    if run_gpt == 'llama-3':
+       llm, Q_, A_ = get_llm(run_gpt, max_tokens=max_length, temp=temperature)
     # load GPT-3 specific instructions
     elif run_gpt == 'gpt3':
         instructions = retrieve_prompt(
@@ -234,7 +242,7 @@ if __name__ == "__main__":
             if (run_gpt == 'claude' or run_gpt == 'claude_2.1'):
                 assert args.file_name_tasklabels is not None, "Please provide a file name for the task labels"
 
-                if args.task == 'categorylearning':
+                if args.task == 'categorisation':
                     features, categories, task_id = retrieve_features_and_categories(path=args.path_tasklabels,
                                                                                      file_name=args.file_name_tasklabels,
                                                                                      task_id=t)
@@ -254,7 +262,8 @@ if __name__ == "__main__":
                         features) == num_dim, "Number of features does not match the number of dimensions"
                     instructions = generate_data_functionlearning_problems(
                         'claude', version=f'v{prompt_version}', num_dim=num_dim, num_data=num_data, features=features, target=target)
-            if run_gpt == 'llama-2':
+            
+            elif run_gpt == 'llama-3':
                 if args.task == 'functionlearning':
 
                     features, target, task_id = retrieve_features_and_targets(path=args.path_tasklabels,
@@ -264,7 +273,18 @@ if __name__ == "__main__":
                     assert len(
                         features) == num_dim, "Number of features does not match the number of dimensions"
                     instructions = generate_data_functionlearning_problems(
-                        'llama-2', version=f'v{prompt_version}', num_dim=num_dim, num_data=num_data, features=features, target=target)
+                        'llama-3', version=f'v{prompt_version}', num_dim=num_dim, num_data=num_data, features=features, target=target)
+                    
+                elif args.task == 'categorisation':
+                    features, categories, task_id = retrieve_features_and_categories(path=args.path_tasklabels,
+                                                                                     file_name=args.file_name_tasklabels,
+                                                                                     task_id=t)
+                    assert len(
+                        features) == num_dim, "Number of features does not match the number of dimensions"
+                    assert len(
+                        categories) == num_categories, "Number of categories does not match the number of categories"
+                    instructions = retrieve_prompt(
+                        'llama-3', version=f'v{prompt_version}', num_dim=num_dim, num_data=num_data, features=features, categories=categories)
 
             # generate tasks in one or two stages
             if args.stage == 2:
@@ -278,7 +298,7 @@ if __name__ == "__main__":
                     action = stage2_action + '\n' + \
                         stage1_action[int(len(stage1_action)/3):]
             else:
-                action = act(instructions, run_gpt, temperature, max_length)
+                action = act(instructions, run_gpt, temperature, max_length, llm)
 
             raw_data.append(action)
             matches = check_if_parsable(action, patterns)
@@ -286,26 +306,21 @@ if __name__ == "__main__":
                 data.append(matches)
                 task_ids.append(task_id)
 
-                if args.task == 'categorylearning':
-                    raise NotImplementedError
-                elif args.task == 'functionlearning':
-                    for trial_id, data in enumerate(matches):
-                        inputs, targets = data[:-1], data[-1]
-                        # import ipdb; ipdb.set_trace()
-                        try:
-                            inputs = str([float(i) for i in inputs])
-                            data = pd.DataFrame({'input': inputs, 'target': targets, 'trial_id': trial_id, 'task_id': t}, index=[
-                                                0], columns=['input', 'target', 'trial_id', 'task_id'])
-                            # only append if the task_id is not already present in the dataframe
-                            df = data if df is None else pd.concat(
-                                [df, data], ignore_index=True)
-                        except:
-                            print(data)
-                            print("Error")
-                            exc_type, exc_value, exc_traceback = sys.exc_info()
+                for trial_id, data in enumerate(matches):
+                    inputs, targets = data[:-1], data[-1]
+                    try:
+                        inputs = str([float(i) for i in inputs])
+                        data = pd.DataFrame({'input': inputs, 'target': targets, 'trial_id': trial_id, 'task_id': t}, index=[
+                                            0], columns=['input', 'target', 'trial_id', 'task_id'])
+                        # only append if the task_id is not already present in the dataframe
+                        df = data if df is None else pd.concat(
+                            [df, data], ignore_index=True)
+                    except:
+                        print(data)
+                        print("Error")
+                        exc_type, exc_value, exc_traceback = sys.exc_info()
                             # print(exc_value)
-
-                df.to_csv(f"{SYS_PATH}/data/{filename}.csv", index=False)
+                df.to_csv(f"{SYS_PATH}/{args.task}/data/generated_tasks/{filename}.csv", index=False)
 
             elif matches is None:
 

@@ -161,6 +161,11 @@ def retrieve_prompt(model, version, num_dim=3, num_data=100, features=None, cate
     instructions['claude']['v4'] = claude_prompt_v4
     instructions['claude']['v5'] = claude_prompt_v5
 
+    instructions['llama-3'] = {}
+    instructions['llama-3']['v3'] = claude_prompt_v3
+    instructions['llama-3']['v4'] = claude_prompt_v4
+    instructions['llama-3']['v5'] = claude_prompt_v5
+
     return instructions[model][version]
 
 
@@ -350,6 +355,9 @@ def generate_data_functionlearning_problems(model, version, num_data=20, num_dim
 
     instructions['llama-2'] = {}
     instructions['llama-2']['v2'] = generate_data_prompt_v2
+
+    instructions['llama-3'] = {}
+    instructions['llama-3']['v2'] = generate_data_prompt_v2
 
     return instructions[model][version]
 

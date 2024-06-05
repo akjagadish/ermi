@@ -325,13 +325,23 @@ def get_all_regex_patterns(num_dim, prompt_version, task_name):
     Returns:
         patterns: list of regex patterns
     '''
-
     if task_name == 'functionlearning':
         assert (int(prompt_version) == 2) or (prompt_version ==
                                               'ranked') or (prompt_version ==
                                                             'direction') or (prompt_version ==
                                                                              'unknown'), 'only prompt versions 2, ranked, unknown, and direction are supported for function learning'
         regex_expressions = [r'([\d.]+),' * num_dim + r'([\d.]+)']
+
+    elif task_name == 'categorisation':
+        if num_dim == 3 and int(prompt_version) == 4:
+            regex_expressions = [r'([\d.]+),([\d.]+),([\d.]+),([\w]+)',
+                                r'([\w\-]+),([\w\-]+),([\w\-]+),([\w]+)',
+                                r'([-\w\d,.]+),([-\w\d,.]+),([-\w\d,.]+),([-\w\d,.]+)',
+                                r'([^,]+),([^,]+),([^,]+),([^,]+)',
+                                r'([^,\n]+),([^,\n]+),([^,\n]+),([^,\n]+)',
+                                r'(?:.*?:)?([^,-]+),([^,-]+),([^,-]+),([^,-]+)',
+                                r'([^,-]+),([^,-]+),([^,-]+),([^,-]+)',]
+    
     else:
         raise NotImplementedError
     patterns = regex_expressions
