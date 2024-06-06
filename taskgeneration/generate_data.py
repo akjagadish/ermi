@@ -307,7 +307,7 @@ if __name__ == "__main__":
                 for trial_id, data in enumerate(matches):
                     inputs, targets = data[:-1], data[-1]
                     try:
-                        inputs = str([float(i) for i in inputs])
+                        inputs =  str([float(i) for i in inputs[1:]]) if len(inputs)==(num_dim+1) else str([float(i) for i in inputs])
                         dataframe = pd.DataFrame({'input': inputs, 'target': targets, 'trial_id': trial_id, 'task_id': task_id}, index=[
                                             0], columns=['input', 'target', 'trial_id', 'task_id'])
                         # only append if the task_id is not already present in the dataframe
