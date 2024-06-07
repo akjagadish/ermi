@@ -326,7 +326,7 @@ def get_all_regex_patterns(num_dim, prompt_version, task_name):
         patterns: list of regex patterns
     '''
     if task_name == 'functionlearning':
-        assert (int(prompt_version) == 2) or (prompt_version ==
+        assert (prompt_version == 'v2') or (prompt_version ==
                                               'ranked') or (prompt_version ==
                                                             'direction') or (prompt_version ==
                                                                              'unknown'), 'only prompt versions 2, ranked, unknown, and direction are supported for function learning'

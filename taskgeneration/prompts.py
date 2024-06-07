@@ -358,6 +358,9 @@ def generate_data_functionlearning_problems(model, version, num_data=20, num_dim
 
     instructions['llama-3'] = {}
     instructions['llama-3']['v2'] = generate_data_prompt_v2
+    instructions['llama-3']['vranked'] = generate_data_prompt_v4
+    instructions['llama-3']['vdirection'] = generate_data_prompt_v4
+    instructions['llama-3']['vunknown'] = generate_data_prompt_v4
 
     return instructions[model][version]
 
