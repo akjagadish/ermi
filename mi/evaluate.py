@@ -65,7 +65,7 @@ def evaluate_regression(env_name=None, model_path=None, experiment='llm_generate
         return accuracy
 
 
-def evaluate_classification(env_name=None, model_path=None, experiment='llm_generated', paired=False, env=None, model=None, mode='val', shuffle_trials=False, loss='nll', policy='greedy', beta=1., max_steps=70, nonlinear=False, num_dims=3, device='cpu', return_all=False):
+def evaluate_classification(env_name=None, model_path=None, experiment='llm_generated', paired=False, env=None, model=None, mode='val', shuffle_trials=False, loss='nll', policy='greedy', beta=1., max_steps=70, nonlinear=False, num_dims=3, device='cpu', optimizer=None, return_all=False):
 
     if env is None:
         # load environment
@@ -81,8 +81,11 @@ def evaluate_classification(env_name=None, model_path=None, experiment='llm_gene
         model = torch.load(model_path, map_location=torch.device('cpu'))[
             1].to(device)
 
-    with torch.no_grad():
         model.eval()
+        if optimizer is not None:
+            optimizer.eval()
+
+    with torch.no_grad():
         packed_inputs, sequence_lengths, targets = env.sample_batch(
             paired=paired)
         model.device = device
@@ -92,23 +95,17 @@ def evaluate_classification(env_name=None, model_path=None, experiment='llm_gene
 
         # sample from model choices probs using binomial distribution
         if loss == 'bce':
-            if policy == 'binomial':
-                model_choices = torch.distributions.Binomial(
-                    probs=model_choices).sample()
-            elif policy == 'greedy':
-                model_choices = model_choices.round()
-
-            model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
-                sequence_lengths)], axis=0).squeeze().float()
-            true_choices = targets.reshape(-1, 1).float().to(device).squeeze()
-            accuracy = (model_choices == true_choices).sum() / \
-                (model_choices.shape[0])
+            model_choices = torch.distributions.Binomial(
+                probs=model_choices).sample() if policy == 'binomial' else model_choices.round()
         elif loss == 'nll':
-            predictive_posterior = model(
-                packed_inputs, sequence_lengths)
-            accuracy = - \
-                predictive_posterior.log_prob(
-                    targets.unsqueeze(2).float().to(device)).mean()
+            model_choices = model_choices.sample(
+            ) if policy == 'binomial' else model_choices.mean.round()
+
+        model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
+            sequence_lengths)], axis=0).squeeze().float()
+        true_choices = targets.reshape(-1, 1).float().to(device).squeeze()
+        accuracy = (model_choices == true_choices).sum() / \
+            (model_choices.shape[0])
 
     if return_all:
         return accuracy, None, None, sequence_lengths, targets  # model_preds, true_targets

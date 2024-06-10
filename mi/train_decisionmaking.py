@@ -9,6 +9,7 @@ from model import TransformerDecoderClassification, TransformerDecoderLinearWeig
 import argparse
 from tqdm import tqdm
 from evaluate import evaluate_classification
+import schedulefree
 
 
 def run(env_name, paired, restart_training, restart_episode_id, num_episodes, synthetic, nonlinear, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, batch_size=64):
@@ -40,19 +41,22 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, sy
         start_id = 0
 
     # setup optimizer
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    # optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = schedulefree.AdamWScheduleFree(model.parameters(), lr=args.lr)
+    model.train()
     losses = []  # keep track of losses
     accuracy = []  # keep track of accuracies
 
     # train for num_episodes
     for t in tqdm(range(start_id, int(num_episodes))):
+        optimizer.train()
         # TODO: nll loss only works for sample_to_match_max_steps=True
         packed_inputs, sequence_lengths, targets = env.sample_batch(
             paired=paired)
+        optimizer.zero_grad()
         loss = model.compute_loss(packed_inputs, targets, sequence_lengths)
 
         # backprop
-        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
@@ -63,10 +67,10 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, sy
             writer.add_scalar('Loss', loss, t)
 
         if (not t % save_every):
-            torch.save([t, model], save_dir)
+            torch.save([t, model.state_dict()], save_dir)
             experiment = 'synthetic' if synthetic else 'llm_generated'
             acc = evaluate_classification(env_name=env_name, model_path=save_dir, experiment=experiment, paired=paired,
-                                          env=env, model=model, mode='val', shuffle_trials=shuffle, loss=loss_fn, max_steps=max_steps, nonlinear=nonlinear, num_dims=num_dims, device=device)
+                                          env=env, model=model, mode='val', shuffle_trials=shuffle, loss=loss_fn, max_steps=max_steps, nonlinear=nonlinear, num_dims=num_dims, optimizer=optimizer, device=device)
             accuracy.append(acc)
             writer.add_scalar('Val. Acc.', acc, t)
 
