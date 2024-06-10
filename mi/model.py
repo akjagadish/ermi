@@ -263,10 +263,11 @@ class TransformerDecoderLinearWeights(nn.Module):
             model_choices = self.forward(packed_inputs, sequence_lengths)
             model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
                 sequence_lengths)], axis=0).squeeze().float()
-            true_choices = targets.reshape(-1, 1).float().to(self.device).squeeze()
+            true_choices = targets.reshape(-1,
+                                           1).float().to(self.device).squeeze()
             return criterion(model_choices, true_choices)
         else:
             predictive_posterior = self.forward(
                 packed_inputs, sequence_lengths)
             return - predictive_posterior.log_prob(
-                            targets.unsqueeze(2).float().to(self.device)).mean()
+                targets.unsqueeze(2).float().to(self.device)).mean()

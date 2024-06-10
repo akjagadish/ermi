@@ -328,7 +328,7 @@ class SyntheticDecisionmakingTask(nn.Module):
             stacked_task_features, batch_first=True)
 
         # support_inputs_a.detach().to(device), support_inputs_b.detach().to(device)
-        return packed_inputs.detach().to(self.device), sequence_lengths, stacked_targets.detach().to(self.device)
+        return packed_inputs.detach().to(self.device), sequence_lengths, stacked_targets.detach().to(self.device).squeeze(2)
 
     def save_synthetic_data(self, num_tasks=5000, paired=True):
 
