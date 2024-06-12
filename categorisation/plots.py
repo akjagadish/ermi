@@ -833,7 +833,6 @@ def plot_dataset_statistics(mode=0):
                 if (y == 0).all() or (y == 1).all():
                     pass
                 else:
-                    # X_linear = PolynomialFeatures(1).fit_transform(X)
                     X_linear = PolynomialFeatures(
                         1, include_bias=False).fit_transform(X)
 
@@ -843,7 +842,6 @@ def plot_dataset_statistics(mode=0):
                     gini = gini_compute(np.abs(log_reg.params[1:]))
                     gini_coeff.append(gini)
 
-                    # X_poly = PolynomialFeatures(poly_degree).fit_transform(X)
                     X_poly = PolynomialFeatures(
                         poly_degree, interaction_only=True, include_bias=False).fit_transform(X)
                     log_reg_quadratic = sm.Logit(y, X_poly).fit(
@@ -859,30 +857,22 @@ def plot_dataset_statistics(mode=0):
                         task_accuraries_polynomial = []
                         for trial in range(max_trial):
                             X_linear_uptotrial = X_linear[:trial]
-                            # X_poly_uptotrial = X_poly[:trial]
                             y_uptotrial = y[:trial]
 
                             if (y_uptotrial == 0).all() or (y_uptotrial == 1).all() or trial == 0:
                                 task_accuraries_linear.append(0.5)
-                                # task_accuraries_polynomial.append(0.5)
                             else:
                                 log_reg = sm.Logit(y_uptotrial, X_linear_uptotrial).fit(
                                     method='bfgs', maxiter=10000, disp=0)
-                                # log_reg_quadratic = sm.Logit(y_uptotrial, X_poly_uptotrial).fit(method='bfgs', maxiter=10000, disp=0)
-
                                 y_linear_trial = log_reg.predict(
                                     X_linear[trial])
-                                # y_poly_trial = log_reg_quadratic.predict(X_poly[trial])
 
                                 task_accuraries_linear.append(
                                     float((y_linear_trial.round() == y[trial]).item()))
-                                # task_accuraries_polynomial.append(float((y_poly_trial.round() == y[trial]).item()))
 
                     all_accuraries_linear.append(task_accuraries_linear)
-                    # all_accuraries_polynomial.append(task_accuraries_polynomial)
-        all_accuraries_linear = np.array(all_accuraries_linear).mean(0)
-        # all_accuraries_polynomial = np.array(all_accuraries_polynomial).mean(0)
 
+        all_accuraries_linear = np.array(all_accuraries_linear).mean(0)
         logprobs = torch.from_numpy(-0.5 *
                                     np.stack((all_bics_linear, all_bics_quadratic), -1))
         joint_logprob = logprobs + \
@@ -895,13 +885,13 @@ def plot_dataset_statistics(mode=0):
     # set env_name and color_stats based on mode
     if mode == 0:
         env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/claude_generated_tasks_paramsNA_dim4_data650_tasks8950_pversion5_stage1'
-        color_stats = '#405A63'  # '#2F4A5A'# '#173b4f'
+        color_stats = '#405A63'  
     elif mode == 1:
         env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/linear_data'
-        color_stats = '#66828F'  # 5d7684'# '#5d7684'
+        color_stats = '#66828F'  
     elif mode == 2:  # first plot
         env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/real_data'
-        color_stats = '#173b4f'  # '#0D2C3D' #'#8b9da7'
+        color_stats = '#173b4f' 
     elif mode == 3:  # last plot
         env_name = f'{SYS_PATH}/categorisation/data/generated_tasks/synthetic_tasks_dim4_data650_tasks1000_nonlinearTrue'
         color_stats = '#5d7684'
@@ -933,7 +923,6 @@ def plot_dataset_statistics(mode=0):
     bin_max = np.max(gini_coeff)
     fig, axs = plt.subplots(1, 4,  figsize=(6*4, 4))  # figsize=(6.75, 1.5))
     axs[0].plot(all_accuraries_linear, color=color_stats, alpha=1., lw=3)
-    # axs[0].plot(all_accuraries_polynomial, alpha=0.7)
     sns.histplot(np.array(all_corr), ax=axs[1], bins=11, binrange=(
         -1., 1.), stat='probability', edgecolor='w', linewidth=1, color=color_stats, alpha=1.)
     sns.histplot(gini_coeff, ax=axs[2], bins=11, binrange=(
