@@ -133,7 +133,7 @@ class TransformerDecoderClassification(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.beta = beta
 
-        assert loss == 'bce', "loss must be binary cross entropy"
+        assert loss == 'bce' or 'nll', "loss must be binary cross entropy or negative log likelihood"
         self.loss = loss
 
     def make_sequence_mask(self, sz):
@@ -163,19 +163,25 @@ class TransformerDecoderClassification(nn.Module):
         output = self.transformer(inputs_pos_encoded.float().to(self.device), inputs_pos_encoded.float(
         ).to(self.device), tgt_mask=tgt_mask.to(self.device), memory_mask=tgt_mask.to(self.device))
         y = self.linear(output.to(self.device))
-        y = self.sigmoid(self.beta*y.to(self.device))
+        theta = self.sigmoid(self.beta*y.to(self.device))
 
-        return y
+        return theta if self.loss == 'bce' else Bernoulli(theta)
 
     def compute_loss(self, packed_inputs, targets, sequence_lengths=None):
 
-        criterion = nn.BCELoss() if self.loss == 'bce' else None
-        model_choices = self.forward(packed_inputs, sequence_lengths)
-        model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
-            sequence_lengths)], axis=0).squeeze().float()
-        true_choices = targets.reshape(-1, 1).float().to(self.device).squeeze()
-        # torch.concat(targets, axis=0).float().to(self.device)
-        return criterion(model_choices, true_choices)
+        if self.loss == 'bce':
+            criterion = nn.BCELoss()
+            model_choices = self.forward(packed_inputs, sequence_lengths)
+            model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
+                sequence_lengths)], axis=0).squeeze().float()
+            true_choices = targets.reshape(-1,
+                                           1).float().to(self.device).squeeze()
+            return criterion(model_choices, true_choices)
+        else:
+            predictive_posterior = self.forward(
+                packed_inputs, sequence_lengths)
+            return - predictive_posterior.log_prob(
+                targets.unsqueeze(2).float().to(self.device)).mean()
 
 
 class TransformerDecoderLinearWeights(nn.Module):
