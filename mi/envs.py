@@ -179,15 +179,15 @@ class DecisionmakingTask(nn.Module):
 
         def stacked_normalized(data):
             data = np.stack(data)
-            return (data - data.min(axis=0))/(data.max(axis=0) - data.min(axis=0) + 1e-6)
+            return (data - data.mean(axis=0))/(data.std(axis=0) + 1e-6)
 
         stacked_task_features = []
         for task_input_features, task_targets in zip(data.input.values, data.target.values):
             if self.normalize:
-                input_features = stacked_normalized(np.diff(np.stack(task_input_features).reshape(
-                    2, self.max_steps // 2, self.num_dims), axis=0).squeeze())
-                targets = stacked_normalized(np.diff(
-                    np.stack(task_targets).reshape(-1, 1).reshape(2, self.max_steps // 2, 1), axis=0).squeeze(0))
+                input_features = np.diff(stacked_normalized(np.stack(task_input_features)).reshape(
+                    2, self.max_steps // 2, self.num_dims), axis=0).squeeze()
+                targets = np.diff(np.stack(
+                    task_targets).reshape(-1, 1).reshape(2, self.max_steps // 2, 1), axis=0).squeeze(0)
             else:
                 input_features = np.diff(np.stack(task_input_features).reshape(
                     2, self.max_steps // 2, self.num_dims), axis=0).squeeze()
@@ -200,7 +200,8 @@ class DecisionmakingTask(nn.Module):
             stacked_task_features.append(torch_features)
 
         stacked_task_features = torch.stack(stacked_task_features)
-        stacked_task_features[..., -1] = stacked_task_features[..., -1] > 0.5
+        stacked_task_features[..., -1] = stacked_task_features[..., -
+                                                               1] > 0. if torch.rand(1) > 0.5 else stacked_task_features[..., -1] < 0.
         stacked_targets = stacked_task_features[..., -1].clone()
 
         if not paired:
@@ -305,11 +306,6 @@ class SyntheticDecisionmakingTask(nn.Module):
 
         sequence_lengths = [self.max_steps] * self.batch_size
 
-        # max-min normalization each feature
-        support_inputs = (support_inputs - support_inputs.min(axis=0).values) / \
-            (support_inputs.max(axis=0).values -
-             support_inputs.min(axis=0).values + 1e-6)
-
         stacked_task_features[..., :self.num_dims] = support_inputs
 
         # permute the order of features to have batch_size as the first dimension
@@ -408,10 +404,6 @@ class Binz2022(nn.Module):
                 'x0', 'x1']].values if self.experiment_id == 3 else data_participant_per_task[['x0', 'x1', 'x2', 'x3']].values
             human_targets = data_participant_per_task.choice.values
             targets = data_participant_per_task.target.values
-
-            # max-min normalization each feature
-            input_features = (input_features - input_features.min(axis=0)) / \
-                (input_features.max(axis=0) - input_features.min(axis=0) + 1e-6)
 
             # flip targets and humans choices
             # if np.random.rand(1) > 0.5:
