@@ -104,7 +104,7 @@ def act(text=None, run_gpt='llama', temperature=1., max_length=300, llm=None):
 
 
 if __name__ == "__main__":
-    models = ["7B", "80B", "NA"]
+    models = ["8B", "70B", "NA"]
     parser = argparse.ArgumentParser()
     parser.add_argument("--llama-path", type=str, required=False, default=None)
     parser.add_argument("--task", type=str, required=False,
