@@ -1,11 +1,14 @@
 #!/bin/bash -l
 #SBATCH -o ./logs/%A.out
 #SBATCH -e ./logs/%A.err
-#SBATCH --job-name=Claude
+#SBATCH --job-name=synthesize_problems_llama
+#SBATCH --time=24:00:00
+#SBATCH --constraint="gpu"
+#SBATCH --gres=gpu:a100:4
+#SBATCH --mem=160G
+#SBATCH --cpus-per-task=72
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=akshaykjagadish@gmail.com
-#SBATCH --time=72:00:00
-#SBATCH --cpus-per-task=18
 
 
 cd ~/ermi/taskgeneration
