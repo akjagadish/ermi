@@ -12,11 +12,11 @@ from evaluate import evaluate_classification
 import schedulefree
 
 
-def run(env_name, paired, restart_training, restart_episode_id, num_episodes, synthetic, nonlinear, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, batch_size=64):
+def run(env_name, paired, restart_training, restart_episode_id, num_episodes, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, batch_size=64):
 
     writer = SummaryWriter('runs/' + save_dir)
     if synthetic:
-        env = SyntheticDecisionmakingTask(num_dims=num_dims, max_steps=max_steps, batch_size=batch_size, noise=noise,
+        env = SyntheticDecisionmakingTask(num_dims=num_dims, max_steps=max_steps, batch_size=batch_size, noise=noise, ranking=ranking, direction=direction,
                                           device=device).to(device)
         model_max_steps = env.max_steps
     else:
@@ -70,7 +70,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, sy
             torch.save([t, model.state_dict()], save_dir)
             experiment = 'synthetic' if synthetic else 'llm_generated'
             acc = evaluate_classification(env_name=env_name, model_path=save_dir, experiment=experiment, paired=paired,
-                                          env=env, model=model, mode='val', shuffle_trials=shuffle, loss=loss_fn, max_steps=max_steps, nonlinear=nonlinear, num_dims=num_dims, optimizer=optimizer, device=device)
+                                          env=env, model=model, mode='val', shuffle_trials=shuffle, loss=loss_fn, max_steps=max_steps, num_dims=num_dims, optimizer=optimizer, device=device)
             accuracy.append(acc)
             writer.add_scalar('Val. Acc.', acc, t)
 
@@ -120,8 +120,10 @@ if __name__ == "__main__":
                         default=False, help='test runs')
     parser.add_argument('--synthetic', action='store_true',
                         default=False, help='train models on synthetic data')
-    parser.add_argument('--nonlinear', action='store_true',
-                        default=False, help='train models on nonlinear synthetic data')
+    parser.add_argument('--ranking', action='store_true',
+                        default=False, help='train models on ranked synthetic data')
+    parser.add_argument('--direction', action='store_true',
+                        default=False, help='train models on directional synthetic data')
     parser.add_argument('--noise', type=float, default=0., help='noise level')
     parser.add_argument('--shuffle', action='store_true',
                         default=False, help='shuffle trials')
@@ -148,9 +150,9 @@ if __name__ == "__main__":
         save_dir = f'{args.save_dir}env={args.env_name}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_paired{str(args.paired)}_loss{str(args.loss)}_run={str(args.first_run_id + i)}.pt'
         if args.synthetic:
             save_dir = save_dir.replace(
-                '.pt', f'_synthetic{"nonlinear" if args.nonlinear else ""}.pt')
+                '.pt', f'_{"ranking" if args.ranking else "direction" if args.direction else "unknown"}.pt')
         save_dir = save_dir.replace(
             '.pt', '_test.pt') if args.test else save_dir
 
-        run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.synthetic, args.nonlinear, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
+        run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
             args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, args.batch_size)

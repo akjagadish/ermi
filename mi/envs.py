@@ -7,7 +7,6 @@ from torch.distributions import Beta, Bernoulli, Categorical, MultivariateNormal
 import torch.multiprocessing as mp
 from model_utils import MLP
 import math
-from pyro.distributions.lkj import LKJCorrCholesky
 SYS_PATH = '/u/ajagadish/ermi/'
 
 
@@ -242,6 +241,7 @@ class SyntheticDecisionmakingTask(nn.Module):
 
         self.sigma = math.sqrt(0.01)
         self.theta = 1.0 * torch.ones(num_dims)
+        from pyro.distributions.lkj import LKJCorrCholesky
         self.cov_prior = LKJCorrCholesky(num_dims, eta=2.0 * torch.ones(1))
 
         self.mode = mode
