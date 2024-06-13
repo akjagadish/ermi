@@ -5,7 +5,7 @@ import os
 import re
 import pickle
 import ipdb
-from prompts import retrieve_tasklabel_prompt, synthesize_functionlearning_problems, synthesize_decisionmaking_problems
+from prompts import synthesize_functionlearning_problems, synthesize_decisionmaking_problems, synthesize_categorisation_problems
 import openai
 import gym
 import time
@@ -14,6 +14,7 @@ import numpy as np
 import torch
 import argparse
 import sys
+from llms import get_llm
 sys.path.append("..")
 sys.path.insert(1, '/u/ajagadish/ermi/taskgeneration/')
 # from inference import LLaMAInference
@@ -21,16 +22,24 @@ load_dotenv()  # load environment variables from .env
 TOKEN_COUNTER = 0
 
 
-def act(text=None, run_gpt='llama', temperature=1., max_length=300):
+def act(text=None, run_gpt='llama', temperature=1., max_length=300, llm=None):
 
-    global TOKEN_COUNTER
+    if run_gpt == 'llama-3':
+        if llm.instruct:
+            prompt = [
+                {"role": "system", 
+                "content": "You are an oracle that can generate data whose statistics match real-world data."},
+                {"role": "user", "content": text},
+                                ]
+            
+            text = llm.tokenizer.apply_chat_template(
+                prompt,
+                add_generation_prompt=True,
+                return_tensors="pt"
+            ).to("cuda")
+        response = llm.generate(text)
 
-    if run_gpt == 'llama':
-
-        # raw_response = llama.generate(
-        #     [text], temperature=temperature, max_length=max_length)[0][0]
-        # return raw_response
-        raise NotImplementedError
+        return response
 
     elif run_gpt == 'gpt4':
 
@@ -95,14 +104,14 @@ def act(text=None, run_gpt='llama', temperature=1., max_length=300):
 
 
 if __name__ == "__main__":
-    models = ["7B", "13B", "30B", "65B", "NA"]
+    models = ["7B", "80B", "NA"]
     parser = argparse.ArgumentParser()
     parser.add_argument("--llama-path", type=str, required=False, default=None)
     parser.add_argument("--task", type=str, required=False,
                         default='functionlearning')
     parser.add_argument("--model", type=str, required=False, choices=models)
     parser.add_argument("--run-gpt", type=str, required=True,
-                        choices=['llama', 'gpt3', 'gpt4', 'claude'])
+                        choices=['llama-3', 'gpt3', 'gpt4', 'claude'])
     parser.add_argument("--num-tasks", type=int, required=True, default=1000)
     parser.add_argument("--num-dim", type=int, required=True, default=3)
     parser.add_argument("--temperature", type=float,
@@ -122,7 +131,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     start_loading = time.time()
     run_gpt = args.run_gpt  # True
-    assert args.model == 'NA'if args.run_gpt == 'gpt3' or args.run_gpt == 'gpt4' or args.run_gpt == 'claude' else False, "Only NA model is supported for GPT3"
+    assert args.model == 'NA'if (args.run_gpt == 'gpt3' or args.run_gpt == 'gpt4' or args.run_gpt == 'claude') else True, "Only NA model is supported for GPT3"
     # model parameters
     temperature = args.temperature
     max_length = args.max_length
@@ -137,60 +146,50 @@ if __name__ == "__main__":
 
     if args.pool:
 
-        pool_synthesisedproblems(args.path, args.run_gpt, args.model, args.num_dim,
+        pool_synthesisedproblems(args.path, args.task, args.run_gpt, args.model, args.num_dim,
                                  args.num_tasks, args.num_runs, args.proc_id, args.prompt_version)
 
     else:
-        patterns = [
-            # r'\d+\.(.+?)\n',
-            r'([A-Za-z&]+),([A-Za-z&]+)',
-            r'([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+)',
-            None,
-            r'([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+)'
-        ]
 
         # load LLaMA model and instructions
-        if run_gpt == 'llama':
-            # llama = LLaMAInference(args.llama_path, args.model, max_batch_size=2)
+        if run_gpt == 'llama-3':
+            llm, Q_, A_ = get_llm(run_gpt, max_tokens=max_length, temp=temperature)
+
+        # load task specific instructions
+        if args.task == 'functionlearning':
+            instructions = synthesize_functionlearning_problems(
+                run_gpt, version=f'v{prompt_version}', num_dim=num_dim, num_tasks=num_tasks)
+            regex_patterns = [
+                        r'([A-Za-z&]+),([A-Za-z&]+)',
+                        r'([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+)',
+                        None,
+                        r'([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+),([A-Za-z&]+)',
+                        ]
+            regex = regex_patterns[num_dim-1]
+        elif args.task == 'categorisation':
+            instructions = synthesize_categorisation_problems(
+                run_gpt, version=f'v{prompt_version}', num_dim=num_dim, num_tasks=num_tasks)
+            regex_patterns = [
+                        r'\d+\.(.+?)\n',
+                        ]
+            regex = regex_patterns[0]
+        else:
             raise NotImplementedError
-
-        # load GPT-3 specific instructions
-        elif run_gpt == 'gpt3':
-            raise NotImplementedError
-
-        # load GPT-4 specific instructions
-        elif run_gpt == 'gpt4':
-            raise NotImplementedError
-
-        # load Claude specific instructions
-        elif run_gpt == 'claude':
-            if args.task == 'functionlearning':
-                instructions = synthesize_functionlearning_problems(
-                    'claude', version=f'v{prompt_version}', num_dim=num_dim, num_tasks=num_tasks)
-            elif args.task == 'categorylearning':
-                instructions = retrieve_tasklabel_prompt(
-                    'claude', version=f'v{prompt_version}', num_dim=num_dim, num_tasks=num_tasks)
-            elif args.task == 'decisionmaking':
-                instructions = synthesize_decisionmaking_problems(
-                    'claude', version=f'v{prompt_version}', num_dim=num_dim, num_tasks=num_tasks)
-            else:
-                raise NotImplementedError
-
+            
         # run gpt models
         for run in range(first_run_id, first_run_id+num_runs):
             stimulus_dimensions, targets = [], []
             # LLM acts
             # print(instructions)
-            action = act(instructions, run_gpt, temperature, max_length)
+            action = act(instructions, run_gpt, temperature, max_length, llm=llm)
             # print(action)
-            matches = re.findall(patterns[num_dim-1], action, re.MULTILINE)
+            matches = re.findall(regex, action, re.MULTILINE)
             if len(matches) > 0:
                 for match in matches:
                     # last generated token are the targets
-                    targets.append(match[-1])
+                    targets.append(match[-1] if args.task == 'functionlearning' else match.split(',')[-2:])
                     # rest are feature names
-                    stimulus_dimensions.append(match[:-1])
-                # import ipdb; ipdb.set_trace()
+                    stimulus_dimensions.append(match[:-1] if args.task == 'functionlearning' else match.split(',')[:-2])
                 # save data
                 df = pd.DataFrame({'feature_names': stimulus_dimensions, 'target_names': targets,
                                   'task_id': np.arange(len(stimulus_dimensions)), })

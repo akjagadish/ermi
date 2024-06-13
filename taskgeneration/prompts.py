@@ -136,12 +136,18 @@ def retrieve_prompt(model, version, num_dim=3, num_data=100, features=None, cate
                    5: 'five', 6: 'six', 7: 'seven', 8: 'eight'}
 
     def featurenames_to_text(features, num_dim):
-        if num_dim == 3:
+        if num_dim == 1:
+            return f'{features[0]}'
+        elif num_dim == 2:
+            return f'{features[0]} and {features[1]}'
+        elif num_dim == 3:
             return f'{features[0]}, {features[1]}, and {features[2]}'
         elif num_dim == 4:
             return f'{features[0]}, {features[1]}, {features[2]}, {features[3]}'
         elif num_dim == 6:
             return f'{features[0]}, {features[1]}, {features[2]}, {features[3]}, {features[4]}, and {features[5]}'
+        else:
+            raise ValueError('Number of dimensions not supported')
 
     claude_prompt_v5 = f" I am a psychologist who wants to run a category learning experiment."\
         " For a category learning experiment, I need a list of stimuli and their category labels."\
@@ -219,6 +225,43 @@ def retrieve_tasklabel_prompt(model, version, num_dim=3, num_tasks=100):
 
     return instructions[model][version]
 
+def synthesize_categorisation_problems(model, version, num_dim=3, num_tasks=100):
+
+    instructions = {}
+    assert num_dim <=8, "Number of dimensions should be less than or equal to 8"
+    num_to_text = {1: 'one', 2: 'two', 3: 'three', 4: 'four',
+                   5: 'five', 6: 'six', 7: 'seven', 8: 'eight'}
+    if num_dim==1:
+        output_format = f"- feature dimension 1, category label 1, category label 2  \n"  
+    elif num_dim==2:
+        output_format = f"- feature dimension 1, feature dimension 2, category label 1, category label 2  \n"
+    elif num_dim>2 and num_dim<=8:
+        output_format = f"- feature dimension 1, feature dimension 2, ..., feature dimension {str(num_dim)}, category label 1, category label 2  \n"
+    
+    feature_names_prompt_v5 = f" I am a psychologist who wants to run a category learning experiment."\
+            f" In a category learning experiment, there are many different {num_to_text[num_dim]}-dimensional stimuli, each of which belongs to one of two possible real-world categories."\
+            f" Please generate names for {num_to_text[num_dim]} stimulus feature dimensions and {num_to_text[2]} corresponding categories for {str(num_tasks)} different category learning experiments: \n"\
+            f"{output_format}"
+    
+    instructions['claude'] = {}
+    instructions['claude']['v5'] = feature_names_prompt_v5
+    
+    if num_dim==1:
+        output_format = f"1. feature dimension 1, category label 1, category label 2  \n"  
+    elif num_dim==2:
+        output_format = f"1. feature dimension 1, feature dimension 2, category label 1, category label 2  \n"
+    elif num_dim>2 and num_dim<=8:
+        output_format = f"1. feature dimension 1, feature dimension 2, ..., feature dimension {str(num_dim)}, category label 1, category label 2  \n"
+    
+    llama_feature_names_prompt_v0 = f" I am a psychologist who wants to run a category learning experiment."\
+            f" In a category learning experiment, there are many different two-dimensional stimuli, each of which belongs to one of two possible real-world categories."\
+            f" Please generate names for two stimulus feature dimensions and two corresponding categories for 100 different category learning experiments: \n"\
+            f"{output_format}"
+
+    instructions['llama-3'] = {}
+    instructions['llama-3']['v0'] = llama_feature_names_prompt_v0
+
+    return instructions[model][version]
 
 def synthesize_functionlearning_problems(model, version, num_dim=1, num_tasks=100):
 
