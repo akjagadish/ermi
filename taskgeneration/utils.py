@@ -283,6 +283,14 @@ def get_regex_patterns(num_dim, use_generated_tasklabels, prompt_version):
                                 r"\[([0-9]\.[0-9]{2}),(0\.[0-9]{2}),(0\.[0-9]{2})\],(A|B)",
                                 r"(\d+\.\d+),(\d+\.\d+),(\d+\.\d+),([A-Z])"
                                 ]
+    elif num_dim == 2 and prompt_version == 5:
+        regex_expressions = [r'^(\d+):([\d.]+),([\d.]+),([\w]+)',
+                             r'^(\d+):([\w\-]+),([\w\-]+),([\w]+)',
+                             r'^(\d+):([-\w\d,.]+),([-\w\d,.]+),([-\w\d,.]+)',
+                             r'^(\d+):([^,]+),([^,]+),([^,]+)',
+                             r'^(\d+):([^,\n]+),([^,\n]+),([^,\n]+)',
+                             r'^(\d+):(?:.*?:)?([^,-]+),([^,-]+),([^,-]+)',
+                             r'^(\d+):([^,-]+),([^,-]+),([^,-]+)']
     elif num_dim == 3 and prompt_version == 4:
         regex_expressions = [r'([\d.]+),([\d.]+),([\d.]+),([\w]+)',
                              r'([\w\-]+),([\w\-]+),([\w\-]+),([\w]+)',
@@ -333,6 +341,15 @@ def get_all_regex_patterns(num_dim, prompt_version, task_name):
         regex_expressions = [r'([\d.]+),' * num_dim + r'([\d.]+)']
 
     elif task_name == 'categorisation':
+        if num_dim == 2:
+             if  int(prompt_version) == 5:
+                regex_expressions = [r'^(\d+):([\d.]+),([\d.]+),([\w]+)',
+                                    r'^(\d+):([\w\-]+),([\w\-]+),([\w]+)',
+                                    r'^(\d+):([-\w\d,.]+),([-\w\d,.]+),([-\w\d,.]+)',
+                                    r'^(\d+):([^,]+),([^,]+),([^,]+)',
+                                    r'^(\d+):([^,\n]+),([^,\n]+),([^,\n]+)',
+                                    r'^(\d+):(?:.*?:)?([^,-]+),([^,-]+),([^,-]+)',
+                                    r'^(\d+):([^,-]+),([^,-]+),([^,-]+)']
         if num_dim == 3:
             if  int(prompt_version) == 5:
                 regex_expressions = [

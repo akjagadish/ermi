@@ -2,136 +2,6 @@ def retrieve_prompt(model, version, num_dim=3, num_data=100, features=None, cate
 
     instructions = {}
 
-    # llama
-    llama_prompt_v0 = f"A classification problem consists of a set of input-target pairs."\
-        f" Each input, x, is a vector of length {str(num_dim)}, x = [x1, x2, x3], containing feature values that range continuously between 0 and 1."\
-        " The target, y, is a function of the input vector and can take on values of either y = A or y = B.\n\n"\
-        f" The following are {str(num_data)} input-target pairs generated for one such classification problem:\n"\
-        "x=["
-
-    instructions['llama'] = {}
-    instructions['llama']['v0'] = llama_prompt_v0
-
-    # gpt3
-    gpt3_prompt_v0 = f"A classification problem consists of a set of input-target pairs."\
-        f" Each input, x, is a vector of length {str(num_dim)}, x = [x1, x2, x3], containing feature values (rounded to 2 decimals) that range continuously between 0 and 1."\
-        " The target, y, is a function of the input vector and can take on values of either y = A or y = B.\n\n"\
-        f" Please generate a list of {str(num_data)} input-target pairs using the following template for each row:\n"\
-        f"- [x1, x2, x3], y"
-
-    gpt3_prompt_v1 = f"A categorisation problem consists of a set of input-target pairs."\
-        f" Each input, x, is a vector of length {str(num_dim)}, x = [x1, x2, x3], containing feature values (rounded to 2 decimals) that range continuously between 0 and 1."\
-        " The target, y, is a function of the input vector and can take on values of either y = A or y = B."\
-        " You can choose any naturalistic decision function for the mapping from input to target.  \n\n"\
-        f" Please generate a list of {str(num_data)} input-target pairs for one such categorisation problem using the following template for each row:\n"\
-        f"- [x1, x2, x3], y"
-
-    instructions['gpt3'] = {}
-    instructions['gpt3']['v0'] = gpt3_prompt_v0
-    instructions['gpt3']['v1'] = gpt3_prompt_v1
-
-    # gpt4
-    gpt4_prompt_v0 = f"A categorisation problem consists of a set of input-target pairs."\
-        f" Each input, x, is a vector of length {str(num_dim)}, x = [x1, x2, x3], containing feature values (rounded to 2 decimals) that range continuously between 0 and 1."\
-        " The target, y, is a function of the input vector and can take on values of either y = A or y = B.\n\n"\
-        f" Please generate a list of {str(num_data)} input-target pairs for one such categorisation problem using the following template for each row:\n"\
-        f"- [x1, x2, x3], y"  # got code to generate output once but otherwise consistent
-
-    gpt4_prompt_v1 = f"A categorisation problem consists of a set of input-target pairs."\
-        f" Each input, x, is a vector of length {str(num_dim)}, x = [x1, x2, x3], containing feature values (rounded to 2 decimals) that range continuously between 0 and 1."\
-        " The target, y, is a function of the input vector and can take on values of either y = A or y = B."\
-        " You can choose any naturalistic decision function for the mapping from input to target. \n\n"\
-        f" Please generate a list of {str(num_data)} input-target pairs for one such categorisation problem using the following template for each row:\n"\
-        f"- [x1, x2, x3], y"\
-        f" Do not generate any text but just provide the input-target pairs."  # moved this line for pre-prompt
-
-    gpt4_prompt_v2 = f"A categorisation problem consists of a set of input-target pairs."\
-        f" Each input, x, is a vector of length {str(num_dim)}, x = [x1, x2, x3], containing feature values (rounded to 2 decimals) that range continuously between 0 and 1."\
-        " The target, y, is a function of the input vector and can take on values of either y = A or y = B."\
-        " For the mapping from input to target, a wide range of naturalistic decision functions can be chosen."\
-        " These functions may encompass complex mathematical operations, linear or non-linear functions, or arbitrary rule-based systems."\
-        " The selected function should be representative of patterns or rules that may exist in real-world categorization tasks. \n\n" \
-        f" Please generate a list of {str(num_data)} input-target pairs for one such categorisation problem using the following template for each row:\n"\
-        f"- [x1, x2, x3], y"
-
-    gpt4_prompt_v3 = f" I am a psychologist who wants to run a category learning experiment."\
-        " For a category learning experiment, I need a list of objects and their category labels."\
-        f" Each object is characterized by three distinct features: shape, size, and colour."\
-        " These feature values (rounded to 2 decimals) range continuously between 0 and 1."\
-        " Each feature should follow a distribution that describes the values they take in the real world. "\
-        " The category label can take the values A or B and should be predictable from the feature values of the object."\
-        " For the mapping from object features to the category label, you can choose any naturalistic function that is"\
-        " representative of patterns or rules that may exist in real-world tasks. \n\n"\
-        f" Please generate a list of {str(num_data)} objects with their feature values and their corresponding"\
-        " category labels using the following template for each row: \n"\
-        "-  feature value 1, feature value 2, feature value 3, category label \n"
-
-    instructions['gpt4'] = {}
-    instructions['gpt4']['v0'] = gpt4_prompt_v0
-    instructions['gpt4']['v1'] = gpt4_prompt_v1
-    instructions['gpt4']['v2'] = gpt4_prompt_v2
-    instructions['gpt4']['v3'] = gpt4_prompt_v3
-
-    # claude
-    features = ['shape', 'size', 'color'] if features is None else features
-    categories = ['A', 'B'] if categories is None else categories
-    features = [f.lower() for f in features]  # make all elements lower case
-    # make all elements lower case
-    categories = [c.lower() for c in categories]
-
-    claude_prompt_v0 = f" I am a psychologist who wants to run a category learning experiment."\
-        " For a category learning experiment, I need a list of objects and their category labels."\
-        f" Each object is characterized by three distinct features: {features[0]}, {features[1]}, and {features[2]}."\
-        " These feature values (rounded to 2 decimals) range continuously between 0 and 1."\
-        " Each feature should follow a distribution that describes the values they take in the real world. "\
-        " The category label can take the values A or B and should be predictable from the feature values of the object."\
-        " For the mapping from object features to the category label, you can choose any naturalistic function that is"\
-        " representative of patterns or rules that may exist in real-world tasks. \n\n"\
-        f" Please generate a list of {str(num_data)} objects with their feature values and their corresponding"\
-        " category labels using the following template for each row: \n"\
-        "-  feature value 1, feature value 2, feature value 3, category label \n"
-
-    claude_prompt_v1 = f" I am a psychologist who wants to run a category learning experiment."\
-        " For a category learning experiment, I need a list of objects and their category labels."\
-        f" Each object is characterized by three distinct features: {features[0]}, {features[1]}, and {features[2]}."\
-        " These feature values (rounded to 2 decimals) range continuously between 0 and 1."\
-        " Each feature should follow a distribution that describes the values they take in the real world. "\
-        " The category label can take the values A or B and should be predictable from the feature values of the object."\
-        " \n\n"\
-        f" Please generate a list of {str(num_data)} objects with their feature values and their corresponding"\
-        " category labels using the following template for each row: \n"\
-        "-  feature value 1, feature value 2, feature value 3, category label \n"
-
-    claude_prompt_v2 = f" I am a psychologist who wants to run a category learning experiment."\
-        " For a category learning experiment, I need a list of stimuli and their category labels."\
-        f" Each stimulus is characterized by three distinct features: {features[0]}, {features[1]}, and {features[2]}."\
-        " These feature values (rounded to 2 decimals) range continuously between 0. and 1. where 0. indicates the minimum possible value and 1. the maximum possible value."\
-        f" The category label can be {categories[0]} or {categories[1]} and should be predictable from the feature values of the stimulus."\
-        " \n\n"\
-        f" Please generate a list of {str(num_data)} stimuli with their feature values and their corresponding"\
-        " category labels using the following template for each row: \n"\
-        "-  feature value 1, feature value 2, feature value 3, category label \n"
-    # " Each feature should follow a distribution that describes the values they take in the real world. "\
-
-    claude_prompt_v3 = f" I am a psychologist who wants to run a category learning experiment."\
-        " For a category learning experiment, I need a list of stimuli and their category labels."\
-        f" Each stimulus is characterized by three distinct features: {features[0]}, {features[1]}, and {features[2]}."\
-        f" The category label can be {categories[0]} or {categories[1]} and should be predictable from the feature values of the stimulus."\
-        " \n\n"\
-        f" Please generate a list of {str(num_data)} stimuli with their feature values and their corresponding"\
-        " category labels using the following template for each row: \n"\
-        " feature value 1, feature value 2, feature value 3, category label \n"
-
-    claude_prompt_v4 = f" I am a psychologist who wants to run a category learning experiment."\
-        " For a category learning experiment, I need a list of stimuli and their category labels."\
-        f" Each stimulus is characterized by three distinct features: {features[0]}, {features[1]}, and {features[2]}."\
-        " These features can take only numerical values."\
-        f" The category label can be {categories[0]} or {categories[1]} and should be predictable from the feature values of the stimulus."\
-        " \n\n"\
-        f" Please generate a list of {str(num_data)} stimuli with their feature values and their corresponding"\
-        " category labels using the following template for each row: \n"\
-        "-  feature value 1, feature value 2, feature value 3, category label \n"
-
     num_to_text = {2: 'two', 3: 'three', 4: 'four',
                    5: 'five', 6: 'six', 7: 'seven', 8: 'eight'}
 
@@ -148,6 +18,14 @@ def retrieve_prompt(model, version, num_dim=3, num_data=100, features=None, cate
             return f'{features[0]}, {features[1]}, {features[2]}, {features[3]}, {features[4]}, and {features[5]}'
         else:
             raise ValueError('Number of dimensions not supported')
+        
+    if num_dim==1:
+        output_format = " 1: feature value 1, category label \n"
+    elif num_dim==2:
+        output_format = f" 1: feature value 1, feature value {str(num_dim)}, category label \n"
+    elif num_dim>2 and num_dim<=8:
+        output_format = f" 1: feature value 1, feature value 2,..., feature value {str(num_dim)}, category label \n"
+   
 
     claude_prompt_v5 = f" I am a psychologist who wants to run a category learning experiment."\
         " For a category learning experiment, I need a list of stimuli and their category labels."\
@@ -157,19 +35,12 @@ def retrieve_prompt(model, version, num_dim=3, num_data=100, features=None, cate
         " \n\n"\
         f" Please generate a list of {str(num_data)} stimuli with their feature values and their corresponding"\
         " category labels sequentially without skipping any row using the following template for each row: \n"\
-        f" 1: feature value 1, feature value 2,..., feature value {str(num_dim)}, category label \n"
+        f"{output_format}"
 
     instructions['claude'] = {}
-    instructions['claude']['v0'] = claude_prompt_v0
-    instructions['claude']['v1'] = claude_prompt_v1
-    instructions['claude']['v2'] = claude_prompt_v2
-    instructions['claude']['v3'] = claude_prompt_v3
-    instructions['claude']['v4'] = claude_prompt_v4
     instructions['claude']['v5'] = claude_prompt_v5
 
     instructions['llama-3'] = {}
-    instructions['llama-3']['v3'] = claude_prompt_v3
-    instructions['llama-3']['v4'] = claude_prompt_v4
     instructions['llama-3']['v5'] = claude_prompt_v5
 
     return instructions[model][version]

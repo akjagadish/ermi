@@ -20,8 +20,8 @@ pip3 install --user fire sentencepiece ipdb accelerate tqdm
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 
 ## generate task labels
-python synthesize_problems.py --task categorisation --model 80B --proc-id 0 --num-runs 100 --num-tasks 100 --num-dim 2 --max-length 10000 --run-gpt llama-3 --prompt-version 0 --path /u/ajagadish/ermi/categorisation/data/synthesize_problems
+# python synthesize_problems.py --task categorisation --model 70B --proc-id 0 --num-runs 100 --num-tasks 100 --num-dim 2 --max-length 10000 --run-gpt llama-3 --prompt-version 0 --path /u/ajagadish/ermi/categorisation/data/synthesize_problems
 
 # python synthesize_
 ## pool generated task labels
-python synthesize_problems.py --task categorisation --model 70B --proc-id 0 --num-runs 10 --num-tasks 100 --num-dim 2 --max-length 10000 --run-gpt llama-3 --prompt-version 0 --pool --path /u/ajagadish/ermi/categorisation/data/synthesize_problems
+python synthesize_problems.py --task categorisation --model 70B --proc-id 0 --num-runs 100 --num-tasks 100 --num-dim 2 --max-length 10000 --run-gpt llama-3 --prompt-version 0 --pool --path /u/ajagadish/ermi/categorisation/data/synthesize_problems
