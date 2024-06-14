@@ -242,7 +242,7 @@ class SyntheticDecisionmakingTask(nn.Module):
         self.sigma = math.sqrt(0.01)
         self.theta = 1.0 * torch.ones(num_dims)
         from pyro.distributions.lkj import LKJCorrCholesky
-        self.cov_prior = LKJCorrCholesky(num_dims, eta=2.0 * torch.ones(1))
+        self.cov_prior = LKJCorrCholesky(num_dims, eta=2.0 * torch.ones([]))
 
         self.mode = mode
         self.batch_size = batch_size if mode == 'train' else 1000
@@ -270,37 +270,31 @@ class SyntheticDecisionmakingTask(nn.Module):
 
         return inputs, targets, inputs_a, inputs_b
 
+    def sample_pair_vectorised(self):
+        weights = torch.randn(self.batch_size, self.num_dims, device=self.device)
+        if self.direction:
+            weights = weights.abs()
+        elif self.ranking:
+            absolutes = torch.abs(weights)
+            _, feature_perm = torch.sort(absolutes, dim=1, descending=True)
+            weights = weights.gather(1, feature_perm)
+
+        self.weights = weights.clone()
+        L = self.cov_prior.sample([self.batch_size]).to(self.device) 
+        while torch.isnan(L).any():
+            L = self.cov_prior.sample([self.batch_size]).to(self.device)
+
+        inputs_a = MultivariateNormal(torch.zeros(self.batch_size, self.num_dims, device=self.device), scale_tril=L).sample([self.max_steps])
+        inputs_b = MultivariateNormal(torch.zeros(self.batch_size, self.num_dims, device=self.device), scale_tril=L).sample([self.max_steps])
+        inputs = inputs_a - inputs_b
+
+        targets = torch.bernoulli(0.5 * torch.erfc(-(weights * inputs).sum(-1, keepdim=True) / (2 * self.sigma)))
+        return inputs.detach().to(self.device), targets.detach().to(self.device), inputs_a.detach().to(self.device), inputs_b.detach().to(self.device)
+ 
     def sample_batch(self, paired=False):
-        support_inputs = torch.zeros(
-            self.max_steps, self.batch_size, self.num_dims)
-        stacked_task_features = torch.zeros(
-            self.max_steps, self.batch_size, self.num_dims+self.num_choices)
-        support_inputs_a = torch.zeros(
-            self.max_steps, self.batch_size, self.num_dims)
-        support_inputs_b = torch.zeros(
-            self.max_steps, self.batch_size, self.num_dims)
-        support_targets = torch.zeros(
-            self.max_steps, self.batch_size, self.num_choices)
-        self.weights = torch.zeros(self.batch_size, self.num_dims)
-
-        for i in range(self.batch_size):
-            if self.direction:
-                weights = torch.randn(self.num_dims).abs()
-            else:
-                weights = torch.randn(self.num_dims)
-
-            if self.ranking:
-                absolutes = torch.abs(weights)
-                _, feature_perm = torch.sort(absolutes, dim=0, descending=True)
-                weights = weights[feature_perm]
-
-            L = self.cov_prior.sample() 
-            while torch.isnan(L).any():
-                L = self.cov_prior.sample()
-            self.weights[i] = weights.clone()
-            for j in range(self.max_steps):
-                support_inputs[j, i], support_targets[j, i], support_inputs_a[j,
-                                                                              i], support_inputs_b[j, i] = self.sample_pair(weights, L)
+        stacked_task_features = torch.empty(
+             self.max_steps, self.batch_size, self.num_dims+self.num_choices, device=self.device)
+        support_inputs, support_targets, support_inputs_a, support_inputs_b = self.sample_pair_vectorised()
 
         # this is a shitty hack to fix an earlier bug
         if self.direction and not self.synthesize_tasks:
