@@ -294,7 +294,9 @@ class SyntheticDecisionmakingTask(nn.Module):
                 _, feature_perm = torch.sort(absolutes, dim=0, descending=True)
                 weights = weights[feature_perm]
 
-            L = self.cov_prior.sample()
+            L = self.cov_prior.sample() 
+            while torch.isnan(L).any():
+                L = self.cov_prior.sample()
             self.weights[i] = weights.clone()
             for j in range(self.max_steps):
                 support_inputs[j, i], support_targets[j, i], support_inputs_a[j,
