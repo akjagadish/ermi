@@ -43,7 +43,7 @@ module load cuda/11.6
 module load pytorch_distributed/gpu-cuda-11.6/1.13.0
 pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropic
 clear
-tensorboard --logdir=runs/trained_models/ --port=6006
+tensorboard --logdir=runs/u/ajagadish/ermi/decisionmaking/trained_models --port=6006
 
 ## function learning or decision making
 module purge
