@@ -1,0 +1,997 @@
+,feature_names,category_names,task_id
+0,"[' Shape', ' Color']","[' Fruits', ' Vehicles']",0
+1,"[' Texture', ' Size']","[' Animals', ' Furniture']",1
+2,"[' Orientation', ' Brightness']","[' Tools', ' Buildings']",2
+3,"[' Pattern', ' Weight']","[' Insects', ' Musical Instruments']",3
+4,"[' Hue', ' Saturation']","[' Sports', ' Food']",4
+5,"[' Angle', ' Curvature']","[' Flowers', ' Electronics']",5
+6,"[' Opacity', ' Speed']","[' Cars', ' Bicycles']",6
+7,"[' Reflectance', ' Contrast']","[' Fish', ' Fruits']",7
+8,"[' Frequency', ' Amplitude']","[' Trees', ' Machines']",8
+9,"[' Aspect Ratio', ' Material']","[' Rocks', ' Appliances']",9
+10,"[' Symmetry', ' Loudness']","[' Birds', ' Furniture']",10
+11,"[' Resolution', ' Clarity']","[' Clouds', ' Buildings']",11
+12,"[' Illumination', ' Distance']","[' Roads', ' Furniture']",12
+13,"[' Saturation', ' Sharpness']","[' Animals', ' Vegetables']",13
+14,"[' Proportion', ' Balance']","[' Furniture', ' Toys']",14
+15,"[' Rigidity', ' Smoothness']","[' Metals', ' Plastics']",15
+16,"[' Vibrancy', ' Lightness']","[' Fruits', ' Vegetables']",16
+17,"[' Angularity', ' Roundness']","[' Animals', ' Toys']",17
+18,"[' Transparency', ' Thickness']","[' Glass', ' Fabric']",18
+19,"[' Contour', ' Fill']","[' Buildings', ' Landscapes']",19
+20,"[' Length', ' Width']","[' Roads', ' Rivers']",20
+21,"[' Width', ' Height']","[' Windows', ' Doors']",21
+22,"[' Curviness', ' Straightness']","[' Rivers', ' Roads']",22
+23,"[' Glossiness', ' Matteness']","[' Fruits', ' Vegetables']",23
+24,"[' Spikiness', ' Roundness']","[' Cacti', ' Flowers']",24
+25,"[' Fragmentation', ' Unity']","[' Rocks', ' Mountains']",25
+26,"[' Flexibility', ' Rigidness']","[' Rubber', ' Metal']",26
+27,"[' Porosity', ' Solidness']","[' Sponges', ' Bricks']",27
+28,"[' Tactility', ' Slipperiness']","[' Fabrics', ' Glass']",28
+29,"[' Angularity', ' Curviness']","[' Machines', ' Furniture']",29
+30,"[' Vibration', ' Stillness']","[' Animals', ' Machines']",30
+31,"[' Transparency', ' Opacity']","[' Water', ' Oil']",31
+32,"[' Smoothness', ' Roughness']","[' Skins', ' Fabrics']",32
+33,"[' Warmth', ' Coolness']","[' Fire', ' Ice']",33
+34,"[' Salinity', ' Freshness']","[' Ocean', ' River']",34
+35,"[' Brittleness', ' Flexibility']","[' Glass', ' Rubber']",35
+36,"[' Lightness', ' Darkness']","[' Day', ' Night']",36
+37,"[' Coarseness', ' Fineness']","[' Sand', ' Sugar']",37
+38,"[' Haze', ' Clarity']","[' Atmosphere', ' Water']",38
+39,"[' Vibrancy', ' Dullness']","[' Colors', ' Grays']",39
+40,"[' Angularity', ' Roundness']","[' Machines', ' Toys']",40
+41,"[' Solidity', ' Porosity']","[' Bricks', ' Sponges']",41
+42,"[' Saturation', ' Desaturation']","[' Colors', ' Grays']",42
+43,"[' Loudness', ' Quietness']","[' Music', ' Silence']",43
+44,"[' Brightness', ' Dimness']","[' Light', ' Dark']",44
+45,"[' Heaviness', ' Lightness']","[' Metals', ' Feathers']",45
+46,"[' Width', ' Narrowness']","[' Roads', ' Paths']",46
+47,"[' Roughness', ' Smoothness']","[' Skins', ' Fabrics']",47
+48,"[' Clarity', ' Distortion']","[' Images', ' Reflections']",48
+49,"[' Straightness', ' Curviness']","[' Roads', ' Rivers']",49
+50,"[' Fragmentation', ' Unity']","[' Ice', ' Water']",50
+51,"[' Vibrancy', ' Dullness']","[' Flowers', ' Rocks']",51
+52,"[' Opacity', ' Transparency']","[' Oil', ' Water']",52
+53,"[' Proportion', ' Imbalance']","[' Furniture', ' Toys']",53
+54,"[' Spikiness', ' Roundness']","[' Cacti', ' Flowers']",54
+55,"[' Warmth', ' Coolness']","[' Fire', ' Ice']",55
+56,"[' Lightness', ' Darkness']","[' Day', ' Night']",56
+57,"[' Saturation', ' Desaturation']","[' Colors', ' Grays']",57
+58,"[' Flexibility', ' Rigidness']","[' Rubber', ' Metal']",58
+59,"[' Coarseness', ' Fineness']","[' Sand', ' Sugar']",59
+60,"[' Angularity', ' Curviness']","[' Machines', ' Furniture']",60
+61,"[' Transparency', ' Opacity']","[' Glass', ' Fabric']",61
+62,"[' Vibration', ' Stillness']","[' Animals', ' Machines']",62
+63,"[' Salinity', ' Freshness']","[' Ocean', ' River']",63
+64,"[' Brittleness', ' Flexibility']","[' Glass', ' Rubber']",64
+65,"[' Smoothness', ' Roughness']","[' Skins', ' Fabrics']",65
+66,"[' Tactility', ' Slipperiness']","[' Fabrics', ' Glass']",66
+67,"[' Contour', ' Fill']","[' Buildings', ' Landscapes']",67
+68,"[' Length', ' Width']","[' Roads', ' Rivers']",68
+69,"[' Width', ' Height']","[' Windows', ' Doors']",69
+70,"[' Curviness', ' Straightness']","[' Rivers', ' Roads']",70
+71,"[' Glossiness', ' Matteness']","[' Fruits', ' Vegetables']",71
+72,"[' Spikiness', ' Roundness']","[' Cacti', ' Flowers']",72
+73,"[' Fragmentation', ' Unity']","[' Rocks', ' Mountains']",73
+74,"[' Flexibility', ' Rigidness']","[' Rubber', ' Metal']",74
+75,"[' Porosity', ' Solidness']","[' Sponges', ' Bricks']",75
+76,"[' Tactility', ' Slipperiness']","[' Fabrics', ' Glass']",76
+77,"[' Angularity', ' Curviness']","[' Machines', ' Furniture']",77
+78,"[' Vibration', ' Stillness']","[' Animals', ' Machines']",78
+79,"[' Transparency', ' Opacity']","[' Water', ' Oil']",79
+80,"[' Smoothness', ' Roughness']","[' Skins', ' Fabrics']",80
+81,"[' Warmth', ' Coolness']","[' Fire', ' Ice']",81
+82,"[' Salinity', ' Freshness']","[' Ocean', ' River']",82
+83,"[' Brittleness', ' Flexibility']","[' Glass', ' Rubber']",83
+84,"[' Lightness', ' Darkness']","[' Day', ' Night']",84
+85,"[' Coarseness', ' Fineness']","[' Sand', ' Sugar']",85
+86,"[' Haze', ' Clarity']","[' Atmosphere', ' Water']",86
+87,"[' Vibrancy', ' Dullness']","[' Colors', ' Grays']",87
+88,"[' Angularity', ' Roundness']","[' Machines', ' Toys']",88
+89,"[' Solidity', ' Porosity']","[' Bricks', ' Sponges']",89
+90,"[' Saturation', ' Desaturation']","[' Colors', ' Grays']",90
+91,"[' Loudness', ' Quietness']","[' Music', ' Silence']",91
+92,"[' Brightness', ' Dimness']","[' Light', ' Dark']",92
+93,"[' Heaviness', ' Lightness']","[' Metals', ' Feathers']",93
+94,"[' Width', ' Narrowness']","[' Roads', ' Paths']",94
+95,"[' Roughness', ' Smoothness']","[' Skins', ' Fabrics']",95
+96,"[' Clarity', ' Distortion']","[' Images', ' Reflections']",96
+97,"[' Straightness', ' Curviness']","[' Roads', ' Rivers']",97
+98,"[' Fragmentation', ' Unity']","[' Ice', ' Water']",98
+99,"[' Texture', ' Shape']","[' Rocky', ' Bubbly']",99
+100,"[' Hue', ' Saturation']","[' Floral', ' Metallic']",100
+101,"[' Size', ' Orientation']","[' Celestial', ' Terrestrial']",101
+102,"[' Smell', ' Taste']","[' Fruity', ' Nutty']",102
+103,"[' Pattern', ' Color']","[' Stripey', ' Dotty']",103
+104,"[' Length', ' Width']","[' Slender', ' Stubby']",104
+105,"[' Temperature', ' Humidity']","[' Misty', ' Steamy']",105
+106,"[' Brightness', ' Contrast']","[' Glowing', ' Fading']",106
+107,"[' Frequency', ' Amplitude']","[' Melodic', ' Harmonic']",107
+108,"[' Material', ' Weight']","[' Light', ' Dense']",108
+109,"[' Speed', ' Direction']","[' Swift', ' Meandering']",109
+110,"[' Tone', ' Pitch']","[' Resonant', ' Muffled']",110
+111,"[' Transparency', ' Reflection']","[' Iridescent', ' Matte']",111
+112,"[' Volume', ' Pressure']","[' Loud', ' Muted']",112
+113,"[' Distance', ' Angle']","[' Far-off', ' Close-up']",113
+114,"[' Flavor', ' Aroma']","[' Zesty', ' Mellow']",114
+115,"[' Softness', ' Firmness']","[' Cushy', ' Rigid']",115
+116,"[' Clarity', ' Focus']","[' Sharp', ' Blurry']",116
+117,"[' Rhythm', ' Beat']","[' Syncopated', ' Steady']",117
+118,"[' Warmth', ' Coolness']","[' Balmy', ' Chilly']",118
+119,"[' Sound', ' Noise']","[' Harmonious', ' Discordant']",119
+120,"[' Lightness', ' Darkness']","[' Radiant', ' Shadowy']",120
+121,"[' Odor', ' Scent']","[' Pungent', ' Subtle']",121
+122,"[' Vibrancy', ' Mutedness']","[' Brilliant', ' Dull']",122
+123,"[' Flow', ' Turbulence']","[' Smooth', ' Chaotic']",123
+124,"[' Firmness', ' Squishiness']","[' Solid', ' Gelatinous']",124
+125,"[' Spiciness', ' Mildness']","[' Zingy', ' Bland']",125
+126,"[' Brightness', ' Dimness']","[' Dazzling', ' Faint']",126
+127,"[' Crispness', ' Softness']","[' Crisp', ' Mushy']",127
+128,"[' Speed', ' Slowness']","[' Rapid', ' Leisurely']",128
+129,"[' Transparency', ' Opacity']","[' Clear', ' Opaque']",129
+130,"[' Warmth', ' Coldness']","[' Cozy', ' Frigid']",130
+131,"[' Freshness', ' Staleness']","[' Invigorating', ' Stale']",131
+132,"[' Smoothness', ' Roughness']","[' Silky', ' Coarse']",132
+133,"[' Loudness', ' Quietness']","[' Boisterous', ' Muted']",133
+134,"[' Clarity', ' Fuzziness']","[' Distinct', ' Hazy']",134
+135,"[' Agility', ' Clumsiness']","[' Nimble', ' Clumsy']",135
+136,"[' Lightness', ' Heaviness']","[' Airy', ' Weighty']",136
+137,"[' Dryness', ' Moistness']","[' Arid', ' Humid']",137
+138,"[' Complexity', ' Simplicity']","[' Intricate', ' Simple']",138
+139,"[' Tension', ' Relaxation']","[' Taut', ' Slack']",139
+140,"[' Width', ' Narrowness']","[' Broad', ' Slender']",140
+141,"[' Depth', ' Shallow']","[' Profound', ' Superficial']",141
+142,"[' Hardness', ' Softness']","[' Rocky', ' Downy']",142
+143,"[' Sweetness', ' Sourness']","[' Sugary', ' Tart']",143
+144,"[' Salinity', ' Freshness']","[' Briny', ' Fresh']",144
+145,"[' Earthiness', ' Airiness']","[' Grounded', ' Ethereal']",145
+146,"[' Brightness', ' Dimness']","[' Radiant', ' Dull']",146
+147,"[' Speed', ' Slowness']","[' Swift', ' Leisurely']",147
+148,"[' Vibrancy', ' Mutedness']","[' Brilliant', ' Dull']",148
+149,"[' Crispness', ' Softness']","[' Crisp', ' Mushy']",149
+150,"[' Transparency', ' Opacity']","[' Clear', ' Opaque']",150
+151,"[' Freshness', ' Staleness']","[' Invigorating', ' Stale']",151
+152,"[' Smoothness', ' Roughness']","[' Silky', ' Coarse']",152
+153,"[' Loudness', ' Quietness']","[' Boisterous', ' Muted']",153
+154,"[' Clarity', ' Fuzziness']","[' Distinct', ' Hazy']",154
+155,"[' Agility', ' Clumsiness']","[' Nimble', ' Clumsy']",155
+156,"[' Lightness', ' Heaviness']","[' Airy', ' Weighty']",156
+157,"[' Dryness', ' Moistness']","[' Arid', ' Humid']",157
+158,"[' Complexity', ' Simplicity']","[' Intricate', ' Simple']",158
+159,"[' Tension', ' Relaxation']","[' Taut', ' Slack']",159
+160,"[' Width', ' Narrowness']","[' Broad', ' Slender']",160
+161,"[' Depth', ' Shallow']","[' Profound', ' Superficial']",161
+162,"[' Hardness', ' Softness']","[' Rocky', ' Downy']",162
+163,"[' Sweetness', ' Sourness']","[' Sugary', ' Tart']",163
+164,"[' Salinity', ' Freshness']","[' Briny', ' Fresh']",164
+165,"[' Earthiness', ' Airiness']","[' Grounded', ' Ethereal']",165
+166,"[' Temperature', ' Humidity']","[' Misty', ' Steamy']",166
+167,"[' Frequency', ' Amplitude']","[' Melodic', ' Harmonic']",167
+168,"[' Material', ' Weight']","[' Light', ' Dense']",168
+169,"[' Speed', ' Direction']","[' Swift', ' Meandering']",169
+170,"[' Tone', ' Pitch']","[' Resonant', ' Muffled']",170
+171,"[' Transparency', ' Reflection']","[' Iridescent', ' Matte']",171
+172,"[' Volume', ' Pressure']","[' Loud', ' Muted']",172
+173,"[' Distance', ' Angle']","[' Far-off', ' Close-up']",173
+174,"[' Flavor', ' Aroma']","[' Zesty', ' Mellow']",174
+175,"[' Softness', ' Firmness']","[' Cushy', ' Rigid']",175
+176,"[' Clarity', ' Focus']","[' Sharp', ' Blurry']",176
+177,"[' Rhythm', ' Beat']","[' Syncopated', ' Steady']",177
+178,"[' Warmth', ' Coolness']","[' Balmy', ' Chilly']",178
+179,"[' Sound', ' Noise']","[' Harmonious', ' Discordant']",179
+180,"[' Lightness', ' Darkness']","[' Radiant', ' Shadowy']",180
+181,"[' Odor', ' Scent']","[' Pungent', ' Subtle']",181
+182,"[' Vibrancy', ' Mutedness']","[' Brilliant', ' Dull']",182
+183,"[' Flow', ' Turbulence']","[' Smooth', ' Chaotic']",183
+184,"[' Firmness', ' Squishiness']","[' Solid', ' Gelatinous']",184
+185,"[' Spiciness', ' Mildness']","[' Zingy', ' Bland']",185
+186,"[' Brightness', ' Dimness']","[' Dazzling', ' Faint']",186
+187,"[' Crispness', ' Softness']","[' Crisp', ' Mushy']",187
+188,"[' Speed', ' Slowness']","[' Rapid', ' Leisurely']",188
+189,"[' Transparency', ' Opacity']","[' Clear', ' Opaque']",189
+190,"[' Warmth', ' Coldness']","[' Cozy', ' Frigid']",190
+191,"[' Freshness', ' Staleness']","[' Invigorating', ' Stale']",191
+192,"[' Smoothness', ' Roughness']","[' Silky', ' Coarse']",192
+193,"[' Loudness', ' Quietness']","[' Boisterous', ' Muted']",193
+194,"[' Clarity', ' Fuzziness']","[' Distinct', ' Hazy']",194
+195,"[' Agility', ' Clumsiness']","[' Nimble', ' Clumsy']",195
+196,"[' Lightness', ' Heaviness']","[' Airy', ' Weighty']",196
+197,"[' Dryness', ' Moistness']","[' Arid', ' Humid']",197
+198,"[' Complexity', ' Simplicity']","[' Intricate', ' Simple']",198
+199,"[' Shape', ' Color']","[' Blooms', ' Petals']",199
+200,"[' Size', ' Orientation']","[' Fliers', ' Gliders']",200
+201,"[' Texture', ' Weight']","[' Rocks', ' Pebbles']",201
+202,"[' Hue', ' Saturation']","[' Dunes', ' Oases']",202
+203,"[' Angle', ' Curvature']","[' Sails', ' Keels']",203
+204,"[' Length', ' Width']","[' Stripes', ' Polka']",204
+205,"[' Pattern', ' Contrast']","[' Fluxes', ' Pulses']",205
+206,"[' Material', ' Reflectance']","[' Shores', ' Banks']",206
+207,"[' Frequency', ' Amplitude']","[' Chimes', ' Tones']",207
+208,"[' Symmetry', ' Asymmetry']","[' Wings', ' Fins']",208
+209,"[' Brightness', ' Saturation']","[' Corals', ' Reefs']",209
+210,"[' Speed', ' Direction']","[' Gusts', ' Zephyrs']",210
+211,"[' Pitch', ' Timbre']","[' Humms', ' Whistles']",211
+212,"[' Orientation', ' Proximity']","[' Clusters', ' Galaxies']",212
+213,"[' Roughness', ' Smoothness']","[' Ridges', ' Valleys']",213
+214,"[' Transparency', ' Opacity']","[' Lagoons', ' Bays']",214
+215,"[' Loudness', ' Pitch']","[' Rumbles', ' Chirps']",215
+216,"[' Curvature', ' Torsion']","[' Coils', ' Springs']",216
+217,"[' Temperature', ' Humidity']","[' Glaciers', ' Volcanos']",217
+218,"[' Wavelength', ' Intensity']","[' Spectra', ' Auras']",218
+219,"[' Size', ' Shape']","[' Craters', ' Mountains']",219
+220,"[' Contrast', ' Saturation']","[' Mists', ' Fogs']",220
+221,"[' Angle', ' Position']","[' Beams', ' Rays']",221
+222,"[' Texture', ' Pattern']","[' Weaves', ' Braids']",222
+223,"[' Speed', ' Acceleration']","[' Flows', ' Eddies']",223
+224,"[' Hue', ' Chroma']","[' Blooms', ' Petals']",224
+225,"[' Orientation', ' Inclination']","[' Sails', ' Masts']",225
+226,"[' Material', ' Finish']","[' Pebbles', ' Rocks']",226
+227,"[' Frequency', ' Phase']","[' Pulses', ' Beats']",227
+228,"[' Symmetry', ' Asymmetry']","[' Wings', ' Tails']",228
+229,"[' Brightness', ' Contrast']","[' Dunes', ' Oases']",229
+230,"[' Length', ' Width']","[' Stripes', ' Polka']",230
+231,"[' Pattern', ' Color']","[' Fluxes', ' Pulses']",231
+232,"[' Shape', ' Size']","[' Shores', ' Banks']",232
+233,"[' Angle', ' Curvature']","[' Coils', ' Springs']",233
+234,"[' Transparency', ' Opacity']","[' Lagoons', ' Bays']",234
+235,"[' Loudness', ' Timbre']","[' Humms', ' Whistles']",235
+236,"[' Roughness', ' Smoothness']","[' Ridges', ' Valleys']",236
+237,"[' Temperature', ' Humidity']","[' Glaciers', ' Volcanos']",237
+238,"[' Wavelength', ' Intensity']","[' Spectra', ' Auras']",238
+239,"[' Size', ' Shape']","[' Craters', ' Mountains']",239
+240,"[' Contrast', ' Saturation']","[' Mists', ' Fogs']",240
+241,"[' Angle', ' Position']","[' Beams', ' Rays']",241
+242,"[' Texture', ' Pattern']","[' Weaves', ' Braids']",242
+243,"[' Speed', ' Acceleration']","[' Flows', ' Eddies']",243
+244,"[' Hue', ' Chroma']","[' Blooms', ' Petals']",244
+245,"[' Orientation', ' Inclination']","[' Sails', ' Masts']",245
+246,"[' Material', ' Finish']","[' Pebbles', ' Rocks']",246
+247,"[' Frequency', ' Phase']","[' Pulses', ' Beats']",247
+248,"[' Symmetry', ' Asymmetry']","[' Wings', ' Tails']",248
+249,"[' Brightness', ' Contrast']","[' Dunes', ' Oases']",249
+250,"[' Length', ' Width']","[' Stripes', ' Polka']",250
+251,"[' Pattern', ' Color']","[' Fluxes', ' Pulses']",251
+252,"[' Shape', ' Size']","[' Shores', ' Banks']",252
+253,"[' Angle', ' Curvature']","[' Coils', ' Springs']",253
+254,"[' Transparency', ' Opacity']","[' Lagoons', ' Bays']",254
+255,"[' Loudness', ' Timbre']","[' Humms', ' Whistles']",255
+256,"[' Roughness', ' Smoothness']","[' Ridges', ' Valleys']",256
+257,"[' Temperature', ' Humidity']","[' Glaciers', ' Volcanos']",257
+258,"[' Wavelength', ' Intensity']","[' Spectra', ' Auras']",258
+259,"[' Size', ' Shape']","[' Craters', ' Mountains']",259
+260,"[' Contrast', ' Saturation']","[' Mists', ' Fogs']",260
+261,"[' Angle', ' Position']","[' Beams', ' Rays']",261
+262,"[' Texture', ' Pattern']","[' Weaves', ' Braids']",262
+263,"[' Speed', ' Acceleration']","[' Flows', ' Eddies']",263
+264,"[' Hue', ' Chroma']","[' Blooms', ' Petals']",264
+265,"[' Orientation', ' Inclination']","[' Sails', ' Masts']",265
+266,"[' Material', ' Finish']","[' Pebbles', ' Rocks']",266
+267,"[' Frequency', ' Phase']","[' Pulses', ' Beats']",267
+268,"[' Symmetry', ' Asymmetry']","[' Wings', ' Tails']",268
+269,"[' Brightness', ' Contrast']","[' Dunes', ' Oases']",269
+270,"[' Length', ' Width']","[' Stripes', ' Polka']",270
+271,"[' Pattern', ' Color']","[' Fluxes', ' Pulses']",271
+272,"[' Shape', ' Size']","[' Shores', ' Banks']",272
+273,"[' Angle', ' Curvature']","[' Coils', ' Springs']",273
+274,"[' Transparency', ' Opacity']","[' Lagoons', ' Bays']",274
+275,"[' Loudness', ' Timbre']","[' Humms', ' Whistles']",275
+276,"[' Roughness', ' Smoothness']","[' Ridges', ' Valleys']",276
+277,"[' Temperature', ' Humidity']","[' Glaciers', ' Volcanos']",277
+278,"[' Wavelength', ' Intensity']","[' Spectra', ' Auras']",278
+279,"[' Size', ' Shape']","[' Craters', ' Mountains']",279
+280,"[' Contrast', ' Saturation']","[' Mists', ' Fogs']",280
+281,"[' Angle', ' Position']","[' Beams', ' Rays']",281
+282,"[' Texture', ' Pattern']","[' Weaves', ' Braids']",282
+283,"[' Speed', ' Acceleration']","[' Flows', ' Eddies']",283
+284,"[' Hue', ' Chroma']","[' Blooms', ' Petals']",284
+285,"[' Orientation', ' Inclination']","[' Sails', ' Masts']",285
+286,"[' Material', ' Finish']","[' Pebbles', ' Rocks']",286
+287,"[' Frequency', ' Phase']","[' Pulses', ' Beats']",287
+288,"[' Symmetry', ' Asymmetry']","[' Wings', ' Tails']",288
+289,"[' Brightness', ' Contrast']","[' Dunes', ' Oases']",289
+290,"[' Length', ' Width']","[' Stripes', ' Polka']",290
+291,"[' Pattern', ' Color']","[' Fluxes', ' Pulses']",291
+292,"[' Shape', ' Size']","[' Shores', ' Banks']",292
+293,"[' Angle', ' Curvature']","[' Coils', ' Springs']",293
+294,"[' Transparency', ' Opacity']","[' Lagoons', ' Bays']",294
+295,"[' Loudness', ' Timbre']","[' Humms', ' Whistles']",295
+296,"[' Roughness', ' Smoothness']","[' Ridges', ' Valleys']",296
+297,"[' Temperature', ' Humidity']","[' Glaciers', ' Volcanos']",297
+298,"[' Shape', ' Color']","[' Blooms', ' Fades']",298
+299,"[' Size', ' Texture']","[' Ridges', ' Grooves']",299
+300,"[' Orientation', ' Pattern']","[' Fluxes', ' Flares']",300
+301,"[' Length', ' Width']","[' Scales', ' Stripes']",301
+302,"[' Hue', ' Saturation']","[' Chromas', ' Tones']",302
+303,"[' Speed', ' Direction']","[' Darts', ' Glides']",303
+304,"[' Temperature', ' Humidity']","[' Heats', ' Chills']",304
+305,"[' Material', ' Weight']","[' Masses', ' Loads']",305
+306,"[' Frequency', ' Amplitude']","[' Beeps', ' Chimes']",306
+307,"[' Brightness', ' Contrast']","[' Glimmers', ' Shines']",307
+308,"[' Age', ' Rarity']","[' Antiques', ' Relics']",308
+309,"[' Smell', ' Taste']","[' Aromas', ' Flavors']",309
+310,"[' Sound', ' Pitch']","[' Chords', ' Melodies']",310
+311,"[' Location', ' Elevation']","[' Peaks', ' Valleys']",311
+312,"[' Time', ' Duration']","[' Moments', ' Eras']",312
+313,"[' Speed', ' Agility']","[' Sprints', ' Marathons']",313
+314,"[' Shape', ' Material']","[' Boulders', ' Pebbles']",314
+315,"[' Color', ' Luminance']","[' Glows', ' Fades']",315
+316,"[' Frequency', ' Wavelength']","[' Radios', ' Microwaves']",316
+317,"[' Texture', ' Temperature']","[' Frost', ' Flames']",317
+318,"[' Weight', ' Volume']","[' Tons', ' Ounces']",318
+319,"[' Orientation', ' Angle']","[' Leans', ' Tilt']",319
+320,"[' Pattern', ' Size']","[' Mosaics', ' Tiles']",320
+321,"[' Hue', ' Saturation']","[' Pastels', ' Neon']",321
+322,"[' Brightness', ' Contrast']","[' Sparkles', ' Dim']",322
+323,"[' Smell', ' Intensity']","[' Scents', ' Stenches']",323
+324,"[' Sound', ' Volume']","[' Roars', ' Whispers']",324
+325,"[' Location', ' Distance']","[' Proximities', ' Remotes']",325
+326,"[' Time', ' Speed']","[' Sprints', ' Crawls']",326
+327,"[' Age', ' Condition']","[' Antiques', ' Relics']",327
+328,"[' Material', ' Texture']","[' Fabrics', ' Leathers']",328
+329,"[' Shape', ' Size']","[' Globes', ' Ovals']",329
+330,"[' Color', ' Hue']","[' Rainbows', ' Monochromes']",330
+331,"[' Frequency', ' Amplitude']","[' Vibrations', ' Oscillations']",331
+332,"[' Speed', ' Acceleration']","[' Blasts', ' Coasts']",332
+333,"[' Temperature', ' Humidity']","[' Climates', ' Weather']",333
+334,"[' Weight', ' Mass']","[' Boulders', ' Pebbles']",334
+335,"[' Orientation', ' Incline']","[' Ramps', ' Stairs']",335
+336,"[' Pattern', ' Complexity']","[' Fractals', ' Geometries']",336
+337,"[' Brightness', ' Luminance']","[' Dazzles', ' Dims']",337
+338,"[' Smell', ' Odor']","[' Fragrances', ' Stenches']",338
+339,"[' Sound', ' Pitch']","[' Melodies', ' Harmonies']",339
+340,"[' Location', ' Elevation']","[' Mountains', ' Valleys']",340
+341,"[' Time', ' Duration']","[' Eras', ' Moments']",341
+342,"[' Age', ' Rarity']","[' Heirlooms', ' Artifacts']",342
+343,"[' Material', ' Density']","[' Solids', ' Liquids']",343
+344,"[' Shape', ' Form']","[' Sculptures', ' Statues']",344
+345,"[' Color', ' Saturation']","[' Vivids', ' Muted']",345
+346,"[' Frequency', ' Wavelength']","[' Radios', ' Microwaves']",346
+347,"[' Texture', ' Temperature']","[' Fires', ' Icicles']",347
+348,"[' Weight', ' Volume']","[' Liters', ' Gallons']",348
+349,"[' Orientation', ' Angle']","[' Tilts', ' Leans']",349
+350,"[' Pattern', ' Size']","[' Mosaics', ' Murals']",350
+351,"[' Hue', ' Luminance']","[' Glimmers', ' Shines']",351
+352,"[' Brightness', ' Contrast']","[' Sparkles', ' Dim']",352
+353,"[' Smell', ' Intensity']","[' Scents', ' Odors']",353
+354,"[' Sound', ' Volume']","[' Blasts', ' Whispers']",354
+355,"[' Location', ' Distance']","[' Proximities', ' Remotes']",355
+356,"[' Time', ' Speed']","[' Sprints', ' Crawls']",356
+357,"[' Age', ' Condition']","[' Antiques', ' Relics']",357
+358,"[' Material', ' Texture']","[' Fabrics', ' Leathers']",358
+359,"[' Shape', ' Size']","[' Globes', ' Ovals']",359
+360,"[' Color', ' Hue']","[' Rainbows', ' Monochromes']",360
+361,"[' Frequency', ' Amplitude']","[' Vibrations', ' Oscillations']",361
+362,"[' Speed', ' Acceleration']","[' Blasts', ' Coasts']",362
+363,"[' Temperature', ' Humidity']","[' Climates', ' Weather']",363
+364,"[' Weight', ' Mass']","[' Tons', ' Ounces']",364
+365,"[' Orientation', ' Incline']","[' Ramps', ' Stairs']",365
+366,"[' Pattern', ' Complexity']","[' Fractals', ' Geometries']",366
+367,"[' Brightness', ' Luminance']","[' Dazzles', ' Dims']",367
+368,"[' Smell', ' Odor']","[' Fragrances', ' Stenches']",368
+369,"[' Sound', ' Pitch']","[' Melodies', ' Harmonies']",369
+370,"[' Location', ' Elevation']","[' Mountains', ' Valleys']",370
+371,"[' Time', ' Duration']","[' Eras', ' Moments']",371
+372,"[' Age', ' Rarity']","[' Heirlooms', ' Artifacts']",372
+373,"[' Material', ' Density']","[' Solids', ' Liquids']",373
+374,"[' Shape', ' Form']","[' Sculptures', ' Statues']",374
+375,"[' Color', ' Saturation']","[' Vivids', ' Muted']",375
+376,"[' Frequency', ' Wavelength']","[' Radios', ' Microwaves']",376
+377,"[' Texture', ' Temperature']","[' Fires', ' Icicles']",377
+378,"[' Weight', ' Volume']","[' Liters', ' Gallons']",378
+379,"[' Orientation', ' Angle']","[' Tilts', ' Leans']",379
+380,"[' Pattern', ' Size']","[' Mosaics', ' Murals']",380
+381,"[' Hue', ' Luminance']","[' Glimmers', ' Shines']",381
+382,"[' Brightness', ' Contrast']","[' Sparkles', ' Dim']",382
+383,"[' Smell', ' Intensity']","[' Scents', ' Odors']",383
+384,"[' Sound', ' Volume']","[' Blasts', ' Whispers']",384
+385,"[' Location', ' Distance']","[' Proximities', ' Remotes']",385
+386,"[' Time', ' Speed']","[' Sprints', ' Crawls']",386
+387,"[' Age', ' Condition']","[' Antiques', ' Relics']",387
+388,"[' Material', ' Texture']","[' Fabrics', ' Leathers']",388
+389,"[' Shape', ' Size']","[' Globes', ' Ovals']",389
+390,"[' Color', ' Hue']","[' Rainbows', ' Monochromes']",390
+391,"[' Frequency', ' Amplitude']","[' Vibrations', ' Oscillations']",391
+392,"[' Speed', ' Acceleration']","[' Blasts', ' Coasts']",392
+393,"[' Temperature', ' Humidity']","[' Climates', ' Weather']",393
+394,"[' Weight', ' Mass']","[' Tons', ' Ounces']",394
+395,"[' Orientation', ' Incline']","[' Ramps', ' Stairs']",395
+396,"[' Pattern', ' Complexity']","[' Fractals', ' Geometries']",396
+397,"[' Brightness', ' Luminance']","[' Dazzles', ' Dims']",397
+398,"[' Color Hue', ' Shape Angle']","[' Fruits', ' Vegetables']",398
+399,"[' Leaf Shape', ' Stem Length']","[' Trees', ' Shrubs']",399
+400,"[' Sound Frequency', ' Rhythm Pattern']","[' Instruments', ' Voices']",400
+401,"[' Body Shape', ' Tail Length']","[' Mammals', ' Reptiles']",401
+402,"[' Font Style', ' Text Size']","[' Headings', ' Paragraphs']",402
+403,"[' Wing Shape', ' Beak Length']","[' Birds', ' Insects']",403
+404,"[' Flavor Profile', ' Aroma Strength']","[' Fruits', ' Cheeses']",404
+405,"[' Hair Texture', ' Face Shape']","[' Humans', ' Animals']",405
+406,"[' Wave Pattern', ' Water Depth']","[' Oceans', ' Lakes']",406
+407,"[' Note Duration', ' Pitch Range']","[' Melodies', ' Chords']",407
+408,"[' Petal Color', ' Sepal Length']","[' Flowers', ' Weeds']",408
+409,"[' Climate Zone', ' Elevation Level']","[' Deserts', ' Forests']",409
+410,"[' Vehicle Type', ' Engine Size']","[' Cars', ' Trucks']",410
+411,"[' Leaf Color', ' Branch Angle']","[' Deciduous', ' Evergreen']",411
+412,"[' Sentence Structure', ' Vocabulary Level']","[' News', ' Fiction']",412
+413,"[' Foot Shape', ' Claw Length']","[' Mammals', ' Birds']",413
+414,"[' Smell Type', ' Intensity Level']","[' Fruits', ' Flowers']",414
+415,"[' Roof Shape', ' Window Size']","[' Houses', ' Buildings']",415
+416,"[' Water Clarity', ' Depth Level']","[' Rivers', ' Oceans']",416
+417,"[' Bird Call', ' Feather Pattern']","[' Songbirds', ' Waterfowl']",417
+418,"[' Food Texture', ' Taste Profile']","[' Savory', ' Sweet']",418
+419,"[' Tree Height', ' Trunk Diameter']","[' Conifers', ' Deciduous']",419
+420,"[' Road Type', ' Speed Limit']","[' Highways', ' Local Roads']",420
+421,"[' Cloud Shape', ' Weather Pattern']","[' Cumulus', ' Stratus']",421
+422,"[' Furniture Style', ' Material Type']","[' Modern', ' Antique']",422
+423,"[' Animal Size', ' Diet Type']","[' Carnivores', ' Herbivores']",423
+424,"[' Music Genre', ' Tempo Level']","[' Fast', ' Slow']",424
+425,"[' Plant Growth', ' Soil Type']","[' Flowers', ' Vegetables']",425
+426,"[' Facial Feature', ' Expression Type']","[' Happy', ' Sad']",426
+427,"[' Star Brightness', ' Distance Level']","[' Near', ' Far']",427
+428,"[' Computer Type', ' Processor Speed']","[' Laptops', ' Desktops']",428
+429,"[' Flower Arrangement', ' Vase Shape']","[' Formal', ' Casual']",429
+430,"[' Sport Type', ' Equipment Size']","[' Team', ' Individual']",430
+431,"[' Painting Style', ' Brush Stroke']","[' Modern', ' Classic']",431
+432,"[' Rock Type', ' Geological Age']","[' Igneous', ' Sedimentary']",432
+433,"[' Fruit Size', ' Skin Texture']","[' Citrus', ' Berries']",433
+434,"[' Insect Body', ' Leg Count']","[' Beetles', ' Flies']",434
+435,"[' Cloud Color', ' Weather Forecast']","[' Sunny', ' Rainy']",435
+436,"[' Fabric Type', ' Weave Pattern']","[' Cotton', ' Polyester']",436
+437,"[' Vehicle Speed', ' Safety Feature']","[' Cars', ' Motorcycles']",437
+438,"[' Tree Bark', ' Leaf Pattern']","[' Oaks', ' Maples']",438
+439,"[' Body Part', ' Function Type']","[' Upper', ' Lower']",439
+440,"[' Music Instrument', ' Sound Type']","[' Brass', ' Strings']",440
+441,"[' Road Condition', ' Traffic Level']","[' Urban', ' Rural']",441
+442,"[' Animal Sound', ' Habitat Type']","[' Forest', ' Desert']",442
+443,"[' House Style', ' Architectural Era']","[' Modern', ' Victorian']",443
+444,"[' Water Flow', ' Elevation Level']","[' Rivers', ' Waterfalls']",444
+445,"[' Furniture Material', ' Design Era']","[' Modern', ' Retro']",445
+446,"[' Plant Leaf', ' Stem Color']","[' Green', ' Non-Green']",446
+447,"[' Food Ingredient', ' Cuisine Type']","[' Italian', ' Chinese']",447
+448,"[' Star Shape', ' Galaxy Type']","[' Spiral', ' Elliptical']",448
+449,"[' Computer Software', ' Function Type']","[' Productivity', ' Games']",449
+450,"[' Sport Equipment', ' Player Position']","[' Offense', ' Defense']",450
+451,"[' Painting Material', ' Art Movement']","[' Impressionist', ' Abstract']",451
+452,"[' Rock Formation', ' Geological Process']","[' Volcanic', ' Tectonic']",452
+453,"[' Fruit Taste', ' Nutritional Value']","[' Healthy', ' Unhealthy']",453
+454,"[' Insect Wing', ' Body Color']","[' Bright', ' Dull']",454
+455,"[' Cloud Height', ' Weather System']","[' Low', ' High']",455
+456,"[' Fabric Texture', ' Clothing Type']","[' Formal', ' Casual']",456
+457,"[' Vehicle Engine', ' Fuel Type']","[' Gasoline', ' Diesel']",457
+458,"[' Tree Root', ' Soil Type']","[' Clay', ' Sandy']",458
+459,"[' Body Function', ' Organ Type']","[' Internal', ' External']",459
+460,"[' Music Rhythm', ' Cultural Origin']","[' African', ' Asian']",460
+461,"[' Road Sign', ' Traffic Rule']","[' Highway', ' Local']",461
+462,"[' Animal Habitat', ' Diet Type']","[' Omnivores', ' Herbivores']",462
+463,"[' House Feature', ' Architectural Style']","[' Modern', ' Colonial']",463
+464,"[' Water Quality', ' Ecosystem Type']","[' Freshwater', ' Saltwater']",464
+465,"[' Furniture Design', ' Material Type']","[' Wood', ' Metal']",465
+466,"[' Plant Stem', ' Leaf Color']","[' Green', ' Non-Green']",466
+467,"[' Food Cooking', ' Preparation Method']","[' Baked', ' Fried']",467
+468,"[' Star Distance', ' Galaxy Location']","[' Near', ' Far']",468
+469,"[' Computer Hardware', ' Function Type']","[' Input', ' Output']",469
+470,"[' Sport Team', ' League Type']","[' Professional', ' Amateur']",470
+471,"[' Painting Style', ' Art Movement']","[' Realist', ' Surrealist']",471
+472,"[' Rock Composition', ' Geological Age']","[' Ancient', ' Modern']",472
+473,"[' Fruit Juice', ' Nutritional Value']","[' Healthy', ' Unhealthy']",473
+474,"[' Insect Leg', ' Body Shape']","[' Six-Legged', ' Eight-Legged']",474
+475,"[' Cloud Type', ' Weather Pattern']","[' Cumulus', ' Stratus']",475
+476,"[' Fabric Pattern', ' Clothing Type']","[' Formal', ' Casual']",476
+477,"[' Vehicle Transmission', ' Drive Type']","[' Automatic', ' Manual']",477
+478,"[' Tree Growth', ' Climate Zone']","[' Tropical', ' Temperate']",478
+479,"[' Body Part', ' Function Type']","[' Sensory', ' Motor']",479
+480,"[' Music Melody', ' Cultural Origin']","[' Western', ' Eastern']",480
+481,"[' Road Condition', ' Traffic Volume']","[' Heavy', ' Light']",481
+482,"[' Animal Behavior', ' Habitat Type']","[' Social', ' Solitary']",482
+483,"[' House Size', ' Architectural Era']","[' Modern', ' Historic']",483
+484,"[' Water Flow', ' Ecosystem Type']","[' Rivers', ' Oceans']",484
+485,"[' Furniture Material', ' Design Style']","[' Modern', ' Traditional']",485
+486,"[' Plant Flower', ' Leaf Shape']","[' Petals', ' Sepals']",486
+487,"[' Food Taste', ' Cultural Origin']","[' Spicy', ' Sweet']",487
+488,"[' Star Brightness', ' Distance Level']","[' Near', ' Far']",488
+489,"[' Computer Software', ' Function Type']","[' Productivity', ' Creativity']",489
+490,"[' Sport Equipment', ' Player Skill']","[' Beginner', ' Advanced']",490
+491,"[' Painting Medium', ' Art Movement']","[' Oil', ' Watercolor']",491
+492,"[' Rock Texture', ' Geological Process']","[' Igneous', ' Metamorphic']",492
+493,"[' Fruit Size', ' Nutritional Value']","[' Healthy', ' Unhealthy']",493
+494,"[' Insect Body', ' Leg Count']","[' Three-Legged', ' Four-Legged']",494
+495,"[' Cloud Color', ' Weather Forecast']","[' Sunny', ' Cloudy']",495
+496,"[' Fabric Type', ' Clothing Function']","[' Warm', ' Cool']",496
+497,"[' Shape', ' Color']","[' Creatures', ' Objects']",497
+498,"[' Size', ' Orientation']","[' Animals', ' Vehicles']",498
+499,"[' Texture', ' Pattern']","[' Fruits', ' Furniture']",499
+500,"[' Hue', ' Saturation']","[' Flowers', ' Buildings']",500
+501,"[' Weight', ' Material']","[' Tools', ' Kitchenware']",501
+502,"[' Brightness', ' Contrast']","[' Birds', ' Insects']",502
+503,"[' Curvature', ' Angle']","[' Sea Creatures', ' Land Animals']",503
+504,"[' Density', ' Transparency']","[' Liquids', ' Solids']",504
+505,"[' Length', ' Width']","[' Musical Instruments', ' Sports Equipment']",505
+506,"[' Smoothness', ' Roughness']","[' Fabrics', ' Woodworks']",506
+507,"[' Temperature', ' Humidity']","[' Weather Conditions', ' Emotions']",507
+508,"[' Frequency', ' Amplitude']","[' Sounds', ' Smells']",508
+509,"[' Speed', ' Acceleration']","[' Cars', ' Bicycles']",509
+510,"[' Flavor', ' Aroma']","[' Foods', ' Drinks']",510
+511,"[' Complexity', ' Symmetry']","[' Artworks', ' Architectures']",511
+512,"[' Loudness', ' Pitch']","[' Noises', ' Music']",512
+513,"[' Width', ' Height']","[' Roads', ' Buildings']",513
+514,"[' Distance', ' Proximity']","[' Landmarks', ' Neighbors']",514
+515,"[' Age', ' Experience']","[' People', ' Animals']",515
+516,"[' Strength', ' Weakness']","[' Sports Teams', ' Political Parties']",516
+517,"[' Volume', ' Surface Area']","[' Containers', ' Objects']",517
+518,"[' Clarity', ' Blurriness']","[' Images', ' Texts']",518
+519,"[' Height', ' Depth']","[' Mountains', ' Valleys']",519
+520,"[' Proportion', ' Scale']","[' Animals', ' Robots']",520
+521,"[' Balance', ' Harmony']","[' Compositions', ' Designs']",521
+522,"[' Focus', ' Blur']","[' Cameras', ' Lenses']",522
+523,"[' Speed', ' Agility']","[' Cars', ' Athletes']",523
+524,"[' Brightness', ' Dimness']","[' Lights', ' Shadows']",524
+525,"[' Warmth', ' Coolness']","[' Seasons', ' Emotions']",525
+526,"[' Loudness', ' Softness']","[' Sounds', ' Whispers']",526
+527,"[' Distance', ' Closeness']","[' Friends', ' Strangers']",527
+528,"[' Width', ' Narrowness']","[' Roads', ' Paths']",528
+529,"[' Age', ' Youth']","[' People', ' Animals']",529
+530,"[' Strength', ' Fragility']","[' Materials', ' Objects']",530
+531,"[' Volume', ' Emptiness']","[' Containers', ' Spaces']",531
+532,"[' Clarity', ' Ambiguity']","[' Messages', ' Codes']",532
+533,"[' Height', ' Lowness']","[' Mountains', ' Hills']",533
+534,"[' Proportion', ' Distortion']","[' Bodies', ' Faces']",534
+535,"[' Balance', ' Imbalance']","[' Scales', ' Weights']",535
+536,"[' Focus', ' Distraction']","[' Tasks', ' Goals']",536
+537,"[' Speed', ' Slowness']","[' Reactions', ' Reflexes']",537
+538,"[' Brightness', ' Darkness']","[' Days', ' Nights']",538
+539,"[' Warmth', ' Coldness']","[' Emotions', ' Weather']",539
+540,"[' Loudness', ' Silence']","[' Sounds', ' Quiet']",540
+541,"[' Distance', ' Intimacy']","[' Relationships', ' Strangers']",541
+542,"[' Width', ' Narrowness']","[' Opportunities', ' Challenges']",542
+543,"[' Age', ' Innocence']","[' People', ' Children']",543
+544,"[' Strength', ' Vulnerability']","[' Defenses', ' Weaknesses']",544
+545,"[' Volume', ' Silence']","[' Voices', ' Whispers']",545
+546,"[' Clarity', ' Confusion']","[' Ideas', ' Concepts']",546
+547,"[' Height', ' Humility']","[' Mountains', ' Valleys']",547
+548,"[' Proportion', ' Disproportion']","[' Bodies', ' Faces']",548
+549,"[' Balance', ' Instability']","[' Systems', ' Chaos']",549
+550,"[' Focus', ' Lack of focus']","[' Goals', ' Distractions']",550
+551,"[' Speed', ' Slowdown']","[' Processes', ' Delays']",551
+552,"[' Brightness', ' Dimness']","[' Lights', ' Shadows']",552
+553,"[' Warmth', ' Coolness']","[' Emotions', ' Weather']",553
+554,"[' Loudness', ' Softness']","[' Sounds', ' Music']",554
+555,"[' Distance', ' Closeness']","[' Relationships', ' Bonds']",555
+556,"[' Width', ' Narrowness']","[' Perspectives', ' Views']",556
+557,"[' Age', ' Wisdom']","[' People', ' Elders']",557
+558,"[' Strength', ' Weakness']","[' Materials', ' Objects']",558
+559,"[' Volume', ' Emptiness']","[' Containers', ' Spaces']",559
+560,"[' Clarity', ' Ambiguity']","[' Messages', ' Codes']",560
+561,"[' Height', ' Lowness']","[' Mountains', ' Hills']",561
+562,"[' Proportion', ' Distortion']","[' Bodies', ' Faces']",562
+563,"[' Balance', ' Imbalance']","[' Scales', ' Weights']",563
+564,"[' Focus', ' Distraction']","[' Tasks', ' Goals']",564
+565,"[' Speed', ' Slowness']","[' Reactions', ' Reflexes']",565
+566,"[' Brightness', ' Darkness']","[' Days', ' Nights']",566
+567,"[' Warmth', ' Coldness']","[' Emotions', ' Weather']",567
+568,"[' Loudness', ' Silence']","[' Sounds', ' Quiet']",568
+569,"[' Distance', ' Intimacy']","[' Relationships', ' Strangers']",569
+570,"[' Width', ' Narrowness']","[' Opportunities', ' Challenges']",570
+571,"[' Age', ' Innocence']","[' People', ' Children']",571
+572,"[' Strength', ' Vulnerability']","[' Defenses', ' Weaknesses']",572
+573,"[' Volume', ' Silence']","[' Voices', ' Whispers']",573
+574,"[' Clarity', ' Confusion']","[' Ideas', ' Concepts']",574
+575,"[' Height', ' Humility']","[' Mountains', ' Valleys']",575
+576,"[' Proportion', ' Disproportion']","[' Bodies', ' Faces']",576
+577,"[' Balance', ' Instability']","[' Systems', ' Chaos']",577
+578,"[' Focus', ' Lack of focus']","[' Goals', ' Distractions']",578
+579,"[' Speed', ' Slowdown']","[' Processes', ' Delays']",579
+580,"[' Brightness', ' Dimness']","[' Lights', ' Shadows']",580
+581,"[' Warmth', ' Coolness']","[' Emotions', ' Weather']",581
+582,"[' Loudness', ' Softness']","[' Sounds', ' Music']",582
+583,"[' Distance', ' Closeness']","[' Relationships', ' Bonds']",583
+584,"[' Width', ' Narrowness']","[' Perspectives', ' Views']",584
+585,"[' Age', ' Wisdom']","[' People', ' Elders']",585
+586,"[' Strength', ' Weakness']","[' Materials', ' Objects']",586
+587,"[' Volume', ' Emptiness']","[' Containers', ' Spaces']",587
+588,"[' Clarity', ' Ambiguity']","[' Messages', ' Codes']",588
+589,"[' Height', ' Lowness']","[' Mountains', ' Hills']",589
+590,"[' Proportion', ' Distortion']","[' Bodies', ' Faces']",590
+591,"[' Balance', ' Imbalance']","[' Scales', ' Weights']",591
+592,"[' Focus', ' Distraction']","[' Tasks', ' Goals']",592
+593,"[' Speed', ' Slowness']","[' Reactions', ' Reflexes']",593
+594,"[' Brightness', ' Darkness']","[' Days', ' Nights']",594
+595,"[' Warmth', ' Coldness']","[' Emotions', ' Weather']",595
+596,"[' Loudness', ' Silence']","[' Sounds', ' Quiet']",596
+597,"[' Color', ' Shape']","[' Blooms', ' Petals']",597
+598,"[' Size', ' Orientation']","[' Rocks', ' Gems']",598
+599,"[' Texture', ' Pattern']","[' Furs', ' Scales']",599
+600,"[' Hue', ' Saturation']","[' Skies', ' Fruits']",600
+601,"[' Weight', ' Material']","[' Metals', ' Woods']",601
+602,"[' Length', ' Width']","[' Rivers', ' Roads']",602
+603,"[' Speed', ' Agility']","[' Predators', ' Prey']",603
+604,"[' Flavor', ' Aroma']","[' Spices', ' Herbs']",604
+605,"[' Temperature', ' Humidity']","[' Deserts', ' Oceans']",605
+606,"[' Brightness', ' Contrast']","[' Stars', ' Planets']",606
+607,"[' Volume', ' Pitch']","[' Instruments', ' Voices']",607
+608,"[' Transparency', ' Reflection']","[' Glass', ' Mirrors']",608
+609,"[' Smell', ' Taste']","[' Fruits', ' Vegetables']",609
+610,"[' Height', ' Depth']","[' Mountains', ' Valleys']",610
+611,"[' Smoothness', ' Roughness']","[' Fabrics', ' Surfaces']",611
+612,"[' Loudness', ' Clarity']","[' Sounds', ' Noises']",612
+613,"[' Width', ' Height']","[' Doors', ' Windows']",613
+614,"[' Distance', ' Proximity']","[' Friends', ' Strangers']",614
+615,"[' Softness', ' Hardness']","[' Toys', ' Tools']",615
+616,"[' Curvature', ' Straightness']","[' Roads', ' Paths']",616
+617,"[' Lightness', ' Darkness']","[' Dawns', ' Dusks']",617
+618,"[' Rarity', ' Commonness']","[' Coins', ' Bills']",618
+619,"[' Freshness', ' Staleness']","[' Fruits', ' Bread']",619
+620,"[' Width', ' Thickness']","[' Papers', ' Cards']",620
+621,"[' Speed', ' Slowness']","[' Cars', ' Bicycles']",621
+622,"[' Transparency', ' Opacity']","[' Liquids', ' Solids']",622
+623,"[' Size', ' Scale']","[' Buildings', ' Models']",623
+624,"[' Flavor', ' Texture']","[' Snacks', ' Meals']",624
+625,"[' Pitch', ' Tone']","[' Voices', ' Instruments']",625
+626,"[' Hardness', ' Softness']","[' Metals', ' Fabrics']",626
+627,"[' Brightness', ' Dimness']","[' Lights', ' Shadows']",627
+628,"[' Speed', ' Agility']","[' Runners', ' Jumpers']",628
+629,"[' Smell', ' Taste']","[' Spices', ' Herbs']",629
+630,"[' Height', ' Width']","[' Trees', ' Houses']",630
+631,"[' Roughness', ' Smoothness']","[' Rocks', ' Sand']",631
+632,"[' Loudness', ' Quietness']","[' Music', ' Silence']",632
+633,"[' Freshness', ' Staleness']","[' Air', ' Water']",633
+634,"[' Distance', ' Proximity']","[' Cities', ' Towns']",634
+635,"[' Width', ' Thickness']","[' Ribbons', ' Strips']",635
+636,"[' Curvature', ' Straightness']","[' Rivers', ' Roads']",636
+637,"[' Lightness', ' Darkness']","[' Nights', ' Days']",637
+638,"[' Rarity', ' Commonness']","[' Jewels', ' Coins']",638
+639,"[' Size', ' Scale']","[' Animals', ' Toys']",639
+640,"[' Flavor', ' Texture']","[' Fruits', ' Vegetables']",640
+641,"[' Pitch', ' Tone']","[' Birds', ' Beasts']",641
+642,"[' Transparency', ' Opacity']","[' Glass', ' Wood']",642
+643,"[' Smoothness', ' Roughness']","[' Fabrics', ' Papers']",643
+644,"[' Speed', ' Slowness']","[' Bikes', ' Cars']",644
+645,"[' Brightness', ' Dimness']","[' Stars', ' Planets']",645
+646,"[' Height', ' Width']","[' Mountains', ' Hills']",646
+647,"[' Loudness', ' Quietness']","[' Noises', ' Sounds']",647
+648,"[' Freshness', ' Staleness']","[' Foods', ' Drinks']",648
+649,"[' Distance', ' Proximity']","[' Friends', ' Family']",649
+650,"[' Width', ' Thickness']","[' Strips', ' Ribbons']",650
+651,"[' Curvature', ' Straightness']","[' Roads', ' Paths']",651
+652,"[' Lightness', ' Darkness']","[' Shadows', ' Lights']",652
+653,"[' Rarity', ' Commonness']","[' Antiques', ' Collectibles']",653
+654,"[' Size', ' Scale']","[' Buildings', ' Bridges']",654
+655,"[' Flavor', ' Texture']","[' Snacks', ' Meals']",655
+656,"[' Pitch', ' Tone']","[' Voices', ' Instruments']",656
+657,"[' Hardness', ' Softness']","[' Metals', ' Fabrics']",657
+658,"[' Brightness', ' Dimness']","[' Lights', ' Shadows']",658
+659,"[' Speed', ' Agility']","[' Runners', ' Jumpers']",659
+660,"[' Smell', ' Taste']","[' Spices', ' Herbs']",660
+661,"[' Height', ' Width']","[' Trees', ' Houses']",661
+662,"[' Roughness', ' Smoothness']","[' Rocks', ' Sand']",662
+663,"[' Loudness', ' Quietness']","[' Music', ' Silence']",663
+664,"[' Freshness', ' Staleness']","[' Air', ' Water']",664
+665,"[' Distance', ' Proximity']","[' Cities', ' Towns']",665
+666,"[' Width', ' Thickness']","[' Ribbons', ' Strips']",666
+667,"[' Curvature', ' Straightness']","[' Rivers', ' Roads']",667
+668,"[' Lightness', ' Darkness']","[' Nights', ' Days']",668
+669,"[' Rarity', ' Commonness']","[' Jewels', ' Coins']",669
+670,"[' Size', ' Scale']","[' Animals', ' Toys']",670
+671,"[' Flavor', ' Texture']","[' Fruits', ' Vegetables']",671
+672,"[' Pitch', ' Tone']","[' Birds', ' Beasts']",672
+673,"[' Transparency', ' Opacity']","[' Glass', ' Wood']",673
+674,"[' Smoothness', ' Roughness']","[' Fabrics', ' Papers']",674
+675,"[' Speed', ' Slowness']","[' Bikes', ' Cars']",675
+676,"[' Brightness', ' Dimness']","[' Stars', ' Planets']",676
+677,"[' Height', ' Width']","[' Mountains', ' Hills']",677
+678,"[' Loudness', ' Quietness']","[' Noises', ' Sounds']",678
+679,"[' Freshness', ' Staleness']","[' Foods', ' Drinks']",679
+680,"[' Distance', ' Proximity']","[' Friends', ' Family']",680
+681,"[' Width', ' Thickness']","[' Strips', ' Ribbons']",681
+682,"[' Curvature', ' Straightness']","[' Roads', ' Paths']",682
+683,"[' Lightness', ' Darkness']","[' Shadows', ' Lights']",683
+684,"[' Rarity', ' Commonness']","[' Antiques', ' Collectibles']",684
+685,"[' Size', ' Scale']","[' Buildings', ' Bridges']",685
+686,"[' Flavor', ' Texture']","[' Snacks', ' Meals']",686
+687,"[' Pitch', ' Tone']","[' Voices', ' Instruments']",687
+688,"[' Hardness', ' Softness']","[' Metals', ' Fabrics']",688
+689,"[' Brightness', ' Dimness']","[' Lights', ' Shadows']",689
+690,"[' Speed', ' Agility']","[' Runners', ' Jumpers']",690
+691,"[' Smell', ' Taste']","[' Spices', ' Herbs']",691
+692,"[' Height', ' Width']","[' Trees', ' Houses']",692
+693,"[' Roughness', ' Smoothness']","[' Rocks', ' Sand']",693
+694,"[' Loudness', ' Quietness']","[' Music', ' Silence']",694
+695,"[' Freshness', ' Staleness']","[' Air', ' Water']",695
+696,"[' Distance', ' Proximity']","[' Cities', ' Towns']",696
+697,"[' Shape', ' Size']","[' Animals', ' Vehicles']",697
+698,"[' Hue', ' Saturation']","[' Fruits', ' Flowers']",698
+699,"[' Orientation', ' Contrast']","[' Tools', ' Furniture']",699
+700,"[' Texture', ' Pattern']","[' Insects', ' Reptiles']",700
+701,"[' Pitch', ' Timbre']","[' Musical Instruments', ' Animal Sounds']",701
+702,"[' Color', ' Brightness']","[' Gems', ' Minerals']",702
+703,"[' Speed', ' Acceleration']","[' Cars', ' Bicycles']",703
+704,"[' Material', ' Form']","[' Kitchen Utensils', ' Office Supplies']",704
+705,"[' Smell', ' Taste']","[' Spices', ' Herbs']",705
+706,"[' Frequency', ' Amplitude']","[' Electrical Components', ' Mechanical Parts']",706
+707,"[' Body Shape', ' Facial Features']","[' Mammals', ' Birds']",707
+708,"[' Transparency', ' Reflectivity']","[' Liquids', ' Solids']",708
+709,"[' Rhythm', ' Melody']","[' Pop Music', ' Classical Music']",709
+710,"[' Surface Area', ' Volume']","[' Fruits', ' Vegetables']",710
+711,"[' Angle', ' Curvature']","[' Architectural Elements', ' Furniture']",711
+712,"[' Weight', ' Balance']","[' Gym Equipment', ' Sports Gear']",712
+713,"[' Temperature', ' Humidity']","[' Weather Conditions', ' Climate Zones']",713
+714,"[' Vibrancy', ' Saturation']","[' Paintings', ' Photographs']",714
+715,"[' Length', ' Width']","[' Roads', ' Rivers']",715
+716,"[' Loudness', ' Clarity']","[' Animal Calls', ' Human Voices']",716
+717,"[' Chemical Structure', ' Molecular Weight']","[' Pharmaceuticals', ' Pesticides']",717
+718,"[' Pattern Complexity', ' Colorfulness']","[' Abstract Art', ' Realistic Art']",718
+719,"[' Elevation', ' Azimuth']","[' Landscapes', ' Cityscapes']",719
+720,"[' Flow Rate', ' Pressure']","[' Water Features', ' Gas Appliances']",720
+721,"[' Sharpness', ' Smoothness']","[' Kitchen Knives', ' Power Tools']",721
+722,"[' Illumination', ' Shadow']","[' Indoor Scenes', ' Outdoor Scenes']",722
+723,"[' Wavelength', ' Amplitude']","[' Light Sources', ' Sound Waves']",723
+724,"[' Fragmentation', ' Dispersal']","[' Rocks', ' Soil']",724
+725,"[' Symmetry', ' Asymmetry']","[' Butterflies', ' Moths']",725
+726,"[' Odor Strength', ' Odor Quality']","[' Fragrances', ' Cleaning Products']",726
+727,"[' Angular Velocity', ' Linear Velocity']","[' Sports Equipment', ' Musical Instruments']",727
+728,"[' Grain Size', ' Texture']","[' Beaches', ' Deserts']",728
+729,"[' Nutritional Value', ' Caloric Content']","[' Fruits', ' Nuts']",729
+730,"[' Branching Pattern', ' Leaf Shape']","[' Trees', ' Shrubs']",730
+731,"[' Air Resistance', ' Water Resistance']","[' Aircraft', ' Boats']",731
+732,"[' Frequency Range', ' Dynamic Range']","[' Music Genres', ' Animal Communication']",732
+733,"[' Cell Shape', ' Cell Size']","[' Bacteria', ' Viruses']",733
+734,"[' Refractive Index', ' Dispersion']","[' Optical Components', ' Mirrors']",734
+735,"[' Flavor Profile', ' Aroma']","[' Cheeses', ' Wines']",735
+736,"[' Soil Type', ' Climate']","[' Crops', ' Livestock']",736
+737,"[' Wing Shape', ' Wing Size']","[' Birds', ' Insects']",737
+738,"[' Shell Shape', ' Shell Size']","[' Mollusks', ' Crustaceans']",738
+739,"[' Leaf Color', ' Leaf Shape']","[' Deciduous Trees', ' Evergreen Trees']",739
+740,"[' Beak Shape', ' Beak Size']","[' Birds', ' Reptiles']",740
+741,"[' Eye Shape', ' Eye Size']","[' Mammals', ' Fish']",741
+742,"[' Horn Shape', ' Horn Size']","[' Mammals', ' Reptiles']",742
+743,"[' Tail Shape', ' Tail Size']","[' Mammals', ' Fish']",743
+744,"[' Speed Range', ' Acceleration Range']","[' Cars', ' Motorcycles']",744
+745,"[' Water Absorption', ' Water Retention']","[' Soils', ' Fabrics']",745
+746,"[' Cloud Shape', ' Cloud Size']","[' Weather Conditions', ' Climate Zones']",746
+747,"[' Tree Shape', ' Tree Size']","[' Deciduous Trees', ' Evergreen Trees']",747
+748,"[' Rock Texture', ' Rock Color']","[' Igneous Rocks', ' Sedimentary Rocks']",748
+749,"[' Flower Shape', ' Flower Color']","[' Wildflowers', ' Cultivated Flowers']",749
+750,"[' Bone Shape', ' Bone Size']","[' Mammals', ' Birds']",750
+751,"[' Fur Color', ' Fur Texture']","[' Mammals', ' Reptiles']",751
+752,"[' Feather Shape', ' Feather Color']","[' Birds', ' Insects']",752
+753,"[' Scale Shape', ' Scale Size']","[' Fish', ' Reptiles']",753
+754,"[' Wingbeat Frequency', ' Wingbeat Amplitude']","[' Birds', ' Insects']",754
+755,"[' Shell Color', ' Shell Pattern']","[' Mollusks', ' Crustaceans']",755
+756,"[' Leaf Arrangement', ' Leaf Shape']","[' Deciduous Trees', ' Evergreen Trees']",756
+757,"[' Root Depth', ' Root Spread']","[' Crops', ' Weeds']",757
+758,"[' Trunk Shape', ' Trunk Size']","[' Trees', ' Shrubs']",758
+759,"[' Branch Angle', ' Branch Length']","[' Trees', ' Shrubs']",759
+760,"[' Petal Shape', ' Petal Color']","[' Wildflowers', ' Cultivated Flowers']",760
+761,"[' Fruit Shape', ' Fruit Color']","[' Fruits', ' Vegetables']",761
+762,"[' Seed Shape', ' Seed Size']","[' Plants', ' Fungi']",762
+763,"[' Feather Arrangement', ' Feather Shape']","[' Birds', ' Insects']",763
+764,"[' Scale Arrangement', ' Scale Shape']","[' Fish', ' Reptiles']",764
+765,"[' Hair Texture', ' Hair Color']","[' Mammals', ' Birds']",765
+766,"[' Eye Color', ' Eye Shape']","[' Mammals', ' Fish']",766
+767,"[' Fin Shape', ' Fin Size']","[' Fish', ' Aquatic Mammals']",767
+768,"[' Tail Shape', ' Tail Size']","[' Mammals', ' Fish']",768
+769,"[' Beak Shape', ' Beak Size']","[' Birds', ' Reptiles']",769
+770,"[' Horn Shape', ' Horn Size']","[' Mammals', ' Reptiles']",770
+771,"[' Antenna Shape', ' Antenna Size']","[' Insects', ' Crustaceans']",771
+772,"[' Leg Shape', ' Leg Size']","[' Insects', ' Crustaceans']",772
+773,"[' Body Shape', ' Body Size']","[' Mammals', ' Birds']",773
+774,"[' Snout Shape', ' Snout Size']","[' Mammals', ' Reptiles']",774
+775,"[' Ear Shape', ' Ear Size']","[' Mammals', ' Birds']",775
+776,"[' Nose Shape', ' Nose Size']","[' Mammals', ' Fish']",776
+777,"[' Mouth Shape', ' Mouth Size']","[' Mammals', ' Fish']",777
+778,"[' Tail Fin Shape', ' Tail Fin Size']","[' Fish', ' Aquatic Mammals']",778
+779,"[' Dorsal Fin Shape', ' Dorsal Fin Size']","[' Fish', ' Aquatic Mammals']",779
+780,"[' Pectoral Fin Shape', ' Pectoral Fin Size']","[' Fish', ' Aquatic Mammals']",780
+781,"[' Anal Fin Shape', ' Anal Fin Size']","[' Fish', ' Aquatic Mammals']",781
+782,"[' Caudal Fin Shape', ' Caudal Fin Size']","[' Fish', ' Aquatic Mammals']",782
+783,"[' Pattern Complexity', ' Pattern Symmetry']","[' Butterflies', ' Moths']",783
+784,"[' Shape Irregularity', ' Shape Symmetry']","[' Rocks', ' Minerals']",784
+785,"[' Smell Intensity', ' Smell Quality']","[' Fruits', ' Vegetables']",785
+786,"[' Taste Intensity', ' Taste Quality']","[' Fruits', ' Vegetables']",786
+787,"[' Sound Frequency', ' Sound Amplitude']","[' Animal Calls', ' Human Voices']",787
+788,"[' Color Saturation', ' Color Brightness']","[' Paintings', ' Photographs']",788
+789,"[' Texture Roughness', ' Texture Smoothness']","[' Fabrics', ' Wood']",789
+790,"[' Vibrancy', ' Hue']","[' Flowers', ' Fruits']",790
+791,"[' Fragmentation', ' Dispersion']","[' Soil', ' Rock']",791
+792,"[' Symmetry', ' Asymmetry']","[' Butterflies', ' Moths']",792
+793,"[' Elevation', ' Azimuth']","[' Landscapes', ' Cityscapes']",793
+794,"[' Flow Rate', ' Pressure']","[' Water Features', ' Gas Appliances']",794
+795,"[' Sharpness', ' Smoothness']","[' Kitchen Knives', ' Power Tools']",795
+796,"[' Shape', ' Color']","[' Blooms', ' Spikes']",796
+797,"[' Texture', ' Pattern']","[' Ridges', ' Whorls']",797
+798,"[' Size', ' Orientation']","[' Flanges', ' Spires']",798
+799,"[' Hue', ' Saturation']","[' Fruits', ' Vegetables']",799
+800,"[' Form', ' Material']","[' Shells', ' Pods']",800
+801,"[' Length', ' Width']","[' Stripes', ' Dots']",801
+802,"[' Pitch', ' Timbre']","[' Chimes', ' Drums']",802
+803,"[' Brightness', ' Contrast']","[' Glows', ' Flickers']",803
+804,"[' Angle', ' Curvature']","[' Peaks', ' Valleys']",804
+805,"[' Speed', ' Direction']","[' Flows', ' Edges']",805
+806,"[' Weight', ' Balance']","[' Stones', ' Feathers']",806
+807,"[' Flavor', ' Aroma']","[' Spices', ' Herbs']",807
+808,"[' Radius', ' Thickness']","[' Coils', ' Springs']",808
+809,"[' Tone', ' Cadence']","[' Chords', ' Melodies']",809
+810,"[' Saturation', ' Luminance']","[' Blooms', ' Fades']",810
+811,"[' Grain', ' Roughness']","[' Sands', ' Rocks']",811
+812,"[' Volume', ' Frequency']","[' Beeps', ' Chimes']",812
+813,"[' Hue', ' Lightness']","[' Petals', ' Leaves']",813
+814,"[' Width', ' Height']","[' Frames', ' Panes']",814
+815,"[' Pitch', ' Volume']","[' Squeaks', ' Rumbles']",815
+816,"[' Orientation', ' Inclination']","[' Slopes', ' Cliffs']",816
+817,"[' Color', ' Saturation']","[' Fruits', ' Flowers']",817
+818,"[' Shape', ' Size']","[' Bubbles', ' Clouds']",818
+819,"[' Texture', ' Roughness']","[' Fur', ' Scales']",819
+820,"[' Brightness', ' Contrast']","[' Lights', ' Shadows']",820
+821,"[' Speed', ' Acceleration']","[' Flows', ' Falls']",821
+822,"[' Form', ' Material']","[' Shells', ' Nuts']",822
+823,"[' Length', ' Width']","[' Stems', ' Roots']",823
+824,"[' Pitch', ' Timbre']","[' Humming', ' Whistling']",824
+825,"[' Angle', ' Curvature']","[' Bends', ' Turns']",825
+826,"[' Weight', ' Balance']","[' Metals', ' Woods']",826
+827,"[' Flavor', ' Aroma']","[' Spicy', ' Sweet']",827
+828,"[' Radius', ' Thickness']","[' Rings', ' Cylinders']",828
+829,"[' Tone', ' Cadence']","[' Beats', ' Rhythms']",829
+830,"[' Saturation', ' Luminance']","[' Glows', ' Flickers']",830
+831,"[' Grain', ' Roughness']","[' Pebbles', ' Boulders']",831
+832,"[' Volume', ' Frequency']","[' Chimes', ' Gong']",832
+833,"[' Hue', ' Lightness']","[' Skies', ' Seas']",833
+834,"[' Width', ' Height']","[' Doors', ' Windows']",834
+835,"[' Pitch', ' Volume']","[' Squeals', ' Roars']",835
+836,"[' Orientation', ' Inclination']","[' Ridges', ' Valleys']",836
+837,"[' Color', ' Saturation']","[' Flowers', ' Trees']",837
+838,"[' Shape', ' Size']","[' Clouds', ' Mountains']",838
+839,"[' Texture', ' Roughness']","[' Feathers', ' Scales']",839
+840,"[' Brightness', ' Contrast']","[' Darks', ' Lights']",840
+841,"[' Speed', ' Acceleration']","[' Falls', ' Jumps']",841
+842,"[' Form', ' Material']","[' Nuts', ' Seeds']",842
+843,"[' Length', ' Width']","[' Roots', ' Stems']",843
+844,"[' Pitch', ' Timbre']","[' Whistling', ' Singing']",844
+845,"[' Angle', ' Curvature']","[' Turns', ' Bends']",845
+846,"[' Weight', ' Balance']","[' Woods', ' Metals']",846
+847,"[' Flavor', ' Aroma']","[' Sweet', ' Sour']",847
+848,"[' Radius', ' Thickness']","[' Cylinders', ' Cones']",848
+849,"[' Tone', ' Cadence']","[' Rhythms', ' Beats']",849
+850,"[' Saturation', ' Luminance']","[' Fades', ' Glows']",850
+851,"[' Grain', ' Roughness']","[' Boulders', ' Pebbles']",851
+852,"[' Volume', ' Frequency']","[' Gong', ' Chimes']",852
+853,"[' Hue', ' Lightness']","[' Seas', ' Skies']",853
+854,"[' Width', ' Height']","[' Windows', ' Doors']",854
+855,"[' Pitch', ' Volume']","[' Roars', ' Squeals']",855
+856,"[' Orientation', ' Inclination']","[' Valleys', ' Ridges']",856
+857,"[' Color', ' Saturation']","[' Trees', ' Flowers']",857
+858,"[' Shape', ' Size']","[' Mountains', ' Clouds']",858
+859,"[' Texture', ' Roughness']","[' Scales', ' Feathers']",859
+860,"[' Brightness', ' Contrast']","[' Lights', ' Darks']",860
+861,"[' Speed', ' Acceleration']","[' Jumps', ' Falls']",861
+862,"[' Form', ' Material']","[' Seeds', ' Nuts']",862
+863,"[' Length', ' Width']","[' Stems', ' Roots']",863
+864,"[' Pitch', ' Timbre']","[' Singing', ' Whistling']",864
+865,"[' Angle', ' Curvature']","[' Bends', ' Turns']",865
+866,"[' Weight', ' Balance']","[' Metals', ' Woods']",866
+867,"[' Flavor', ' Aroma']","[' Sour', ' Sweet']",867
+868,"[' Radius', ' Thickness']","[' Cones', ' Cylinders']",868
+869,"[' Tone', ' Cadence']","[' Beats', ' Rhythms']",869
+870,"[' Saturation', ' Luminance']","[' Glows', ' Fades']",870
+871,"[' Grain', ' Roughness']","[' Pebbles', ' Boulders']",871
+872,"[' Volume', ' Frequency']","[' Chimes', ' Gong']",872
+873,"[' Hue', ' Lightness']","[' Skies', ' Seas']",873
+874,"[' Width', ' Height']","[' Doors', ' Windows']",874
+875,"[' Pitch', ' Volume']","[' Squeals', ' Roars']",875
+876,"[' Orientation', ' Inclination']","[' Ridges', ' Valleys']",876
+877,"[' Color', ' Saturation']","[' Flowers', ' Trees']",877
+878,"[' Shape', ' Size']","[' Clouds', ' Mountains']",878
+879,"[' Texture', ' Roughness']","[' Feathers', ' Scales']",879
+880,"[' Brightness', ' Contrast']","[' Darks', ' Lights']",880
+881,"[' Speed', ' Acceleration']","[' Falls', ' Jumps']",881
+882,"[' Form', ' Material']","[' Nuts', ' Seeds']",882
+883,"[' Length', ' Width']","[' Roots', ' Stems']",883
+884,"[' Pitch', ' Timbre']","[' Whistling', ' Singing']",884
+885,"[' Angle', ' Curvature']","[' Turns', ' Bends']",885
+886,"[' Weight', ' Balance']","[' Woods', ' Metals']",886
+887,"[' Flavor', ' Aroma']","[' Sweet', ' Sour']",887
+888,"[' Radius', ' Thickness']","[' Cylinders', ' Cones']",888
+889,"[' Tone', ' Cadence']","[' Rhythms', ' Beats']",889
+890,"[' Saturation', ' Luminance']","[' Fades', ' Glows']",890
+891,"[' Grain', ' Roughness']","[' Boulders', ' Pebbles']",891
+892,"[' Volume', ' Frequency']","[' Gong', ' Chimes']",892
+893,"[' Hue', ' Lightness']","[' Seas', ' Skies']",893
+894,"[' Width', ' Height']","[' Windows', ' Doors']",894
+895,"[' Pitch', ' Volume']","[' Roars', ' Squeals']",895
+896,"[' Texture', ' Shape']","[' Rocky', ' Smooth']",896
+897,"[' Color', ' Pattern']","[' Bright', ' Dull']",897
+898,"[' Size', ' Material']","[' Heavy', ' Light']",898
+899,"[' Orientation', ' Curvature']","[' Angular', ' Rounded']",899
+900,"[' Hue', ' Saturation']","[' Vivid', ' Muted']",900
+901,"[' Width', ' Length']","[' Narrow', ' Broad']",901
+902,"[' Transparency', ' Reflection']","[' Clear', ' Opaque']",902
+903,"[' Temperature', ' Humidity']","[' Hot', ' Cool']",903
+904,"[' Speed', ' Direction']","[' Fast', ' Slow']",904
+905,"[' Flavor', ' Aroma']","[' Sweet', ' Savory']",905
+906,"[' Pitch', ' Timbre']","[' High', ' Low']",906
+907,"[' Brightness', ' Contrast']","[' Light', ' Dark']",907
+908,"[' Firmness', ' Softness']","[' Hard', ' Soft']",908
+909,"[' Weight', ' Density']","[' Heavy', ' Light']",909
+910,"[' Grain', ' Texture']","[' Coarse', ' Fine']",910
+911,"[' Scent', ' Odor']","[' Fragrant', ' Pungent']",911
+912,"[' Volume', ' Frequency']","[' Loud', ' Quiet']",912
+913,"[' Tension', ' Relaxation']","[' Tight', ' Loose']",913
+914,"[' Smoothness', ' Roughness']","[' Silky', ' Coarse']",914
+915,"[' Length', ' Width']","[' Long', ' Wide']",915
+916,"[' Depth', ' Height']","[' Deep', ' Shallow']",916
+917,"[' Vibrancy', ' Dullness']","[' Bright', ' Dull']",917
+918,"[' Softness', ' Hardness']","[' Plush', ' Rigid']",918
+919,"[' Sweetness', ' Sourness']","[' Sweet', ' Tart']",919
+920,"[' Transparency', ' Opacity']","[' Clear', ' Opaque']",920
+921,"[' Moisture', ' Dryness']","[' Wet', ' Dry']",921
+922,"[' Width', ' Thickness']","[' Narrow', ' Broad']",922
+923,"[' Temperature', ' Comfort']","[' Warm', ' Cool']",923
+924,"[' Pattern', ' Texture']","[' Complex', ' Simple']",924
+925,"[' Size', ' Scale']","[' Large', ' Small']",925
+926,"[' Curvature', ' Angularity']","[' Curved', ' Angular']",926
+927,"[' Hue', ' Saturation']","[' Bright', ' Muted']",927
+928,"[' Firmness', ' Softness']","[' Solid', ' Pliable']",928
+929,"[' Speed', ' Velocity']","[' Fast', ' Slow']",929
+930,"[' Brightness', ' Luminance']","[' Light', ' Dark']",930
+931,"[' Coarseness', ' Fineness']","[' Rough', ' Smooth']",931
+932,"[' Flavor', ' Aroma']","[' Rich', ' Subtle']",932
+933,"[' Pitch', ' Tone']","[' High', ' Low']",933
+934,"[' Smoothness', ' Roughness']","[' Silky', ' Coarse']",934
+935,"[' Length', ' Width']","[' Long', ' Wide']",935
+936,"[' Vibrancy', ' Dullness']","[' Vibrant', ' Dull']",936
+937,"[' Softness', ' Hardness']","[' Cushy', ' Rigid']",937
+938,"[' Sweetness', ' Sourness']","[' Sweet', ' Sour']",938
+939,"[' Transparency', ' Opacity']","[' Transparent', ' Opaque']",939
+940,"[' Moisture', ' Dryness']","[' Humid', ' Dry']",940
+941,"[' Width', ' Thickness']","[' Narrow', ' Broad']",941
+942,"[' Temperature', ' Comfort']","[' Warm', ' Cool']",942
+943,"[' Pattern', ' Texture']","[' Intricate', ' Simple']",943
+944,"[' Size', ' Scale']","[' Enormous', ' Tiny']",944
+945,"[' Curvature', ' Angularity']","[' Rounded', ' Angular']",945
+946,"[' Hue', ' Saturation']","[' Vivid', ' Muted']",946
+947,"[' Firmness', ' Softness']","[' Solid', ' Pliable']",947
+948,"[' Speed', ' Velocity']","[' Rapid', ' Slow']",948
+949,"[' Brightness', ' Luminance']","[' Radiant', ' Dim']",949
+950,"[' Coarseness', ' Fineness']","[' Rough', ' Smooth']",950
+951,"[' Flavor', ' Aroma']","[' Savory', ' Sweet']",951
+952,"[' Pitch', ' Tone']","[' High', ' Low']",952
+953,"[' Smoothness', ' Roughness']","[' Silky', ' Coarse']",953
+954,"[' Length', ' Width']","[' Long', ' Wide']",954
+955,"[' Vibrancy', ' Dullness']","[' Vibrant', ' Dull']",955
+956,"[' Softness', ' Hardness']","[' Plush', ' Rigid']",956
+957,"[' Sweetness', ' Sourness']","[' Sweet', ' Tart']",957
+958,"[' Transparency', ' Opacity']","[' Clear', ' Opaque']",958
+959,"[' Moisture', ' Dryness']","[' Wet', ' Dry']",959
+960,"[' Width', ' Thickness']","[' Narrow', ' Broad']",960
+961,"[' Temperature', ' Comfort']","[' Warm', ' Cool']",961
+962,"[' Pattern', ' Texture']","[' Complex', ' Simple']",962
+963,"[' Size', ' Scale']","[' Huge', ' Minuscule']",963
+964,"[' Curvature', ' Angularity']","[' Curved', ' Angular']",964
+965,"[' Hue', ' Saturation']","[' Bright', ' Muted']",965
+966,"[' Firmness', ' Softness']","[' Solid', ' Pliable']",966
+967,"[' Speed', ' Velocity']","[' Fast', ' Slow']",967
+968,"[' Brightness', ' Luminance']","[' Light', ' Dark']",968
+969,"[' Coarseness', ' Fineness']","[' Rough', ' Smooth']",969
+970,"[' Flavor', ' Aroma']","[' Rich', ' Subtle']",970
+971,"[' Pitch', ' Tone']","[' High', ' Low']",971
+972,"[' Smoothness', ' Roughness']","[' Silky', ' Coarse']",972
+973,"[' Length', ' Width']","[' Long', ' Wide']",973
+974,"[' Vibrancy', ' Dullness']","[' Vibrant', ' Dull']",974
+975,"[' Softness', ' Hardness']","[' Cushy', ' Rigid']",975
+976,"[' Sweetness', ' Sourness']","[' Sweet', ' Sour']",976
+977,"[' Transparency', ' Opacity']","[' Transparent', ' Opaque']",977
+978,"[' Moisture', ' Dryness']","[' Humid', ' Dry']",978
+979,"[' Width', ' Thickness']","[' Narrow', ' Broad']",979
+980,"[' Temperature', ' Comfort']","[' Warm', ' Cool']",980
+981,"[' Pattern', ' Texture']","[' Intricate', ' Simple']",981
+982,"[' Size', ' Scale']","[' Enormous', ' Tiny']",982
+983,"[' Curvature', ' Angularity']","[' Rounded', ' Angular']",983
+984,"[' Hue', ' Saturation']","[' Vivid', ' Muted']",984
+985,"[' Firmness', ' Softness']","[' Solid', ' Pliable']",985
+986,"[' Speed', ' Velocity']","[' Rapid', ' Slow']",986
+987,"[' Brightness', ' Luminance']","[' Radiant', ' Dim']",987
+988,"[' Coarseness', ' Fineness']","[' Rough', ' Smooth']",988
+989,"[' Flavor', ' Aroma']","[' Savory', ' Sweet']",989
+990,"[' Pitch', ' Tone']","[' High', ' Low']",990
+991,"[' Smoothness', ' Roughness']","[' Silky', ' Coarse']",991
+992,"[' Length', ' Width']","[' Long', ' Wide']",992
+993,"[' Vibrancy', ' Dullness']","[' Vibrant', ' Dull']",993
+994,"[' Softness', ' Hardness']","[' Plush', ' Rigid']",994
+995,"[' Sweetness', ' Sourness']","[' Sweet', ' Tart']",995
