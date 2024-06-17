@@ -4,16 +4,55 @@ from envs import Binz2022, Badham2017, Devraj2022
 import argparse
 from tqdm import tqdm
 from scipy.optimize import differential_evolution, minimize
+from model import TransformerDecoderClassification, TransformerDecoderLinearWeights
 import sys
+import re
 sys.path.insert(0, '/u/ajagadish/ermi/mi')
 SYS_PATH = '/u/ajagadish/ermi'
 
 
 def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, participant=0, beta=1., epsilon=0., method='soft_sigmoid', device='cpu', paired=False, **kwargs):
 
+    # parse num_hidden, num_layers, d_model, num_head, noise, shuffle, paired, loss from model_path
+    patterns = {
+        "num_hidden": r"num_hidden=(\d+)",
+        "num_layers": r"num_layers=(\d+)",
+        "d_model": r"d_model=(\d+)",
+        "num_head": r"num_head=(\d+)",
+        "noise": r"noise=(\d+\.\d+)",
+        "shuffle": r"shuffle=(True|False)",
+        "paired": r"paired=(True|False)",
+        "loss": r"loss(\w+)"
+    }
+
+    # Initialize a dictionary to store the parsed parameters
+    parameters = {}
+
+    # Parse each parameter from the model_path string
+    for param, pattern in patterns.items():
+        match = re.search(pattern, model_path)
+        if match:
+            parameters[param] = match.group(1)
+
+    num_hidden = int(parameters.get('num_hidden', 0))
+    num_layers = int(parameters.get('num_layers', 0))
+    d_model = int(parameters.get('d_model', 0))
+    num_head = int(parameters.get('num_head', 0))
+    loss_fn = 'nll'  # parameters.get('loss', 'nll')
+    # TODO: does not work other than for binz2022
+    model_max_steps = kwargs.get('model_max_steps', 10)
     # load model
-    model = torch.load(model_path)[1].to(device) if device == 'cuda' else torch.load(
-        model_path, map_location=torch.device('cpu'))[1].to(device)
+    if paired:
+        model = TransformerDecoderLinearWeights(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
+                                                num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
+
+    else:
+        model = TransformerDecoderClassification(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
+                                                 num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
+    state_dict = torch.load(
+        model_path, map_location=torch.device('cpu'))[1]
+    model.load_state_dict(state_dict)
+    model.to(device)
 
     with torch.no_grad():
 
@@ -35,9 +74,15 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
             packed_inputs.float().to(device), sequence_lengths)
 
         # task performance
-        model_choices = model_choice_probs > 0.5 if method == 'greedy' else torch.distributions.Binomial(
-            probs=model_choice_probs).sample()
+        if model.loss == 'bce':
+            model_choices = model_choice_probs > 0.5 if method == 'greedy' else torch.distributions.Binomial(
+                probs=model_choice_probs).sample()
+
+        elif model.loss == 'nll':
+            model_choices = model_choice_probs.mean > 0.5 if method == 'greedy' else model_choice_probs.sample()
+
         per_trial_model_accuracy = (model_choices == correct_choices)
+        per_trial_human_accuracy = (human_choices == correct_choices)
         model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
             sequence_lengths)], axis=0).squeeze().float()
         correct_choices = torch.concat([correct_choices[i, :seq_len] for i, seq_len in enumerate(
@@ -48,7 +93,7 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
         human_accuracy = (human_choices.reshape(-1) ==
                           correct_choices).sum() / correct_choices.numel()
 
-    return model_accuracy, per_trial_model_accuracy, human_accuracy
+    return model_accuracy, per_trial_model_accuracy, per_trial_human_accuracy
 
 
 def optimize(args):
@@ -62,7 +107,7 @@ def optimize(args):
         task_features = {}
     elif args.task_name == 'binz2022':
         env = Binz2022()
-        task_features = {}
+        task_features = {'model_max_steps': 10}
     else:
         raise NotImplementedError
 
@@ -76,7 +121,7 @@ def optimize(args):
         per_trial_accs.append(per_trial_model_accuracy)
         accs.append(model_accuracy)
 
-    return np.array(accs), torch.stack(per_trial_accs).squeeze().sum(1), np.array(human_accs)
+    return np.array(accs), torch.stack(per_trial_accs).squeeze().sum(1), np.stack(human_accs).squeeze().sum(1)
 
 
 if __name__ == '__main__':

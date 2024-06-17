@@ -5,6 +5,8 @@ import argparse
 from tqdm import tqdm
 from scipy.optimize import differential_evolution, minimize
 import sys
+import re
+from model import TransformerDecoderClassification, TransformerDecoderLinearWeights
 sys.path.insert(0, '/u/ajagadish/ermi/mi')
 SYS_PATH = '/u/ajagadish/ermi'
 
@@ -12,8 +14,47 @@ SYS_PATH = '/u/ajagadish/ermi'
 def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, participant=0, beta=1., epsilon=0., method='soft_sigmoid', device='cpu', paired=False, **kwargs):
 
     # load model
-    model = torch.load(model_path)[1].to(device) if device == 'cuda' else torch.load(
-        model_path, map_location=torch.device('cpu'))[1].to(device)
+    # model = torch.load(model_path)[1].to(device) if device == 'cuda' else torch.load(
+    #     model_path, map_location=torch.device('cpu'))[1].to(device)
+    patterns = {
+        "num_hidden": r"num_hidden=(\d+)",
+        "num_layers": r"num_layers=(\d+)",
+        "d_model": r"d_model=(\d+)",
+        "num_head": r"num_head=(\d+)",
+        "noise": r"noise=(\d+\.\d+)",
+        "shuffle": r"shuffle=(True|False)",
+        "paired": r"paired=(True|False)",
+        "loss": r"loss(\w+)"
+    }
+
+    # Initialize a dictionary to store the parsed parameters
+    parameters = {}
+
+    # Parse each parameter from the model_path string
+    for param, pattern in patterns.items():
+        match = re.search(pattern, model_path)
+        if match:
+            parameters[param] = match.group(1)
+
+    num_hidden = int(parameters.get('num_hidden', 0))
+    num_layers = int(parameters.get('num_layers', 0))
+    d_model = int(parameters.get('d_model', 0))
+    num_head = int(parameters.get('num_head', 0))
+    loss_fn = 'nll'  # parameters.get('loss', 'nll')
+    # TODO: does not work other than for binz2022
+    model_max_steps = kwargs.get('model_max_steps', 10)
+    # load model
+    if paired:
+        model = TransformerDecoderLinearWeights(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
+                                                num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
+
+    else:
+        model = TransformerDecoderClassification(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
+                                                 num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
+    state_dict = torch.load(
+        model_path, map_location=torch.device('cpu'))[1]
+    model.load_state_dict(state_dict)
+    model.to(device)
 
     with torch.no_grad():
 
@@ -54,18 +95,25 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
         elif method == 'soft_sigmoid':
 
             assert epsilon == 0., "epsilon must be 0 for soft_sigmoid"
+            # sum log likelihoods only for unpadded trials per condition and compute chance log likelihood
+            chance_loglikelihood = sum(sequence_lengths) * np.log(0.5)
+
             # compute log likelihoods of human choices under model choice probs (binomial distribution)
-            loglikehoods = torch.distributions.Binomial(
-                probs=model_choice_probs).log_prob(human_choices)
+            if model.loss == 'bce':
+                model_choices = model_choice_probs > 0.5 if method == 'greedy' else torch.distributions.Binomial(
+                    probs=model_choice_probs).sample()
+                loglikehoods = torch.distributions.Binomial(
+                    probs=model_choice_probs).log_prob(human_choices)
+
+            elif model.loss == 'nll':
+                model_choices = model_choice_probs.mean > 0.5 if method == 'greedy' else model_choice_probs.sample()
+                loglikehoods = model_choice_probs.log_prob(
+                    human_choices.float())
+
             summed_loglikelihoods = torch.vstack(
                 [loglikehoods[idx, :sequence_lengths[idx]].sum() for idx in range(len(loglikehoods))]).sum()
 
-        # sum log likelihoods only for unpadded trials per condition and compute chance log likelihood
-        chance_loglikelihood = sum(sequence_lengths) * np.log(0.5)
-
         # task performance
-        model_choices = torch.distributions.Binomial(
-            probs=model_choice_probs).sample()
         model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
             sequence_lengths)], axis=0).squeeze().float()
         correct_choices = torch.concat([correct_choices[i, :seq_len] for i, seq_len in enumerate(
