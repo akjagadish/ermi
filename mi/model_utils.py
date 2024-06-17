@@ -79,7 +79,7 @@ class MLP(torch.nn.Module):
         x = torch.sigmoid(x)
         return x
 
-def parse_model_path(model_path, kwargs):
+def parse_model_path(model_path, kwargs, return_data_info=False):
 #    parse num_hidden, num_layers, d_model, num_head, paired, loss from model_path
     patterns = {
         "num_hidden": r"num_hidden=(\d+)",
@@ -87,7 +87,7 @@ def parse_model_path(model_path, kwargs):
         "d_model": r"d_model=(\d+)",
         "num_head": r"num_head=(\d+)",
         "paired": r"paired=(True|False)",
-        "loss": r"loss=(\w+)"
+        "loss": r"loss=([a-zA-Z0-9]+)",
     }
 
     # Initialize a dictionary to store the parsed parameters
@@ -105,4 +105,11 @@ def parse_model_path(model_path, kwargs):
     num_head = int(parameters.get('num_head', 0))
     loss_fn =  parameters.get('loss', 'nll')
     model_max_steps = kwargs.get('model_max_steps', 0)
+
+    source = 'claude' if 'claude' in model_path else 'synthetic' if 'synthetic' in model_path else None
+    condition = 'rank' if 'rank' in model_path else 'direction' if 'direction' in model_path else 'unknown'
+    
+    if return_data_info:
+        return num_hidden, num_layers, d_model, num_head, loss_fn, model_max_steps, source, condition
+    
     return num_hidden, num_layers, d_model, num_head, loss_fn, model_max_steps
