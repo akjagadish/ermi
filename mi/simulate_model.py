@@ -29,7 +29,7 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
     
     # load model weights
     state_dict = torch.load(
-        model_path, map_location=args.device)[1]
+        model_path, map_location=device)[1]
     model.load_state_dict(state_dict)
     model.to(device)
 
@@ -45,7 +45,7 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
         if not hasattr(env, 'return_prototype'):
             packed_inputs, sequence_lengths, correct_choices, human_choices, _ = outputs
         elif hasattr(env, 'return_prototype') and (env.return_prototype is True):
-            packed_inputs, sequence_lengths, correct_choices, human_choices, stacked_prototypes, _ = outputs
+            packed_inputs, sequence_lengths, correct_choices, human_choices, _, _ = outputs
 
         # get model choices
         model_choice_probs = model(
