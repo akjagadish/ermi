@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import math
 import torch.nn.functional as F
-
+import re
 
 class PositionalEncoding(nn.Module):
     """
@@ -78,3 +78,31 @@ class MLP(torch.nn.Module):
         # pass x though sigmoid to get probabilities
         x = torch.sigmoid(x)
         return x
+
+def parse_model_path(model_path, kwargs):
+#    parse num_hidden, num_layers, d_model, num_head, paired, loss from model_path
+    patterns = {
+        "num_hidden": r"num_hidden=(\d+)",
+        "num_layers": r"num_layers=(\d+)",
+        "d_model": r"d_model=(\d+)",
+        "num_head": r"num_head=(\d+)",
+        "paired": r"paired=(True|False)",
+        "loss": r"loss=(\w+)"
+    }
+
+    # Initialize a dictionary to store the parsed parameters
+    parameters = {}
+
+    # Parse each parameter from the model_path string
+    for param, pattern in patterns.items():
+        match = re.search(pattern, model_path)
+        if match:
+            parameters[param] = match.group(1)
+
+    num_hidden = int(parameters.get('num_hidden', 0))
+    num_layers = int(parameters.get('num_layers', 0))
+    d_model = int(parameters.get('d_model', 0))
+    num_head = int(parameters.get('num_head', 0))
+    loss_fn =  parameters.get('loss', 'nll')
+    model_max_steps = kwargs.get('model_max_steps', 0)
+    return num_hidden, num_layers, d_model, num_head, loss_fn, model_max_steps

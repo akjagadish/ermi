@@ -2,8 +2,9 @@ import numpy as np
 import torch
 from envs import FunctionlearningTask, DecisionmakingTask, SyntheticDecisionmakingTask
 import torch.nn as nn
-# import argparse
-# from baseline_classifiers import LogisticRegressionModel, SVMModel
+from model import TransformerDecoderClassification, TransformerDecoderLinearWeights
+from model_utils import parse_model_path
+from torch.distributions import Categorical, Normal, Bernoulli
 
 
 def evaluate_regression(env_name=None, model_path=None, experiment='llm_generated', env=None, model=None, mode='val', shuffle_trials=False, loss='mse', beta=1., max_steps=70, nonlinear=False, num_dims=3, device='cpu', return_all=False):
@@ -75,32 +76,42 @@ def evaluate_classification(env_name=None, model_path=None, experiment='llm_gene
         elif experiment == 'llm_generated':
             env = DecisionmakingTask(data=env_name, num_dims=num_dims,
                                      mode=mode, max_steps=max_steps, shuffle_trials=shuffle_trials)
-
+        
     if model is None:
         # load model
-        model = torch.load(model_path, map_location=torch.device('cpu'))[
-            1].to(device)
+        num_hidden, num_layers, d_model, num_head, loss_fn, model_max_steps = parse_model_path(model_path, {'model_max_steps': max_steps})
 
-        model.eval()
-        if optimizer is not None:
-            optimizer.eval()
+        # initialise model
+        if paired:
+            model = TransformerDecoderLinearWeights(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
+                                                    num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
+
+        else:
+            model = TransformerDecoderClassification(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
+                                                    num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
+        
+        # load model weights
+        state_dict = torch.load(
+            model_path, map_location=device)[1]
+        model.load_state_dict(state_dict)
+        model.to(device)
+
+    model.eval()
+    if optimizer is not None:
+        optimizer.eval()
 
     with torch.no_grad():
+        # sample batch
         packed_inputs, sequence_lengths, targets = env.sample_batch(
             paired=paired)
         model.device = device
         model.beta = beta  # model beta is adjustable at test time
 
-        model_choices = model(packed_inputs, sequence_lengths)
+        # model choices
+        model_choice_probs = model(packed_inputs, sequence_lengths)
 
-        # sample from model choices probs using binomial distribution
-        if loss == 'bce':
-            model_choices = torch.distributions.Binomial(
-                probs=model_choices).sample() if policy == 'binomial' else model_choices.round()
-        elif loss == 'nll':
-            model_choices = model_choices.sample(
-            ) if policy == 'binomial' else model_choices.mean.round()
-
+        # sample from model choices probs using bernoulli distribution or use greedy policy
+        model_choices = Bernoulli(probs=model_choice_probs).sample() if policy == 'bernoulli' else model_choice_probs.round()
         model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
             sequence_lengths)], axis=0).squeeze().float()
         true_choices = targets.reshape(-1, 1).float().to(device).squeeze()

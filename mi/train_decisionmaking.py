@@ -43,14 +43,13 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, sy
     # setup optimizer
     # optimizer = optim.Adam(model.parameters(), lr=lr)
     optimizer = schedulefree.AdamWScheduleFree(model.parameters(), lr=args.lr)
-    model.train()
     losses = []  # keep track of losses
     accuracy = []  # keep track of accuracies
 
     # train for num_episodes
     for t in tqdm(range(start_id, int(num_episodes))):
         optimizer.train()
-        # TODO: nll loss only works for sample_to_match_max_steps=True
+        model.train()
         packed_inputs, sequence_lengths, targets = env.sample_batch(
             paired=paired)
         optimizer.zero_grad()
@@ -69,7 +68,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, sy
         if (not t % save_every):
             torch.save([t, model.state_dict()], save_dir)
             experiment = 'synthetic' if synthetic else 'llm_generated'
-            acc = evaluate_classification(env_name=env_name, model_path=save_dir, experiment=experiment, paired=paired,
+            acc = evaluate_classification(env_name=env_name, experiment=experiment, paired=paired,
                                           env=env, model=model, mode='val', shuffle_trials=shuffle, loss=loss_fn, max_steps=max_steps, num_dims=num_dims, optimizer=optimizer, device=device)
             accuracy.append(acc)
             writer.add_scalar('Val. Acc.', acc, t)
@@ -141,18 +140,17 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
-    device = torch.device("cuda" if use_cuda else "cpu")  # "cpu" #
-    # if args.env_name is None else args.env_name
-    env_name = f'/{args.env_dir}/{args.env_name}.csv'
+    device = torch.device("cuda" if use_cuda else "cpu")
+    args.env_name = f'{args.env_name}_dim{args.num_dims}' if args.synthetic else args.env_name
 
     for i in range(args.runs):
 
         save_dir = f'{args.save_dir}env={args.env_name}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_paired{str(args.paired)}_loss{str(args.loss)}_run={str(args.first_run_id + i)}.pt'
-        if args.synthetic:
-            save_dir = save_dir.replace(
-                '.pt', f'_{"synthetic" if args.num_dims==2 else "ranking" if args.ranking else "direction" if args.direction else "unknown"}.pt')
+        save_dir = save_dir.replace(
+                '.pt', f'_{"ranking" if args.ranking else "direction" if args.direction else "unknown"}.pt') if args.synthetic else save_dir
         save_dir = save_dir.replace(
             '.pt', '_test.pt') if args.test else save_dir
+        env_name = f'/{args.env_dir}/{args.env_name}.csv' if not args.synthetic else None
 
         run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
             args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, args.batch_size)

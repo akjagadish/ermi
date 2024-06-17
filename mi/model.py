@@ -165,7 +165,7 @@ class TransformerDecoderClassification(nn.Module):
         y = self.linear(output.to(self.device))
         theta = self.sigmoid(self.beta*y.to(self.device))
 
-        return theta if self.loss == 'bce' else Bernoulli(theta)
+        return theta
 
     def compute_loss(self, packed_inputs, targets, sequence_lengths=None):
 
@@ -178,8 +178,9 @@ class TransformerDecoderClassification(nn.Module):
                                            1).float().to(self.device).squeeze()
             return criterion(model_choices, true_choices)
         else:
-            predictive_posterior = self.forward(
+            theta = self.forward(
                 packed_inputs, sequence_lengths)
+            predictive_posterior = Bernoulli(theta)
             return - predictive_posterior.log_prob(
                 targets.unsqueeze(2).float().to(self.device)).mean()
 
@@ -260,7 +261,7 @@ class TransformerDecoderLinearWeights(nn.Module):
         y = (w*current_inputs).sum(-1, keepdim=True).to(self.device)
         theta = self.sigmoid(self.beta*y)
 
-        return theta if self.loss == 'bce' else Bernoulli(theta)
+        return theta
 
     def compute_loss(self, packed_inputs, targets, sequence_lengths=None):
 
@@ -273,7 +274,8 @@ class TransformerDecoderLinearWeights(nn.Module):
                                            1).float().to(self.device).squeeze()
             return criterion(model_choices, true_choices)
         else:
-            predictive_posterior = self.forward(
+            theta = self.forward(
                 packed_inputs, sequence_lengths)
+            predictive_posterior = Bernoulli(theta)
             return - predictive_posterior.log_prob(
                 targets.unsqueeze(2).float().to(self.device)).mean()
