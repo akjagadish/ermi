@@ -20,7 +20,7 @@ module load anaconda/3/2021.11
 module load gcc/11 impi/2021.6
 module load cuda/11.6
 module load pytorch_distributed/gpu-cuda-11.6/1.13.0
-pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropic openml wordcloud mycolorpy Pillow pyro-ppl 
+pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropic openml wordcloud mycolorpy Pillow pyro-ppl nnsight
 clear
 jupyter-lab
 
@@ -30,7 +30,7 @@ module purge
 module load anaconda/3/2023.03
 module load gcc/13 impi/2021.9
 module load pytorch/cpu/2.0.0 
-pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropic openml wordcloud mycolorpy Pillow pyro-ppl 
+pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropic openml wordcloud mycolorpy Pillow pyro-ppl nnsight
 clear
 jupyter-lab
 
@@ -40,7 +40,7 @@ module load anaconda/3/2021.11
 module load gcc/11 impi/2021.6
 module load cuda/11.6
 module load pytorch_distributed/gpu-cuda-11.6/1.13.0
-pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropic
+pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropic nnsight
 clear
 tensorboard --logdir=runs/u/ajagadish/ermi/decisionmaking/trained_models --port=6006
 
@@ -50,7 +50,7 @@ module load anaconda/3/2021.11
 module load gcc/11 impi/2021.6
 module load cuda/11.6
 module load pytorch_distributed/gpu-cuda-11.6/1.13.0
-pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropic
+pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropic nnsight
 clear
 tensorboard --logdir=runs/ --port=6006
 
@@ -79,7 +79,7 @@ module load gcc/11 impi/2021.6
 module load cuda/11.6
 module load pytorch_distributed/gpu-cuda-11.6/1.13.0
 pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropic
-pip3 install --upgrade transformers jinja2 torch accelerate
+pip3 install --upgrade transformers jinja2 torch accelerate nnsight
 cd ~/ermi/taskgeneration
 # python generate_data.py --model NA --task functionlearning --proc-id 0 --num-tasks 10 --start-task-id 0 --num-dim 1 --num-data 20 --max-length 8000 --run-gpt llama-3 --prompt-version 2  --file-name-tasklabels claude_synthesized_functionlearning_problems_paramsNA_dim1_tasks9991_pversion0 --path-tasklabels /u/ajagadish/ermi/functionlearning/data/synthesize_problems
 python generate_data.py --model NA --task categorisation --proc-id 0 --num-tasks 10 --start-task-id 0 --num-dim 3 --num-data 20 --max-length 8000 --run-gpt llama-3 --prompt-version 4 --file-name-tasklabels claude_generated_tasklabels_paramsNA_dim3_tasks23421_pversion5 --path-tasklabels /u/ajagadish/ermi/categorisation/data/task_labels
