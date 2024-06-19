@@ -11,15 +11,23 @@ from model_utils import parse_model_path
 from torch.distributions import Bernoulli
 sys.path.insert(0, '/u/ajagadish/ermi/mi')
 SYS_PATH = '/u/ajagadish/ermi'
+#TODO: pass state_dict instead of model path, remove grid_bounded_soft_sigmoid and epsilon as input
 
-
-def compute_loglikelihood_human_choices_under_model(env, model, participant=0, beta=1., epsilon=0., method='soft_sigmoid', policy='greedy', device='cpu', paired=False, **kwargs):
+def compute_loglikelihood_human_choices_under_model(env, model, participant=0, beta=1., epsilon=0., method='soft_sigmoid', policy='greedy', device='cpu', paired=False, model_path=None, **kwargs):
 
     with torch.no_grad():
 
-        # model setup: eval mode and set beta
+        if method == 'bounded_soft_sigmoid' or method == 'bounded_resources':
+            state_dict = torch.load(
+                model_path, map_location=device)[1]    
+            for key in state_dict.keys():
+                state_dict[key][..., [np.random.choice(state_dict[key].shape[-1], int(state_dict[key].shape[-1] * epsilon), replace=False)]] = 0
+            model.load_state_dict(state_dict)
+        
+        # model setup: eval mode, set device, and fix beta
+        model.eval()
+        model.to(device)
         model.beta = beta
-        model.device = device
 
         # env setup: sample batch from environment and unpack
         outputs = env.sample_batch(participant, paired=paired)
@@ -83,36 +91,38 @@ def optimize(args):
                                                  num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
     
     # load model weights
-    state_dict = torch.load(
-        model_path, map_location=device)[1]
-    model.load_state_dict(state_dict)
-    model.to(device)
-    model.eval()
+    if args.method == 'soft_sigmoid':
+        state_dict = torch.load(
+            model_path, map_location=device)[1]    
+        if args.method == 'grid_bounded_soft_sigmoid' and args.epsilon > 0.:
+            for key in state_dict.keys():
+                state_dict[key][..., [np.random.choice(state_dict[key].shape[-1], int(state_dict[key].shape[-1] * args.epsilon), replace=False)]] = 0
+        model.load_state_dict(state_dict)
 
     def objective(x, participant):
-        epsilon = x[0] if args.method == 'eps_greedy' else 0.
-        beta = x[0] if args.method == 'soft_sigmoid' else 1.
-        if args.method == 'both':
+        epsilon = x[0] if args.method == 'bounded_resources' else 0.
+        beta = x[0] if args.method == 'soft_sigmoid' or args.method == 'grid_bounded_soft_sigmoid' else 1.
+        if args.method == 'bounded_soft_sigmoid':
             epsilon = x[0]
             beta = x[1]
         ll, _, _ = compute_loglikelihood_human_choices_under_model(env=env, model=model, participant=participant, shuffle_trials=True,
-                                                                   beta=beta, epsilon=epsilon, method=args.method, paired=args.paired, ** task_features)
+                                                                   beta=beta, epsilon=epsilon, method=args.method, paired=args.paired, model_path=model_path, ** task_features)
         return -ll.numpy()
 
-    if args.method == 'soft_sigmoid':
+    if args.method == 'soft_sigmoid' or args.method == 'grid_bounded_soft_sigmoid':
         bounds = [(0., 1.)]
-    elif args.method == 'eps_greedy':
-        bounds = [(0., 1.)]
-    elif args.method == 'both':
-        bounds = [(0., 1.), (0., 1.)]
+    elif args.method == 'bounded_resources':
+        bounds = [(0., 0.5)]
+    elif args.method == 'bounded_soft_sigmoid':
+        bounds = [(0., .5), (0., 1.)]
     else:
         raise NotImplementedError
 
     pr2s, nlls, accs, parameters = [], [], [], []
     participants = env.data.participant.unique()
-    for participant in participants:
+    for participant in tqdm(participants):
         res_fun = np.inf
-        for _ in tqdm(range(args.num_iters)):
+        for _ in range(args.num_iters):
 
             # x0 = [np.random.uniform(x, y) for x, y in bounds]
             # result = minimize(objective, x0, args=(participant), bounds=bounds, method='SLSQP')
@@ -124,14 +134,14 @@ def optimize(args):
                 res = result
                 print(f"min nll and parameter: {res_fun, res.x}")
 
-        epsilon = res.x[0] if args.method == 'eps_greedy' else 0.
-        beta = res.x[0] if args.method == 'soft_sigmoid' else 1.
-        if args.method == 'both':
+        epsilon = res.x[0] if args.method == 'bounded_resources' else 0.
+        beta = res.x[0] if args.method == 'soft_sigmoid' or args.method == 'grid_bounded_soft_sigmoid' else 1.
+        if args.method == 'bounded_soft_sigmoid':
             epsilon = res.x[0]
             beta = res.x[1]
 
         ll, chance_ll, acc = compute_loglikelihood_human_choices_under_model(env=env, model=model, participant=participant, shuffle_trials=True,
-                                                                             beta=beta, epsilon=epsilon, method=args.method, paired=args.paired, **task_features)
+                                                                             beta=beta, epsilon=epsilon, method=args.method, paired=args.paired, model_path=model_path, **task_features)
         nlls.append(-ll)
         pr2s.append(1 - (ll/chance_ll))
         accs.append(acc)
@@ -153,6 +163,8 @@ if __name__ == '__main__':
                         required=True, help='model name')
     parser.add_argument('--method', type=str, default='soft_sigmoid',
                         help='method for computing model choice probabilities')
+    parser.add_argument('--epsilon', type=float, default=0.,
+                        help='epsilon for grid_bounded_soft_sigmoid')
     parser.add_argument('--num-iters', type=int, default=5)
     parser.add_argument('--paired', action='store_true',
                         default=False, help='paired')
@@ -161,11 +173,11 @@ if __name__ == '__main__':
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
-
+    assert args.method in ['soft_sigmoid', 'grid_bounded_soft_sigmoid', 'bounded_soft_sigmoid'], 'method not implemented'
     pr2s, nlls, accs, parameters = optimize(args)
     optimizer = 'de'
     
     # save list of results
     num_hidden, num_layers, d_model, num_head, loss_fn, _, source, condition = parse_model_path(args.model_name, {}, return_data_info=True)
-    save_path = f"{args.paradigm}/data/model_comparison/task={args.task_name}_experiment={args.exp_id}_source={source}_condition={condition}_loss={loss_fn}_paired={args.paired}_method={args.method}_optimizer={optimizer}.npz"
+    save_path = f"{args.paradigm}/data/model_comparison/task={args.task_name}_experiment={args.exp_id}_source={source}_condition={condition}_loss={loss_fn}_paired={args.paired}_method={args.method}_optimizer={optimizer}_epsilon={args.epsilon}.npz"
     np.savez(save_path, betas=parameters, nlls=nlls, pr2s=pr2s, accs=accs)
