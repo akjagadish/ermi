@@ -125,7 +125,7 @@ if __name__ == '__main__':
                         help='method to use for computing model choices')
     parser.add_argument('--percent-neurons', type=int, default=10, choices=range(1, 101),
                         help='percentage of hidden units to ablate')
-    parser.add_argument('--layer', type=str, default='last_linear',
+    parser.add_argument('--layer', type=str, default='all_layers',
                         help='from which layer(s) to ablate hidden units')
 
     args = parser.parse_args()
