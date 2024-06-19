@@ -34,25 +34,12 @@ def compute_loglikelihood_human_choices_under_model(env, model, participant=0, b
             packed_inputs.float().to(device), sequence_lengths)
         model_choices = model_choice_probs.round() if policy == 'greedy' else Bernoulli(
                     probs=model_choice_probs).sample()
-
-        if method == 'eps_greedy' or method == 'both':
-            # make a new tensor containing model_choice_probs for each trial for option 1 and 1-model_choice_probs for option 2
-            probs = torch.cat(
-                [1-model_choice_probs, model_choice_probs], axis=2)
-            # keep only the probabilities for the chosen option from human_choices
-            probs = torch.vstack([probs[batch, i, human_choices[batch, i, 0].long(
-            )] for batch in range(probs.shape[0]) for i in range(sequence_lengths[batch])])
-            probs_with_guessing = probs * (1 - epsilon) + epsilon * 0.5
-            summed_loglikelihoods = torch.log(probs_with_guessing).sum()
-
-        elif method == 'soft_sigmoid':
-
-            assert epsilon == 0., "epsilon must be 0 for soft_sigmoid"
-            # compute log likelihoods of human choices under model choice probs (binomial distribution)
-            loglikehoods = Bernoulli(
-                    probs=model_choice_probs).log_prob(human_choices.float())
-            summed_loglikelihoods = torch.vstack(
-                [loglikehoods[idx, :sequence_lengths[idx]].sum() for idx in range(len(loglikehoods))]).sum()
+    
+        # compute log likelihoods of human choices under model choice probs (binomial distribution)
+        loglikehoods = Bernoulli(
+                probs=model_choice_probs).log_prob(human_choices.float())
+        summed_loglikelihoods = torch.vstack(
+            [loglikehoods[idx, :sequence_lengths[idx]].sum() for idx in range(len(loglikehoods))]).sum()
        
         # sum log likelihoods only for unpadded trials per condition and compute chance log likelihood
         chance_loglikelihood = sum(sequence_lengths) * np.log(0.5)
