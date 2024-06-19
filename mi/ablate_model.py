@@ -31,6 +31,11 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
     # load model weights
     state_dict = torch.load(
         model_path, map_location=device)[1]
+    
+    # set the values of percent_neurons of all values within the state_dict to 0
+    for key in state_dict.keys():
+        state_dict[key][..., [np.random.choice(state_dict[key].shape[-1], int(state_dict[key].shape[-1] * percent_neurons / 100), replace=False)]] = 0
+
     net.load_state_dict(state_dict)
     net.to(device)
 
@@ -52,23 +57,8 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
 
         # get model choiceså
         input = (packed_inputs.float().to(device), sequence_lengths)
-        model = NNsight(net.requires_grad_(False))
-        total_neurons = model.transformer.layers[-1].linear2.out_features if layer == 'last_linear' else None
-        if total_neurons is not None:
-            sample_random_neurons = np.random.choice(total_neurons, int(total_neurons * percent_neurons / 100), replace=False)
-            print(f"Neurons to ablate: {len(sample_random_neurons)}/{total_neurons}")
-
-        with model.trace(*input):
-            
-            # set the output of the last layer to 0
-            model.transformer.layers[-1].linear2.output[..., [sample_random_neurons]] = 0
-
-            # last linear layer
-            #model.linear.output[..., 1] = 0
-
-            # aave the output after to see our edit.
-            model_choice_probs = model.output.save()
-
+        model_choice_probs = net(*input)
+        # compute model choices
         model_choices = model_choice_probs.round() if policy == 'greedy' else Bernoulli(
                     probs=model_choice_probs).sample()
 
