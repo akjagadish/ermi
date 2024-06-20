@@ -11,7 +11,6 @@ from model_utils import parse_model_path
 from torch.distributions import Bernoulli
 sys.path.insert(0, '/u/ajagadish/ermi/mi')
 SYS_PATH = '/u/ajagadish/ermi'
-#TODO: pass state_dict instead of model path, remove grid_bounded_soft_sigmoid and epsilon as input
 
 def compute_loglikelihood_human_choices_under_model(env, model, participant=0, beta=1., epsilon=0., method='soft_sigmoid', policy='greedy', device='cpu', paired=False, model_path=None, **kwargs):
 
@@ -102,6 +101,9 @@ def optimize(args):
         if args.method == 'bounded_soft_sigmoid':
             epsilon = x[0]
             beta = x[1]
+        elif args.method == 'grid_search':
+            epsilon = args.epsilon
+            beta = res.x[0]
         ll, _, _ = compute_loglikelihood_human_choices_under_model(env=env, model=model, participant=participant, shuffle_trials=True,
                                                                    beta=beta, epsilon=epsilon, method=args.method, paired=args.paired, model_path=model_path, ** task_features)
         return -ll.numpy()
@@ -112,6 +114,8 @@ def optimize(args):
         bounds = [(0., 0.5)]
     elif args.method == 'bounded_soft_sigmoid':
         bounds = [(0., .5), (0., 1.)]
+    elif args.method == 'grid_search':
+        bounds = [(0., 1.)]
     else:
         raise NotImplementedError
 
@@ -136,6 +140,9 @@ def optimize(args):
         if args.method == 'bounded_soft_sigmoid':
             epsilon = res.x[0]
             beta = res.x[1]
+        elif args.method == 'grid_search':
+            epsilon = args.epsilon
+            beta = res.x[0]
 
         ll, chance_ll, acc = compute_loglikelihood_human_choices_under_model(env=env, model=model, participant=participant, shuffle_trials=True,
                                                                              beta=beta, epsilon=epsilon, method=args.method, paired=args.paired, model_path=model_path, **task_features)
