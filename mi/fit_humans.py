@@ -94,9 +94,6 @@ def optimize(args):
     if args.method == 'soft_sigmoid':
         state_dict = torch.load(
             model_path, map_location=device)[1]    
-        if args.method == 'grid_bounded_soft_sigmoid' and args.epsilon > 0.:
-            for key in state_dict.keys():
-                state_dict[key][..., [np.random.choice(state_dict[key].shape[-1], int(state_dict[key].shape[-1] * args.epsilon), replace=False)]] = 0
         model.load_state_dict(state_dict)
 
     def objective(x, participant):
