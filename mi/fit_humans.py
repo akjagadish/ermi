@@ -17,7 +17,7 @@ def compute_loglikelihood_human_choices_under_model(env, model, participant=0, b
 
     with torch.no_grad():
 
-        if method == 'bounded_soft_sigmoid' or method == 'bounded_resources':
+        if method in ['bounded_soft_sigmoid', 'bounded_resources', 'grid_search']:
             state_dict = torch.load(
                 model_path, map_location=device)[1]    
             for key in state_dict.keys():
@@ -101,7 +101,7 @@ def optimize(args):
 
     def objective(x, participant):
         epsilon = x[0] if args.method == 'bounded_resources' else 0.
-        beta = x[0] if args.method == 'soft_sigmoid' or args.method == 'grid_bounded_soft_sigmoid' else 1.
+        beta = x[0] if args.method == 'soft_sigmoid' else 1.
         if args.method == 'bounded_soft_sigmoid':
             epsilon = x[0]
             beta = x[1]
@@ -109,7 +109,7 @@ def optimize(args):
                                                                    beta=beta, epsilon=epsilon, method=args.method, paired=args.paired, model_path=model_path, ** task_features)
         return -ll.numpy()
 
-    if args.method == 'soft_sigmoid' or args.method == 'grid_bounded_soft_sigmoid':
+    if args.method == 'soft_sigmoid':
         bounds = [(0., 1.)]
     elif args.method == 'bounded_resources':
         bounds = [(0., 0.5)]
@@ -135,15 +135,15 @@ def optimize(args):
                 print(f"min nll and parameter: {res_fun, res.x}")
 
         epsilon = res.x[0] if args.method == 'bounded_resources' else 0.
-        beta = res.x[0] if args.method == 'soft_sigmoid' or args.method == 'grid_bounded_soft_sigmoid' else 1.
+        beta = res.x[0] if args.method == 'soft_sigmoid' else 1.
         if args.method == 'bounded_soft_sigmoid':
             epsilon = res.x[0]
             beta = res.x[1]
 
         ll, chance_ll, acc = compute_loglikelihood_human_choices_under_model(env=env, model=model, participant=participant, shuffle_trials=True,
                                                                              beta=beta, epsilon=epsilon, method=args.method, paired=args.paired, model_path=model_path, **task_features)
-        nlls.append(-ll)
-        pr2s.append(1 - (ll/chance_ll))
+        nlls.append(res_fun)
+        pr2s.append(1 - (res_fun/chance_ll))
         accs.append(acc)
         parameters.append(res.x)
 
@@ -164,20 +164,20 @@ if __name__ == '__main__':
     parser.add_argument('--method', type=str, default='soft_sigmoid',
                         help='method for computing model choice probabilities')
     parser.add_argument('--epsilon', type=float, default=0.,
-                        help='epsilon for grid_bounded_soft_sigmoid')
+                        help='epsilon for grid_search')
     parser.add_argument('--num-iters', type=int, default=5)
     parser.add_argument('--paired', action='store_true',
                         default=False, help='paired')
+    parser.add_argument('--optimizer', type=str, default='de', help='optimizer')
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    assert args.method in ['soft_sigmoid', 'grid_bounded_soft_sigmoid', 'bounded_soft_sigmoid'], 'method not implemented'
+    assert args.method in ['soft_sigmoid', 'bounded_soft_sigmoid'], 'method not implemented'
     pr2s, nlls, accs, parameters = optimize(args)
-    optimizer = 'de'
     
     # save list of results
     num_hidden, num_layers, d_model, num_head, loss_fn, _, source, condition = parse_model_path(args.model_name, {}, return_data_info=True)
-    save_path = f"{args.paradigm}/data/model_comparison/task={args.task_name}_experiment={args.exp_id}_source={source}_condition={condition}_loss={loss_fn}_paired={args.paired}_method={args.method}_optimizer={optimizer}_epsilon={args.epsilon}.npz"
+    save_path = f"{args.paradigm}/data/model_comparison/task={args.task_name}_experiment={args.exp_id}_source={source}_condition={condition}_loss={loss_fn}_paired={args.paired}_method={args.method}_optimizer={args.optimizer}_numiters={args.num_iters}.npz"
     np.savez(save_path, betas=parameters, nlls=nlls, pr2s=pr2s, accs=accs)
