@@ -12,13 +12,14 @@ from torch.distributions import Bernoulli
 sys.path.insert(0, '/u/ajagadish/ermi/mi')
 SYS_PATH = '/u/ajagadish/ermi'
 
-def compute_loglikelihood_human_choices_under_model(env, model, participant=0, beta=1., epsilon=0., method='soft_sigmoid', policy='greedy', device='cpu', paired=False, model_path=None, **kwargs):
+def compute_loglikelihood_human_choices_under_model(env, model, participant=0, beta=1., epsilon=0., method='soft_sigmoid', policy='greedy', paired=False, model_path=None, **kwargs):
 
     with torch.no_grad():
 
         if method in ['bounded_soft_sigmoid', 'bounded_resources', 'grid_search']:
+            model = model if kwargs['state_dict'] else torch.load(model_path)[1].to(device) if device=='cuda' else torch.load(model_path, map_location=torch.device('cpu'))[1].to(device)
             state_dict = torch.load(
-                model_path, map_location=device)[1]    
+                model_path, map_location=device)[1] if kwargs['state_dict'] else model.state_dict()  
             for key in state_dict.keys():
                 state_dict[key][..., [np.random.choice(state_dict[key].shape[-1], int(state_dict[key].shape[-1] * epsilon), replace=False)]] = 0
             model.load_state_dict(state_dict)
@@ -35,6 +36,8 @@ def compute_loglikelihood_human_choices_under_model(env, model, participant=0, b
             packed_inputs, sequence_lengths, correct_choices, human_choices, _ = outputs
         elif hasattr(env, 'return_prototype') and (env.return_prototype is True):
             packed_inputs, sequence_lengths, correct_choices, human_choices, _, _ = outputs
+        else:
+            packed_inputs, sequence_lengths, correct_choices, human_choices, _ = outputs
 
         # get model choices
         model_choice_probs = model(
@@ -44,7 +47,7 @@ def compute_loglikelihood_human_choices_under_model(env, model, participant=0, b
     
         # compute log likelihoods of human choices under model choice probs (binomial distribution)
         loglikehoods = Bernoulli(
-                probs=model_choice_probs).log_prob(human_choices.float())
+                probs=model_choice_probs.to('cpu')).log_prob(human_choices.float())
         summed_loglikelihoods = torch.vstack(
             [loglikehoods[idx, :sequence_lengths[idx]].sum() for idx in range(len(loglikehoods))]).sum()
        
@@ -67,13 +70,13 @@ def optimize(args):
     model_path = f"{SYS_PATH}/{args.paradigm}/trained_models/{args.model_name}.pt"
     if args.task_name == 'badham2017':
         env = Badham2017()
-        task_features = {'model_max_steps': 96}
+        task_features = {'model_max_steps': 96, 'state_dict': False}
     elif args.task_name == 'devraj2022':
         env = Devraj2022()
-        task_features = {'model_max_steps': 616}
+        task_features = {'model_max_steps': 616, 'state_dict': False}
     elif args.task_name == 'binz2022':
         env = Binz2022(experiment_id=args.exp_id)
-        task_features = {'model_max_steps': 10}
+        task_features = {'model_max_steps': 10, 'state_dict': True}
     else:
         raise NotImplementedError
     
@@ -91,9 +94,12 @@ def optimize(args):
     
     # load model weights
     if args.method == 'soft_sigmoid':
-        state_dict = torch.load(
-            model_path, map_location=device)[1]    
-        model.load_state_dict(state_dict)
+        if task_features['state_dict']:
+            state_dict = torch.load(
+                model_path, map_location=device)[1]    
+            model.load_state_dict(state_dict)
+        else:
+            model = torch.load(model_path)[1].to(device) if device=='cuda' else torch.load(model_path, map_location=torch.device('cpu'))[1].to(device)    
 
     def objective(x, participant):
         epsilon = x[0] if args.method == 'bounded_resources' else 0.
