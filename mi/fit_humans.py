@@ -63,7 +63,7 @@ def compute_loglikelihood_human_choices_under_model(env, model, participant=0, b
         model_accuracy = (model_choices == correct_choices).sum() / \
             correct_choices.numel()
     
-    return summed_loglikelihoods, chance_loglikelihood, model_accuracy
+    return summed_loglikelihoods, chance_loglikelihood, model_accuracy.cpu().numpy()
 
 def optimize(args):
 
