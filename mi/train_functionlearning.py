@@ -40,19 +40,6 @@ def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic,
     for t in tqdm(range(start_id, int(num_episodes))):
         # TODO: nll loss only works for sample_to_match_max_steps=True
         packed_inputs, sequence_lengths, targets = env.sample_batch()
-        # if loss == 'mse':  # mse loss
-        #     model_choices = model(packed_inputs, sequence_lengths)
-        #     model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
-        #         sequence_lengths)], axis=0).squeeze().float()
-        #     true_choices = torch.concat(targets, axis=0).float().to(device)
-        #     loss = model.compute_loss(model_choices, true_choices)
-        # elif loss == 'nll':  # nll loss
-        #     predictive_posterior = model(packed_inputs, sequence_lengths)
-        #     loss = - \
-        #         predictive_posterior.log_prob(
-        #             torch.stack(targets).unsqueeze(2).float().to(device)).mean()
-        # else:
-        #     raise ValueError('loss must be either mse or nll')
         loss = model.compute_loss(packed_inputs, targets, sequence_lengths)
 
         # backprop
@@ -67,7 +54,8 @@ def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic,
             writer.add_scalar('Loss', loss, t)
 
         if (not t % save_every):
-            torch.save([t, model], save_dir)
+            # save optimizer
+            torch.save([t, model.state_dict()], save_dir)#, elbo
             experiment = 'synthetic' if synthetic else 'llm_generated'
             acc = evaluate_regression(env_name=env_name, model_path=save_dir, experiment=experiment,
                                       env=env, model=model, mode='val', loss='mse', shuffle_trials=shuffle, max_steps=max_steps, nonlinear=nonlinear, num_dims=num_dims, device=device)
@@ -145,9 +133,8 @@ if __name__ == "__main__":
 
         save_dir = f'{args.save_dir}env={args.env_name}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_run={str(args.first_run_id + i)}.pt'
 
-        if args.synthetic:
-            save_dir = save_dir.replace(
-                '.pt', f'_synthetic{"nonlinear" if args.nonlinear else ""}.pt')
+        save_dir = save_dir.replace(
+                '.pt', f'_synthetic.pt') if args.synthetic else save_dir
         save_dir = save_dir.replace(
             '.pt', '_test.pt') if args.test else save_dir
 
