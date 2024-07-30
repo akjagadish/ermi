@@ -97,7 +97,7 @@ def evaluate_classification(env_name=None, model_path=None, experiment='llm_gene
         model.to(device)
 
     model.eval()
-    if optimizer is not None:
+    if optimizer is not None and loss != 'variational':
         optimizer.eval()
 
     with torch.no_grad():

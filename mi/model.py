@@ -43,7 +43,7 @@ class TransformerDecoderRegression(nn.Module):
         self.linear_logscale = nn.Linear(d_model, num_output)
 
         # loss
-        assert loss in ['mse', 'nll'], "loss must be either mse or nll"
+        assert loss in ['mse', 'nll', 'variational'], "loss must be either mse or nll"
         self.loss = loss
 
     def make_sequence_mask(self, sz):
@@ -76,7 +76,7 @@ class TransformerDecoderRegression(nn.Module):
         mu = self.linear_mu(output.to(self.device))
         std = torch.exp(self.linear_logscale(output.to(self.device)))
 
-        return torch.distributions.Normal(mu, std) if self.loss == 'nll' else mu
+        return torch.distributions.Normal(mu, std) if self.loss in ['nll', 'variational'] else mu
 
     def compute_loss(self, packed_inputs, targets, sequence_lengths=None):
         if self.loss == 'mse':
@@ -224,7 +224,7 @@ class TransformerDecoderLinearWeights(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.beta = beta
 
-        assert loss == 'bce' or 'nll', "loss must be binary cross entropy or negative log likelihood"
+        assert loss in ['bce', 'nll', 'variational'], "loss must be binary cross entropy or negative log likelihood"
         self.loss = loss
 
     def make_sequence_mask(self, sz):

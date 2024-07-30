@@ -10,9 +10,10 @@ import argparse
 from tqdm import tqdm
 from evaluate import evaluate_classification
 import schedulefree
+import ivon
+from model_utils import get_wd_from_std, compute_elbo
 
-
-def run(env_name, paired, restart_training, restart_episode_id, num_episodes, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, batch_size=64):
+def run(env_name, paired, restart_training, restart_episode_id, num_episodes, train_samples, ess, std, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, batch_size=64):
 
     writer = SummaryWriter('runs/' + save_dir)
     if synthetic:
@@ -42,31 +43,44 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, sy
 
     # setup optimizer
     # optimizer = optim.Adam(model.parameters(), lr=lr)
-    optimizer = schedulefree.AdamWScheduleFree(model.parameters(), lr=args.lr)
+    #optimizer = schedulefree.AdamWScheduleFree(model.parameters(), lr=args.lr)
+    ess = len(env.data) if ess is None else ess
+    wd = get_wd_from_std(std, ess)
+    optimizer = ivon.IVON(model.parameters(), lr=lr, ess=ess, weight_decay=wd)
     losses = []  # keep track of losses
     accuracy = []  # keep track of accuracies
 
     # train for num_episodes
     for t in tqdm(range(start_id, int(num_episodes))):
-        optimizer.train()
+        # optimizer.train()
+        # model.train()
+        # packed_inputs, sequence_lengths, targets = env.sample_batch(
+        #     paired=paired)
+        # optimizer.zero_grad()
+        # loss = model.compute_loss(packed_inputs, targets, sequence_lengths)
+        
         model.train()
-        packed_inputs, sequence_lengths, targets = env.sample_batch(
-            paired=paired)
-        optimizer.zero_grad()
-        loss = model.compute_loss(packed_inputs, targets, sequence_lengths)
+        packed_inputs, sequence_lengths, targets = env.sample_batch(paired=paired)
+        for _ in range(train_samples):
+            with optimizer.sampled_params(train=True):
+                optimizer.zero_grad()
+                loss = model.compute_loss(packed_inputs, targets, sequence_lengths)
+                loss.backward()
 
         # backprop
-        loss.backward()
+        # loss.backward()
         optimizer.step()
 
         # logging
         losses.append(loss.item())
+        # elbo = compute_elbo(optimizer, model, std, packed_inputs, targets, sequence_lengths)
 
         if (not t % print_every):
             writer.add_scalar('Loss', loss, t)
+            # writer.add_scalar('ELBO', elbo, t)
 
         if (not t % save_every):
-            torch.save([t, model.state_dict()], save_dir)
+            torch.save([t, model.state_dict(), optimizer.state_dict(), std], save_dir)
             experiment = 'synthetic' if synthetic else 'llm_generated'
             acc = evaluate_classification(env_name=env_name, experiment=experiment, paired=paired,
                                           env=env, model=model, mode='val', shuffle_trials=shuffle, loss=loss_fn, max_steps=max_steps, num_dims=num_dims, optimizer=optimizer, device=device)
@@ -81,6 +95,10 @@ if __name__ == "__main__":
         description='meta-learning for decisionmaking')
     parser.add_argument('--num-episodes', type=int, default=1e6,
                         help='number of trajectories for training')
+    parser.add_argument('--train-samples', type=int, default=1,
+                        help='number of samples for training')
+    parser.add_argument('--ess', type=float, default=None, help='weight for the nll loss term in the ELBO')
+    parser.add_argument('--prior-std', type=float, default=0.1, help='std for the prior')
     parser.add_argument('--num-dims', type=int, default=3,
                         help='number of dimensions')
     parser.add_argument('--max-steps', type=int, default=8,
@@ -109,6 +127,8 @@ if __name__ == "__main__":
                         default=False, help='disables CUDA training')
     parser.add_argument('--paired', action='store_true',
                         default=False, required=False, help='paired')
+    parser.add_argument(
+        '--env-type', default=None, help='name of the environment')
     parser.add_argument(
         '--env-name', required=False, help='name of the environment')
     parser.add_argument(
@@ -141,16 +161,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
-    args.env_name = f'{args.env_name}_dim{args.num_dims}' if args.synthetic else args.env_name
+    env = f'{args.env_name}_dim{args.num_dims}' if args.synthetic else args.env_name if args.env_type is None else args.env_type
 
     for i in range(args.runs):
 
-        save_dir = f'{args.save_dir}env={args.env_name}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_paired{str(args.paired)}_loss{str(args.loss)}_run={str(args.first_run_id + i)}.pt'
+        save_dir = f'{args.save_dir}env={env}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_paired{str(args.paired)}_loss{str(args.loss)}_run={str(args.first_run_id + i)}.pt'
         save_dir = save_dir.replace(
                 '.pt', f'_{"ranking" if args.ranking else "direction" if args.direction else "unknown"}.pt') if args.synthetic else save_dir
         save_dir = save_dir.replace(
             '.pt', '_test.pt') if args.test else save_dir
         env_name = f'/{args.env_dir}/{args.env_name}.csv' if not args.synthetic else None
+        save_dir = save_dir.replace(
+            '.pt', '_variational.pt') if args.loss == 'variational' else save_dir
 
-        run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
+        run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.train_samples, args.ess, args.prior_std, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
             args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, args.batch_size)

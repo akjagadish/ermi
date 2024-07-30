@@ -3,6 +3,8 @@ import torch.nn as nn
 import math
 import torch.nn.functional as F
 import re
+from torch.distributions import Normal
+from torch.distributions.kl import kl_divergence
 
 class PositionalEncoding(nn.Module):
     """
@@ -113,3 +115,27 @@ def parse_model_path(model_path, kwargs, return_data_info=False):
         return num_hidden, num_layers, d_model, num_head, loss_fn, model_max_steps, source, condition
     
     return num_hidden, num_layers, d_model, num_head, loss_fn, model_max_steps
+
+def get_wd_from_std(std, ess):
+    return 1 / ((std ** 2) * ess)
+
+def compute_elbo(optimizer, model, std, packed_inputs, targets, sequence_lengths, eval_samples=100):
+    # compute KLD
+    p = Normal(torch.zeros([]), std)
+    kld =  0
+    for group in optimizer.param_groups:
+        q_m = torch.cat([p.flatten() for p in group["params"] if p is not None], 0)
+        q_s = 1 / torch.sqrt(group["ess"] * (group["hess"] + group["weight_decay"]))
+        q = Normal(q_m, q_s)
+        kld += kl_divergence(q, p).sum().item()
+
+    # compute NLL
+    nll = 0
+    for _ in range(eval_samples):
+        with optimizer.sampled_params():
+            model.eval()
+            with torch.no_grad():
+                nll += (model.compute_loss(packed_inputs, targets, sequence_lengths)*targets.numel()).item()
+
+    # compute ELBO
+    return nll / eval_samples + kld
