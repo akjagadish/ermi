@@ -97,8 +97,10 @@ if __name__ == "__main__":
                         help='number of trajectories for training')
     parser.add_argument('--train-samples', type=int, default=1,
                         help='number of samples for training')
-    parser.add_argument('--ess', type=float, default=None, help='weight for the nll loss term in the ELBO')
-    parser.add_argument('--prior-std', type=float, default=0.1, help='std for the prior')
+    parser.add_argument('--ess', type=float, default=None,
+                         help='weight for the nll loss term in the ELBO')
+    parser.add_argument('--prior-std', type=float, default=0.1,
+                         help='std for the prior')
     parser.add_argument('--num-dims', type=int, default=3,
                         help='number of dimensions')
     parser.add_argument('--max-steps', type=int, default=8,
@@ -165,14 +167,12 @@ if __name__ == "__main__":
 
     for i in range(args.runs):
 
-        save_dir = f'{args.save_dir}env={env}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_paired{str(args.paired)}_loss{str(args.loss)}_run={str(args.first_run_id + i)}.pt'
+        save_dir = f'{args.save_dir}env={env}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_paired{str(args.paired)}_loss{str(args.loss)}_ess{str(args.ess)}_std{str(args.prior_std)}_run={str(args.first_run_id + i)}.pt'
         save_dir = save_dir.replace(
                 '.pt', f'_{"ranking" if args.ranking else "direction" if args.direction else "unknown"}.pt') if args.synthetic else save_dir
         save_dir = save_dir.replace(
             '.pt', '_test.pt') if args.test else save_dir
         env_name = f'/{args.env_dir}/{args.env_name}.csv' if not args.synthetic else None
-        save_dir = save_dir.replace(
-            '.pt', '_variational.pt') if args.loss == 'variational' else save_dir
 
         run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.train_samples, args.ess, args.prior_std, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
             args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, args.batch_size)
