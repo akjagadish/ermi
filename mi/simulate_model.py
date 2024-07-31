@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from envs import Binz2022, Badham2017, Devraj2022
+from envs import Binz2022, Badham2017, Devraj2022, Little2022
 import argparse
 from tqdm import tqdm
 from scipy.optimize import differential_evolution, minimize
@@ -69,7 +69,7 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
     return model_accuracy, per_trial_model_accuracy, human_accuracy, per_trial_human_accuracy
 
 
-def optimize(args):
+def sample_model(args):
 
     model_path = f"{SYS_PATH}/{args.paradigm}/trained_models/{args.model_name}.pt"
     if args.task_name == 'badham2017':
@@ -81,6 +81,9 @@ def optimize(args):
     elif args.task_name == 'binz2022':
         env = Binz2022(experiment_id=args.exp_id)
         task_features = {'model_max_steps': 10}
+    elif args.task_name == 'Little2022':
+        env = Little2022()
+        task_features = {'model_max_steps': 25}
     else:
         raise NotImplementedError
 
@@ -113,16 +116,18 @@ if __name__ == '__main__':
                         default=False, help='paired')
     parser.add_argument('--policy', type=str, default='greedy',
                         help='method to use for computing model choices')
+    parser.add_argument('--ess', type=str, default='None',
+                    help='constraint')
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if use_cuda else "cpu")
 
-    model_accuracy, per_trial_model_accuracy, human_accuracy, per_trial_human_accuracy = optimize(args)
+    model_accuracy, per_trial_model_accuracy, human_accuracy, per_trial_human_accuracy = sample_model(args)
 
     num_hidden, num_layers, d_model, num_head, loss_fn, _, source, condition = parse_model_path(args.model_name, {}, return_data_info=True)
     
     # save list of results
-    save_path = f"{args.paradigm}/data/model_simulation/task={args.task_name}_experiment={args.exp_id}_source={source}_condition={condition}_loss={loss_fn}_paired={args.paired}_policy={args.policy}.npz"
+    save_path = f"{args.paradigm}/data/model_simulation/task={args.task_name}_experiment={args.exp_id}_source={source}_condition={condition}_loss={loss_fn}_paired={args.paired}_policy={args.policy}_ess{args.ess}.npz"
     np.savez(save_path, model_accuracy=model_accuracy,
              per_trial_model_accuracy=per_trial_model_accuracy, human_accuracy=human_accuracy, per_trial_human_accuracy=per_trial_human_accuracy)

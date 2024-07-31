@@ -129,14 +129,14 @@ if __name__ == "__main__":
                         default=False, help='disables CUDA training')
     parser.add_argument('--paired', action='store_true',
                         default=False, required=False, help='paired')
-    parser.add_argument(
-        '--env-type', default=None, help='name of the environment')
-    parser.add_argument(
-        '--env-name', required=False, help='name of the environment')
-    parser.add_argument(
-        '--env-dir', help='name of the environment', required=False)
-    parser.add_argument(
-        '--save-dir', help='directory to save models', required=True)
+    parser.add_argument('--env-type', default=None, 
+                        help='name of the environment')
+    parser.add_argument('--env-name', required=False, 
+                        help='name of the environment')
+    parser.add_argument('--env-dir', help='name of the environment', 
+                        required=False)
+    parser.add_argument('--save-dir', help='directory to save models', 
+                        required=True)
     parser.add_argument('--test', action='store_true',
                         default=False, help='test runs')
     parser.add_argument('--synthetic', action='store_true',
