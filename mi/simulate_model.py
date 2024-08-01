@@ -137,7 +137,8 @@ def sample_model(args):
     else:
         raise NotImplementedError
    
-    participants = env.data.participant.unique()[:5] #TODO
+    participants = env.data.participant.unique()
+    
     if args.task_name in ['little2022']:
 
         model_errors, model_preds, targets, human_preds, ground_truth_functions = [], [], [], [], []

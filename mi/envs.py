@@ -584,6 +584,8 @@ class Little2022(nn.Module):
         DATA_PATH = f'{SYS_PATH}/functionlearning/data/human'
         self.device = torch.device(device)
         self.data = pd.read_csv(f'{DATA_PATH}/little2022functionestimation.csv')
+        # filter participants with less than 24 tasks
+        self.data = self.data.groupby('participant').filter(lambda x: len(x.task.unique()) == 24)
         self.num_dims = 1
         self.num_choices = 1
         self.return_true_values = return_true_values
