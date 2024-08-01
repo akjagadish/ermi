@@ -573,3 +573,81 @@ class Devraj2022(nn.Module):
             stimulus_id_list.append(torch.from_numpy(data_condition.stimulus_id.values.reshape(-1, 1)))
 
         return inputs_list, targets_list, human_targets_list, prototype_list, stimulus_id_list 
+
+class Little2022(nn.Module):
+    """
+    load human data from Badham et al. 2017
+    """
+    
+    def __init__(self, noise=0., return_true_values=True, device='cpu'):
+        super(Little2022, self).__init__()
+        DATA_PATH = f'{SYS_PATH}/functionlearning/data/human'
+        self.device = torch.device(device)
+        self.data = pd.read_csv(f'{DATA_PATH}/little2022functionestimation.csv')
+        self.num_dims = 1
+        self.num_choices = 1
+        self.return_true_values = return_true_values
+        #TODO: provice these contraints a bit better
+        num_points = 24 # 6 or 24
+        scale = 2 # 1 is zoomed in or 2 is zoomed out
+        self.sampling_rate = 48
+        self.data = self.data[(self.data.num_points==num_points) & (self.data.scale==scale)]
+        self.noise = noise
+
+    def sample_batch(self, participant, paired=False):
+    
+        stacked_task_features, stacked_targets, stacked_human_targets, stacked_true_data = self.get_participant_data(participant, paired)
+        sequence_lengths = [len(data)for data in stacked_task_features]
+        packed_inputs = rnn_utils.pad_sequence(stacked_task_features, batch_first=True)
+        padded_targets = rnn_utils.pad_sequence(stacked_targets, batch_first=True)
+        padded_human_targets = rnn_utils.pad_sequence(stacked_human_targets, batch_first=True)
+
+        if self.return_true_values:
+            return packed_inputs, sequence_lengths, padded_targets, padded_human_targets, stacked_true_data
+        else:
+            return packed_inputs, sequence_lengths, padded_targets, padded_human_targets
+
+    def get_participant_data(self, participant, paired):
+        
+        inputs_list, targets_list, human_targets_list, true_data_list = [], [], [], []
+    
+        # get data for the participant
+        data_participant = self.data[self.data['participant']==participant]
+        tasks = np.unique(data_participant['task'])\
+        
+
+        for task_id in tasks:
+            
+            # get features and targets shown to participants for the task
+            train_condition = (data_participant.task==task_id) & (data_participant.type=='train')
+            train_features = data_participant[train_condition].x.values.reshape(-1,1)
+            train_preds = data_participant[train_condition].y.values.reshape(-1,1)
+            true_values = np.concatenate((train_features, train_preds), axis=1)  # concatenate train features and preds as two columns
+
+            # get the predictions made by the participants
+            test_condition = (data_participant.task==task_id) & (data_participant.type=='test')
+            test_features =  data_participant[test_condition].x.values[::self.sampling_rate].reshape(-1,1)
+            test_preds = data_participant[test_condition].y.values[::self.sampling_rate].reshape(-1,1)
+            pred_values = np.concatenate((test_features, test_preds), axis=1)
+
+            for (x_test, y_test) in zip(test_features, test_preds):
+
+                input_features = np.concatenate((train_features, x_test.reshape(-1,1)), axis=0)
+                targets = np.concatenate((train_preds, y_test.reshape(-1,1)), axis=0)
+
+                # concatenate all features and targets into one array with placed holder for shifted target
+                sampled_data = np.concatenate((input_features, targets, targets), axis=1)
+                
+                if not paired:
+                    # replace placeholder with shifted targets to the sampled data array
+                    sampled_data[:, self.num_dims] = np.concatenate((np.array([targets.mean()]), sampled_data[:-1, self.num_dims]))
+                    
+                # stacking all the sampled data across all tasks
+                inputs_list.append(torch.from_numpy(sampled_data[:, :(self.num_dims+1)]))
+                targets_list.append(torch.from_numpy(sampled_data[:, [self.num_dims+1]]))
+            
+            human_targets_list.append(torch.from_numpy(pred_values))
+            true_data_list.append(true_values)
+     
+        return inputs_list, targets_list, human_targets_list, true_data_list  
+
