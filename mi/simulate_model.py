@@ -83,14 +83,12 @@ def compute_mses_human_predictions_under_model(env=None, model_path=None, partic
     else:
         model = TransformerDecoderRegression(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
                                                  num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
-
-    model = torch.load(model_path)[1].to(device) if device=='cuda' else torch.load(model_path, map_location=torch.device('cpu'))[1].to(device)
-        
-    # load model weights
-    # state_dict = torch.load(
-    #     model_path, map_location=torch.device('cpu'))[1]
-    # model.load_state_dict(state_dict)
-    # model.to(device)
+    
+    #load model weights
+    state_dict = torch.load(
+        model_path, map_location=torch.device('cpu'))[1]
+    model.load_state_dict(state_dict)
+    model.to(device)
 
     with torch.no_grad():
 
