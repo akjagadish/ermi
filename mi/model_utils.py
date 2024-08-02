@@ -82,7 +82,8 @@ class MLP(torch.nn.Module):
         return x
 
 def parse_model_path(model_path, kwargs, return_data_info=False):
-#    parse num_hidden, num_layers, d_model, num_head, paired, loss from model_path
+    # parse num_hidden, num_layers, d_model, num_head, paired, loss from model_path
+    
     patterns = {
         "num_hidden": r"num_hidden=(\d+)",
         "num_layers": r"num_layers=(\d+)",
@@ -90,6 +91,8 @@ def parse_model_path(model_path, kwargs, return_data_info=False):
         "num_head": r"num_head=(\d+)",
         "paired": r"paired=(True|False)",
         "loss": r"loss=([a-zA-Z0-9]+)",
+        "std": r"std=([0-9.]+)",
+        "ess": r"ess=([0-9.]+)",
     }
 
     # Initialize a dictionary to store the parsed parameters
@@ -139,3 +142,14 @@ def compute_elbo(optimizer, model, std, packed_inputs, targets, sequence_lengths
 
     # compute ELBO
     return nll / eval_samples + kld
+
+def compute_kld(optimizer, std):
+    # compute KLD
+    p = Normal(torch.zeros([]), std)
+    kld =  0
+    for group in optimizer.param_groups:
+        q_m = torch.cat([p.flatten() for p in group["params"] if p is not None], 0)
+        q_s = 1 / torch.sqrt(group["ess"] * (group["hess"] + group["weight_decay"]))
+        q = Normal(q_m, q_s)
+        kld += kl_divergence(q, p).sum().item()
+    return kld
