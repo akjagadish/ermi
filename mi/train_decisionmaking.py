@@ -97,6 +97,8 @@ if __name__ == "__main__":
                         help='number of trajectories for training')
     parser.add_argument('--train-samples', type=int, default=1,
                         help='number of samples for training')
+    parser.add_argument('--job-array', action='store_true',
+                        default=False, help='job array')
     parser.add_argument('--ess', type=float, default=None,
                          help='weight for the nll loss term in the ELBO')
     parser.add_argument('--prior-std', type=float, default=0.1,
@@ -164,6 +166,7 @@ if __name__ == "__main__":
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
     env = f'{args.env_name}_dim{args.num_dims}' if args.synthetic else args.env_name if args.env_type is None else args.env_type
+    args.ess = int(args.ess * 10000) if args.job_array else args.ess
 
     for i in range(args.runs):
 
