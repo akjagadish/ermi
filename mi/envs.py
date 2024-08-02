@@ -84,7 +84,7 @@ class FunctionlearningTask(nn.Module):
 
         def stacked_normalized(data):
             data = np.stack(data)
-            return 2.5*(data - data.min())/(data.max() - data.min()+1e-6) - 1.25
+            return (data - data.min())/(data.max() - data.min()+1e-6) - 0.5
         
         stacked_task_features = [torch.from_numpy(np.concatenate((stacked_normalized(task_input_features) if self.normalize else np.stack(task_input_features), stacked_normalized(
             task_targets).reshape(-1, 1) if self.normalize else np.stack(task_targets).reshape(-1, 1)), axis=1)) for task_input_features, task_targets in zip(data.input.values, data.shifted_target.values)]
