@@ -183,8 +183,10 @@ if __name__ == '__main__':
                         default=False, help='paired')
     parser.add_argument('--policy', type=str, default='greedy',
                         help='method to use for computing model choices')
-    parser.add_argument('--ess', type=str, default='NA',
-                    help='constraint')
+    parser.add_argument('--ess', type=float, default=None,
+                         help='weight for the nll loss term in the ELBO')
+    parser.add_argument('--job-array', action='store_true',
+                        default=False, help='passed as a job array')
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
@@ -192,6 +194,7 @@ if __name__ == '__main__':
     
     num_hidden, num_layers, d_model, num_head, loss_fn, _, source, condition = parse_model_path(args.model_name, {}, return_data_info=True)
     save_path = f"{args.paradigm}/data/model_simulation/task={args.task_name}_experiment={args.exp_id}_source={source}_condition={condition}_loss={loss_fn}_paired={args.paired}_policy={args.policy}.npz"
+    args.ess = int(args.ess * 10000) if args.job_array else args.ess
     save_path = save_path.replace('.npz', f"_ess={str(args.ess)}.npz")
     
     if args.paradigm == 'functionlearning':
