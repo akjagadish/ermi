@@ -5,6 +5,7 @@ import torch
 import torch.nn.utils.rnn as rnn_utils
 from torch.distributions import Beta, Bernoulli, Categorical, MultivariateNormal
 import torch.multiprocessing as mp
+from sklearn.preprocessing import MinMaxScaler
 from model_utils import MLP
 import math
 SYS_PATH = '/u/ajagadish/ermi/'
@@ -15,7 +16,7 @@ class FunctionlearningTask(nn.Module):
     Function learning
     """
 
-    def __init__(self, data, max_steps=20, sample_to_match_max_steps=False, num_dims=3, batch_size=64, mode='train', split=[0.8, 0.1, 0.1], device='cpu', num_tasks=10000, noise=0., shuffle_trials=False, shuffle_features=True, normalize_inputs=True):
+    def __init__(self, data, max_steps=20, sample_to_match_max_steps=False, num_dims=3, scale=0.5, batch_size=64, mode='train', split=[0.8, 0.1, 0.1], device='cpu', num_tasks=10000, noise=0., shuffle_trials=False, shuffle_features=True, normalize_inputs=True):
         """
         Initialise the environment
         Args:
@@ -38,6 +39,7 @@ class FunctionlearningTask(nn.Module):
         self.batch_size = batch_size
         self.num_dims = num_dims
         self.mode = mode
+        self.scale = scale
         self.split = (torch.tensor(
             [split[0], split[0]+split[1], split[0]+split[1]+split[2]]) * self.data.task_id.nunique()).int()
         self.noise = noise
@@ -82,14 +84,14 @@ class FunctionlearningTask(nn.Module):
         data['shifted_target'] = data['target'].apply(
             lambda x: [1. if torch.rand(1) > 0.5 else 0.] + x[:-1])
 
-        def stacked_normalized(data):
+        def stacked_normalized(data, scale):
             data = np.stack(data)
-            return (data - data.min())/(data.max() - data.min()+1e-6) - 0.5
+            return 2 * scale * (data - data.min())/(data.max() - data.min() + 1e-6) - scale
         
-        stacked_task_features = [torch.from_numpy(np.concatenate((stacked_normalized(task_input_features) if self.normalize else np.stack(task_input_features), stacked_normalized(
+        stacked_task_features = [torch.from_numpy(np.concatenate((stacked_normalized(task_input_features, self.scale) if self.normalize else np.stack(task_input_features), stacked_normalized(
             task_targets).reshape(-1, 1) if self.normalize else np.stack(task_targets).reshape(-1, 1)), axis=1)) for task_input_features, task_targets in zip(data.input.values, data.shifted_target.values)]
         stacked_targets = [torch.from_numpy(
-            stacked_normalized(task_targets) if self.normalize else np.stack(task_targets)) for task_targets in data.target.values]
+            stacked_normalized(task_targets, self.scale) if self.normalize else np.stack(task_targets)) for task_targets in data.target.values]
         sequence_lengths = [len(task_input_features)
                             for task_input_features in data.input.values]
         packed_inputs = rnn_utils.pad_sequence(
@@ -580,13 +582,16 @@ class Little2022(nn.Module):
     load human data from Badham et al. 2017
     """
     
-    def __init__(self, noise=0., return_true_values=True, device='cpu'):
+    def __init__(self, noise=0., return_true_values=True, scale=0.5, device='cpu'):
         super(Little2022, self).__init__()
         DATA_PATH = f'{SYS_PATH}/functionlearning/data/human'
         self.device = torch.device(device)
         self.data = pd.read_csv(f'{DATA_PATH}/little2022functionestimation.csv')
         # filter participants with less than 24 tasks
-        self.data = self.data.groupby('participant').filter(lambda x: len(x.task.unique()) == 24)
+        self.data = self.data.groupby('participant').filter(lambda x: len(x.task.unique()) == 24) 
+        # Fit and transform the 'x' and 'y' columns
+        scaler = MinMaxScaler(feature_range=(-scale, scale))
+        self.data[['x', 'y']] = scaler.fit_transform(self.data[['x', 'y']])
         self.num_dims = 1
         self.num_choices = 1
         self.return_true_values = return_true_values
