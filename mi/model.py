@@ -257,8 +257,8 @@ class TransformerDecoderLinearWeights(nn.Module):
         output = self.transformer(inputs_pos_encoded.float().to(self.device), inputs_pos_encoded.float(
         ).to(self.device), tgt_mask=tgt_mask.to(self.device), memory_mask=tgt_mask.to(self.device))
 
-        w = self.linear(output.to(self.device))
-        y = (w*current_inputs).sum(-1, keepdim=True).to(self.device)
+        self.w = self.linear(output.to(self.device))
+        y = (self.w * current_inputs).sum(-1, keepdim=True).to(self.device)
         theta = self.sigmoid(self.beta*y)
 
         return theta
