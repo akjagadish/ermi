@@ -132,7 +132,7 @@ if __name__ == "__main__":
     parser.add_argument('--paired', action='store_true',
                         default=False, required=False, help='paired')
     parser.add_argument('--env-type', default=None, 
-                        help='name of the environment')
+                        help='name of the environment when name of the dataset does not explain the model fully')
     parser.add_argument('--env-name', required=False, 
                         help='name of the environment')
     parser.add_argument('--env-dir', help='name of the environment', 
