@@ -89,7 +89,7 @@ class FunctionlearningTask(nn.Module):
             return 2 * scale * (data - data.min())/(data.max() - data.min() + 1e-6) - scale
         
         stacked_task_features = [torch.from_numpy(np.concatenate((stacked_normalized(task_input_features, self.scale) if self.normalize else np.stack(task_input_features), stacked_normalized(
-            task_targets).reshape(-1, 1) if self.normalize else np.stack(task_targets).reshape(-1, 1)), axis=1)) for task_input_features, task_targets in zip(data.input.values, data.shifted_target.values)]
+            task_targets, self.scale).reshape(-1, 1) if self.normalize else np.stack(task_targets).reshape(-1, 1)), axis=1)) for task_input_features, task_targets in zip(data.input.values, data.shifted_target.values)]
         stacked_targets = [torch.from_numpy(
             stacked_normalized(task_targets, self.scale) if self.normalize else np.stack(task_targets)) for task_targets in data.target.values]
         sequence_lengths = [len(task_input_features)
