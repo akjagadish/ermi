@@ -589,9 +589,16 @@ class Little2022(nn.Module):
         self.data = pd.read_csv(f'{DATA_PATH}/little2022functionestimation.csv')
         # filter participants with less than 24 tasks
         self.data = self.data.groupby('participant').filter(lambda x: len(x.task.unique()) == 24) 
-        # Fit and transform the 'x' and 'y' columns
-        scaler = MinMaxScaler(feature_range=(-scale, scale))
-        self.data[['x', 'y']] = scaler.fit_transform(self.data[['x', 'y']])
+
+        # Function to scale 'x' and 'y' for each participant and task
+        def scale_participant_task_data(group):
+            scaler = MinMaxScaler(feature_range=(-scale, scale))
+            group[['x', 'y']] = scaler.fit_transform(group[['x', 'y']])
+            return group
+
+        # Apply scaling to each participant and task group
+        self.data = self.data.groupby(['participant', 'task']).apply(scale_participant_task_data).reset_index(drop=True)
+
         self.num_dims = 1
         self.num_choices = 1
         self.return_true_values = return_true_values
