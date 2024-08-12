@@ -160,13 +160,17 @@ if __name__ == "__main__":
                         default=False, help='restart training')
     parser.add_argument('--restart-episode-id', type=int,
                         default=0, help='restart episode id')
+    parser.add_argument('--scale', type=int, default=10000,
+                        help='scale for the job array')
+    parser.add_argument('--offset', type=int, default=0,
+                        help='offset for the job array')
     # parser.add_argument('--eval', default='categorisation', help='what to eval your meta-learner on')
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
     env = f'{args.env_name}_dim{args.num_dims}' if args.synthetic else args.env_name if args.env_type is None else args.env_type
-    args.ess = args.ess * 10 if args.job_array else args.ess
+    args.ess = args.ess * args.scale + args.offset if args.job_array else args.ess
 
     for i in range(args.runs):
 

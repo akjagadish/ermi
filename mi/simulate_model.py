@@ -187,6 +187,10 @@ if __name__ == '__main__':
                          help='weight for the nll loss term in the ELBO')
     parser.add_argument('--job-array', action='store_true',
                         default=False, help='passed as a job array')
+    parser.add_argument('--scale', type=int, default=10000,
+                        help='scale for the job array')
+    parser.add_argument('--offset', type=int, default=0,
+                        help='offset for the job array')
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
@@ -194,8 +198,9 @@ if __name__ == '__main__':
     
     num_hidden, num_layers, d_model, num_head, loss_fn, _, source, condition = parse_model_path(args.model_name, {}, return_data_info=True)
     save_path = f"{args.paradigm}/data/model_simulation/task={args.task_name}_experiment={args.exp_id}_source={source}_condition={condition}_loss={loss_fn}_paired={args.paired}_policy={args.policy}.npz"
-    args.ess = int(args.ess * 10000) if args.job_array else args.ess
-    save_path = save_path.replace('.npz', f"_ess={str(args.ess)}.npz")
+    args.ess = args.ess * args.scale + args.offset if args.job_array else args.ess
+    save_path = save_path.replace('.npz', f"_ess={str(int(args.ess))}.npz")
+    args.model_name = args.model_name.replace('essNone', f'ess{str(int(args.ess))}')
     
     if args.paradigm == 'functionlearning':
         model_preds, model_errors, targets, human_preds, ground_truth_functions = sample_model(args)
