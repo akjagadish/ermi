@@ -56,7 +56,9 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
                     probs=model_choice_probs).sample()
 
         # compute metrics
-        per_trial_model_accuracy = (model_choices == correct_choices)
+        per_trial_model_accuracy =(model_choices == correct_choices)
+        correct_choice_probs = torch.concat([1-model_choice_probs, model_choice_probs], 2).gather(2, correct_choices.to(torch.int64))
+        expected_log_likelihood = torch.log(correct_choice_probs).sum()
         per_trial_human_accuracy = (human_choices == correct_choices)
         model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
             sequence_lengths)], axis=0).squeeze().float()
@@ -69,7 +71,7 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
                           correct_choices).sum() / correct_choices.numel()
         model_coefficients = model.w.detach().numpy() if paired else None
 
-    return model_accuracy, per_trial_model_accuracy, human_accuracy, per_trial_human_accuracy, model_coefficients
+    return model_accuracy, per_trial_model_accuracy, human_accuracy, per_trial_human_accuracy, model_coefficients, expected_log_likelihood
 
 def compute_mses_human_predictions_under_model(env=None, model_path=None, participant=0, device='cpu', paired=False, policy='greedy', **kwargs):
 
@@ -154,18 +156,19 @@ def sample_model(args):
         
     else:
 
-        per_trial_accs, per_trial_human_accs, human_accs, accs, coeffs = [], [], [], [], []
+        per_trial_accs, per_trial_human_accs, human_accs, accs, coeffs, exp_logs = [], [], [], [], [], []
         for participant in participants:  
             beta, epsilon = 1., 0.
-            model_accuracy, per_trial_model_accuracy, human_accuracy, per_trial_human_accuracy, model_coeffs = compute_loglikelihood_human_choices_under_model(env=env, model_path=model_path, participant=participant, shuffle_trials=True,
+            model_accuracy, per_trial_model_accuracy, human_accuracy, per_trial_human_accuracy, model_coeffs, expected_log_likelihood = compute_loglikelihood_human_choices_under_model(env=env, model_path=model_path, participant=participant, shuffle_trials=True,
                                                                                                                     beta=beta, epsilon=epsilon, policy=args.policy, paired=args.paired, **task_features)
             human_accs.append(human_accuracy)
             per_trial_accs.append(per_trial_model_accuracy)
             per_trial_human_accs.append(per_trial_human_accuracy)
             accs.append(model_accuracy)
             coeffs.append(model_coeffs)
+            exp_logs.append(expected_log_likelihood)
         
-        return np.array(accs), torch.stack(per_trial_accs).squeeze().sum(1), np.array(human_accs), np.stack(per_trial_human_accs).squeeze().sum(1), np.stack(coeffs)
+        return np.array(accs), torch.stack(per_trial_accs).squeeze().sum(1), np.array(human_accs), np.stack(per_trial_human_accs).squeeze().sum(1), np.stack(coeffs), torch.stack(exp_logs).squeeze()
 
 
 if __name__ == '__main__':
@@ -208,8 +211,9 @@ if __name__ == '__main__':
         np.savez(save_path, model_preds=model_preds, model_errors=model_errors, targets=targets, 
                  human_preds=human_preds, ground_truth_functions=ground_truth_functions)
     else:
-        model_accuracy, per_trial_model_accuracy, human_accuracy, per_trial_human_accuracy, model_coefficients = sample_model(args)
+        model_accuracy, per_trial_model_accuracy, human_accuracy, per_trial_human_accuracy, model_coefficients, expected_log_likelihood  = sample_model(args)
         print('saving')
         # save list of results
         np.savez(save_path, model_accuracy=model_accuracy, per_trial_model_accuracy=per_trial_model_accuracy, 
-                 human_accuracy=human_accuracy, per_trial_human_accuracy=per_trial_human_accuracy, model_coefficients=model_coefficients)
+                 human_accuracy=human_accuracy, per_trial_human_accuracy=per_trial_human_accuracy, model_coefficients=model_coefficients,
+                 expected_log_likelihood=expected_log_likelihood)
