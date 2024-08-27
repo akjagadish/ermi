@@ -58,7 +58,7 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
         # compute metrics
         per_trial_model_accuracy =(model_choices == correct_choices)
         correct_choice_probs = torch.concat([1-model_choice_probs, model_choice_probs], 2).gather(2, correct_choices.to(torch.int64))
-        expected_log_likelihood = torch.log(correct_choice_probs).sum()
+        expected_log_likelihood = torch.log(correct_choice_probs)
         per_trial_human_accuracy = (human_choices == correct_choices)
         model_choices = torch.concat([model_choices[i, :seq_len] for i, seq_len in enumerate(
             sequence_lengths)], axis=0).squeeze().float()
