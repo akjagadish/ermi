@@ -26,24 +26,28 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
         model_max_steps = env.max_steps//2
 
     # setup model
-    if restart_training and os.path.exists(save_dir):
-        t, model = torch.load(save_dir)
-        model = model.to(device)
-        print(f'Loaded model from {save_dir}')
-        start_id = restart_episode_id
-    elif os.path.exists(path_to_init_weights) and path_to_init_weights is not None:
-        t, model = torch.load(path_to_init_weights)
-        model = model.to(device)
-        print(f'Loaded model from {path_to_init_weights}')
-    else:
-        if paired:
-            model = TransformerDecoderLinearWeights(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
-                                                    num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
+    if paired:
+        model = TransformerDecoderLinearWeights(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
+                                                num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
 
-        else:
-            model = TransformerDecoderClassification(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
-                                                     num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
-        start_id = 0
+    else:
+        model = TransformerDecoderClassification(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
+                                                num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
+    
+    if restart_training and os.path.exists(save_dir):
+        t, state_dict, _, _, _ = torch.load(path_to_init_weights)
+        model.load_state_dict(state_dict)
+        model = model.to(device)
+        restart_episode_id = t if restart_episode_id == 0 else restart_episode_id
+        print(f'Loaded model from {save_dir}')
+
+    elif path_to_init_weights is not None:
+        state_dict = torch.load(path_to_init_weights)[1]
+        model.load_state_dict(state_dict)
+        model.to(device)
+        print(f'Loaded model from {path_to_init_weights}')
+    
+    start_id = restart_episode_id if restart_training else 0
 
     # setup optimizer
     # optimizer = optim.Adam(model.parameters(), lr=lr)
