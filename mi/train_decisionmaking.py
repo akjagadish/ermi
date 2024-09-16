@@ -13,7 +13,7 @@ import schedulefree
 import ivon
 from model_utils import get_wd_from_std, compute_elbo
 
-def run(env_name, paired, restart_training, restart_episode_id, num_episodes, train_samples, ess, std, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, batch_size=64):
+def run(env_name, paired, restart_training, restart_episode_id, num_episodes, train_samples, ess, std, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, path_to_init_weights, batch_size=64):
 
     writer = SummaryWriter('runs/' + save_dir)
     if synthetic:
@@ -31,6 +31,10 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
         model = model.to(device)
         print(f'Loaded model from {save_dir}')
         start_id = restart_episode_id
+    elif os.path.exists(path_to_init_weights) and path_to_init_weights is not None:
+        t, model = torch.load(path_to_init_weights)
+        model = model.to(device)
+        print(f'Loaded model from {path_to_init_weights}')
     else:
         if paired:
             model = TransformerDecoderLinearWeights(num_input=env.num_dims, num_output=env.num_choices, num_hidden=num_hidden,
@@ -43,7 +47,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
 
     # setup optimizer
     # optimizer = optim.Adam(model.parameters(), lr=lr)
-    #optimizer = schedulefree.AdamWScheduleFree(model.parameters(), lr=args.lr)
+    # optimizer = schedulefree.AdamWScheduleFree(model.parameters(), lr=args.lr)
     ess = len(env.data) if ess is None else ess
     wd = get_wd_from_std(std, ess)
     optimizer = ivon.IVON(model.parameters(), lr=lr, ess=ess, weight_decay=wd)
@@ -139,6 +143,8 @@ if __name__ == "__main__":
                         required=False)
     parser.add_argument('--save-dir', help='directory to save models', 
                         required=True)
+    parser.add_argument('--path-to-init-weights', default=None,
+                        help='path to the initial weights')
     parser.add_argument('--test', action='store_true',
                         default=False, help='test runs')
     parser.add_argument('--synthetic', action='store_true',
@@ -180,6 +186,7 @@ if __name__ == "__main__":
         save_dir = save_dir.replace(
             '.pt', '_test.pt') if args.test else save_dir
         env_name = f'/{args.env_dir}/{args.env_name}.csv' if not args.synthetic else None
-
+        save_dir = save_dir.replace('.pt', '_annealed.pt') if args.path_to_init_weights is not None else save_dir
+        path_to_init_weights = f'{args.save_dir}{args.path_to_init_weights}.pt' if args.path_to_init_weights is not None else None
         run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.train_samples, args.ess, args.prior_std, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
-            args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, args.batch_size)
+            args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, path_to_init_weights, args.batch_size)
