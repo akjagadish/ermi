@@ -13,7 +13,7 @@ import schedulefree
 import ivon
 from model_utils import get_wd_from_std, compute_elbo
 
-def run(env_name, paired, restart_training, restart_episode_id, num_episodes, train_samples, ess, std, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, path_to_init_weights, batch_size=64):
+def run(env_name, paired, restart_training, restart_episode_id, num_episodes, train_samples, ess, std, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, path_to_init_weights, regularize, batch_size=64):
 
     writer = SummaryWriter('runs/' + save_dir)
     if synthetic:
@@ -35,7 +35,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
                                                 num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
     
     if restart_training and os.path.exists(save_dir):
-        t, state_dict, _, _, _ = torch.load(path_to_init_weights)
+        t, state_dict, _, _, _ = torch.load(save_dir)
         model.load_state_dict(state_dict)
         model = model.to(device)
         restart_episode_id = t if restart_episode_id == 0 else restart_episode_id
@@ -43,6 +43,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
 
     elif path_to_init_weights is not None:
         state_dict = torch.load(path_to_init_weights)[1]
+        #state_dict = torch.load(path_to_init_weights, map_location=torch.device('cpu'))[1]
         model.load_state_dict(state_dict)
         model.to(device)
         print(f'Loaded model from {path_to_init_weights}')
@@ -54,7 +55,8 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
     # optimizer = schedulefree.AdamWScheduleFree(model.parameters(), lr=args.lr)
     ess = len(env.data) if ess is None else ess
     wd = get_wd_from_std(std, ess)
-    optimizer = ivon.IVON(model.parameters(), lr=lr, ess=ess, weight_decay=wd)
+    model_parameters =  model.get_mlp_weights() if (regularize == 'mlp_only') and (path_to_init_weights is not None) else model.parameters()
+    optimizer = ivon.IVON(model_parameters, lr=lr, ess=ess, weight_decay=wd)
     losses = []  # keep track of losses
     accuracy = []  # keep track of accuracies
 
@@ -174,6 +176,8 @@ if __name__ == "__main__":
                         help='scale for the job array')
     parser.add_argument('--offset', type=int, default=0,
                         help='offset for the job array')
+    parser.add_argument('--regularize', default=None,
+                        help='regularize the specific model parameters or all')
     # parser.add_argument('--eval', default='categorisation', help='what to eval your meta-learner on')
 
     args = parser.parse_args()
@@ -193,4 +197,4 @@ if __name__ == "__main__":
         save_dir = save_dir.replace('.pt', '_annealed.pt') if args.path_to_init_weights is not None else save_dir
         path_to_init_weights = f'{args.save_dir}{args.path_to_init_weights}.pt' if args.path_to_init_weights is not None else None
         run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.train_samples, args.ess, args.prior_std, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
-            args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, path_to_init_weights, args.batch_size)
+            args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, path_to_init_weights, args.regularize, args.batch_size)

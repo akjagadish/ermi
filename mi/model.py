@@ -280,6 +280,13 @@ class TransformerDecoderLinearWeights(nn.Module):
             return - predictive_posterior.log_prob(
                 targets.unsqueeze(2).float().to(self.device)).mean()
 
+    def get_mlp_weights(self):
+        
+        mlp_weights = []
+        for layer in self.transformer.layers:
+            mlp_weights.extend([layer.linear1.weight, layer.linear1.bias, layer.linear2.weight, layer.linear2.bias])
+        return mlp_weights
+    
 class TransformerDecoder(nn.Module):
     """ Meta-learning model with transformer core for the categorisation task """
 
