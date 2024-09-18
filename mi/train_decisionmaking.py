@@ -176,7 +176,7 @@ if __name__ == "__main__":
                         help='scale for the job array')
     parser.add_argument('--offset', type=int, default=0,
                         help='offset for the job array')
-    parser.add_argument('--regularize', default=None,
+    parser.add_argument('--regularize', default='all',
                         help='regularize the specific model parameters or all')
     # parser.add_argument('--eval', default='categorisation', help='what to eval your meta-learner on')
 
@@ -194,7 +194,7 @@ if __name__ == "__main__":
         save_dir = save_dir.replace(
             '.pt', '_test.pt') if args.test else save_dir
         env_name = f'/{args.env_dir}/{args.env_name}.csv' if not args.synthetic else None
-        save_dir = save_dir.replace('.pt', '_annealed.pt') if args.path_to_init_weights is not None else save_dir
+        save_dir = save_dir.replace('.pt', f'_reg{args.regularize}.pt') if args.path_to_init_weights is not None else save_dir
         path_to_init_weights = f'{args.save_dir}{args.path_to_init_weights}.pt' if args.path_to_init_weights is not None else None
         run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.train_samples, args.ess, args.prior_std, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
             args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, path_to_init_weights, args.regularize, args.batch_size)
