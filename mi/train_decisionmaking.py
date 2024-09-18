@@ -55,7 +55,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
     # optimizer = schedulefree.AdamWScheduleFree(model.parameters(), lr=args.lr)
     ess = len(env.data) if ess is None else ess
     wd = get_wd_from_std(std, ess)
-    model_parameters =  model.get_mlp_weights() if (regularize == 'mlp_only') and (path_to_init_weights is not None) else model.parameters()
+    model_parameters =  model.get_mlp_weights() if (regularize == 'mlp_only') and (path_to_init_weights is not None) else model.get_self_attention_weights() if (regularize == 'attn_only') and (path_to_init_weights is not None) else model.parameters()
     optimizer = ivon.IVON(model_parameters, lr=lr, ess=ess, weight_decay=wd)
     losses = []  # keep track of losses
     accuracy = []  # keep track of accuracies

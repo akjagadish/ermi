@@ -287,6 +287,13 @@ class TransformerDecoderLinearWeights(nn.Module):
             mlp_weights.extend([layer.linear1.weight, layer.linear1.bias, layer.linear2.weight, layer.linear2.bias])
         return mlp_weights
     
+    def get_self_attention_weights(self):
+        
+        self_attention_weights = []
+        for layer in self.transformer.layers:
+            self_attention_weights.extend([layer.self_attn.in_proj_weight, layer.self_attn.in_proj_bias, layer.self_attn.out_proj.weight, layer.self_attn.out_proj.bias])
+        return self_attention_weights
+    
 class TransformerDecoder(nn.Module):
     """ Meta-learning model with transformer core for the categorisation task """
 
