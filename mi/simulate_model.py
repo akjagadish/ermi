@@ -194,17 +194,22 @@ if __name__ == '__main__':
                         help='scale for the job array')
     parser.add_argument('--offset', type=int, default=0,
                         help='offset for the job array')
+    parser.add_argument('--use-filename', action='store_true',
+                        default=False, help='use filename for saving')
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if use_cuda else "cpu")
     
-    num_hidden, num_layers, d_model, num_head, loss_fn, _, source, condition = parse_model_path(args.model_name, {}, return_data_info=True)
-    save_path = f"{args.paradigm}/data/model_simulation/task={args.task_name}_experiment={args.exp_id}_source={source}_condition={condition}_loss={loss_fn}_paired={args.paired}_policy={args.policy}.npz"
-    # save_path = f"{args.paradigm}/data/model_simulation/{args.model_name}.npz"
     args.ess = args.ess * args.scale + args.offset if args.job_array else args.ess
-    save_path = save_path.replace('.npz', f"_ess={str(int(args.ess))}.npz")
-    args.model_name = args.model_name.replace('essNone', f'ess{str(int(args.ess))}')
+    args.model_name = args.model_name.replace('essNone', f'ess{str(int(args.ess))}') if (args.ess is not None) and (args.job_array) else args.model_name
+    if args.use_filename:
+        save_path = f"{args.paradigm}/data/model_simulation/{args.model_name}.npz"
+    else:
+        num_hidden, num_layers, d_model, num_head, loss_fn, _, source, condition = parse_model_path(args.model_name, {}, return_data_info=True)
+        save_path = f"{args.paradigm}/data/model_simulation/task={args.task_name}_experiment={args.exp_id}_source={source}_condition={condition}_loss={loss_fn}_paired={args.paired}_policy={args.policy}.npz"
+        save_path = save_path.replace('.npz', f"_ess={str(int(args.ess))}.npz")
+        
     
     if args.paradigm == 'functionlearning':
         model_preds, model_errors, targets, human_preds, ground_truth_functions = sample_model(args)
