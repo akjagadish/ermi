@@ -161,13 +161,4 @@ cython_debug/
 logs/*
 bin/*
 figures/*
-categorisation/data/synthesize_problems/archive/*
-functionlearning/data/synthesize_problems/archive/*
-decisionmaking/data/synthesize_problems/archive/*
-categorisation/data/*.csv
-functionlearning/data/*.csv
-functionlearning/figures/*  
 runs/*
-scripts/*raven.sh
-man/*
-core*
