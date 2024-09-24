@@ -7,6 +7,7 @@ from scipy.optimize import differential_evolution, minimize
 from model import TransformerDecoderClassification, TransformerDecoderLinearWeights, TransformerDecoderRegression, TransformerDecoderRegressionLinearWeights
 import sys
 import re
+import ivon
 from model_utils import parse_model_path
 from torch.distributions import Bernoulli
 sys.path.insert(0, '/u/ajagadish/ermi/mi')
@@ -30,8 +31,11 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
                                                  num_layers=num_layers, d_model=d_model, num_head=num_head, max_steps=model_max_steps, loss=loss_fn, device=device).to(device)
     
     # load model weights
-    state_dict = torch.load(
-        model_path, map_location=device)[1]
+    # state_dict = torch.load(
+    #     model_path, map_location=device)[1]
+    _, state_dict, opt_dict, _, _ = torch.load(model_path, map_location=device)
+    optimizer = ivon.IVON(model.parameters(), lr=1., ess=1000000) # dummy optimizer
+    optimizer.load_state_dict(opt_dict)
     model.load_state_dict(state_dict)
     model.to(device)
 
@@ -50,8 +54,14 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
             packed_inputs, sequence_lengths, correct_choices, human_choices, _, _ = outputs
 
         # get model choices
-        model_choice_probs = model(
-            packed_inputs.float().to(device), sequence_lengths)
+        model_choice_probs = []
+        test_samples = 10
+        for i in range(test_samples):
+            with optimizer.sampled_params():
+                sampled_probs = model(
+                    packed_inputs.float().to(device), sequence_lengths)
+                model_choice_probs.append(sampled_probs)
+        model_choice_probs = torch.stack(model_choice_probs).mean(0)
         model_choices = model_choice_probs.round() if policy == 'greedy' else Bernoulli(
                     probs=model_choice_probs).sample()
 
