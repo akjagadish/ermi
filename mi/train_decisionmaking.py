@@ -57,6 +57,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
     wd = get_wd_from_std(std, ess)
     model_parameters =  model.get_mlp_weights() if (regularize == 'mlp_only') and (path_to_init_weights is not None) else model.get_self_attention_weights() if (regularize == 'attn_only') and (path_to_init_weights is not None) else model.parameters()
     optimizer = ivon.IVON(model_parameters, lr=lr, ess=ess, weight_decay=wd)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, eta_min=start_id, T_max=num_episodes)
     losses = []  # keep track of losses
     accuracy = []  # keep track of accuracies
 
@@ -80,6 +81,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
         # backprop
         # loss.backward()
         optimizer.step()
+        scheduler.step()
 
         # logging
         losses.append(loss.item())
