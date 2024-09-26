@@ -75,12 +75,6 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
         # loss = model.compute_loss(packed_inputs, targets, sequence_lengths)
         # backprop
         # loss.backward()
-
-        if annealing_fraction > 0:
-          ess = annealed_ess(t, num_episodes, ess_init, ess_final, annealing_fraction)
-          wd = get_wd_from_std(std, ess)
-          model_parameters =  model.get_mlp_weights() if (regularize == 'mlp_only') and (path_to_init_weights is not None) else model.get_self_attention_weights() if (regularize == 'attn_only') and (path_to_init_weights is not None) else model.parameters()
-          optimizer = ivon.IVON(model_parameters, lr=lr, ess=ess, weight_decay=wd)
         
         model.train()
         packed_inputs, sequence_lengths, targets = env.sample_batch(paired=paired)
@@ -92,6 +86,12 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
 
         optimizer.step()
         scheduler.step()
+        if annealing_fraction > 0:
+          ess = annealed_ess(t+1, num_episodes, ess_init, ess_final, annealing_fraction)
+          wd = get_wd_from_std(std, ess)
+          for group in optimizer.param_groups:
+                group['ess'] = ess
+                group['weight_decay'] = wd
 
         # logging
         losses.append(loss.item())
@@ -211,7 +211,7 @@ if __name__ == "__main__":
             '.pt', '_test.pt') if args.test else save_dir
         env_name = f'/{args.env_dir}/{args.env_name}.csv' if not args.synthetic else None
         save_dir = save_dir.replace('.pt', f'_reg{args.regularize}.pt') if args.path_to_init_weights is not None else save_dir
-        save_dir = save_dir.replace('.pt', f'_annealed.pt') if args.annealing_fraction > 0 else save_dir
+        save_dir = save_dir.replace('.pt', f'_essinit{str(args.ess_init)}_annealed.pt') if args.annealing_fraction > 0 else save_dir
         path_to_init_weights = f'{args.save_dir}{args.path_to_init_weights}.pt' if args.path_to_init_weights is not None else None
         run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.train_samples, args.ess, args.ess_init, args.annealing_fraction, args.prior_std, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
             args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, path_to_init_weights, args.regularize, args.batch_size)
