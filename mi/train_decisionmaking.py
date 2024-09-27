@@ -11,7 +11,7 @@ from tqdm import tqdm
 from evaluate import evaluate_classification
 import schedulefree
 import ivon
-from model_utils import get_wd_from_std, compute_elbo, annealed_ess
+from model_utils import get_wd_from_std, compute_elbo, annealed_ess, compute_kld
 
 def run(env_name, paired, restart_training, restart_episode_id, num_episodes, train_samples, ess, ess_init, annealing_fraction, std, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, path_to_init_weights, regularize, batch_size=64):
 
@@ -84,6 +84,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
                 loss = model.compute_loss(packed_inputs, targets, sequence_lengths)
                 loss.backward()
 
+        elbo = loss.item()*ess + compute_kld(optimizer, std)
         optimizer.step()
         scheduler.step()
         if annealing_fraction > 0:
@@ -99,7 +100,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
 
         if (not t % print_every):
             writer.add_scalar('Loss', loss, t)
-            # writer.add_scalar('ELBO', elbo, t)
+            writer.add_scalar('ELBO', elbo, t)
 
         if (not t % save_every):
             torch.save([t, model.state_dict(), optimizer.state_dict(), std, ess], save_dir)
