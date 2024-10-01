@@ -33,7 +33,7 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
     # load model weights
     # state_dict = torch.load(
     #     model_path, map_location=device)[1]
-    _, state_dict, opt_dict, _, _ = torch.load(model_path, map_location=device)
+    _, state_dict, opt_dict, _, _ = torch.load(model_path, map_location=device, weights_only=False)
     optimizer = ivon.IVON(model.parameters(), lr=1., ess=1000000) # dummy optimizer
     optimizer.load_state_dict(opt_dict)
     model.load_state_dict(state_dict)
