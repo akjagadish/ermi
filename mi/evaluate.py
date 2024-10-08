@@ -75,7 +75,8 @@ def evaluate_classification(env_name=None, model_path=None, experiment='llm_gene
                                               device=device).to(device)
         elif experiment == 'llm_generated':
             env = DecisionmakingTask(data=env_name, num_dims=num_dims,
-                                     mode=mode, max_steps=max_steps, shuffle_trials=shuffle_trials)
+                                     mode=mode, max_steps=max_steps, shuffle_trials=shuffle_trials,
+                                      device=device).to(device)
         
     if model is None:
         # load model
@@ -97,8 +98,8 @@ def evaluate_classification(env_name=None, model_path=None, experiment='llm_gene
         model.to(device)
 
     model.eval()
-    if optimizer is not None and loss != 'variational':
-        optimizer.eval()
+    # if optimizer is not None and loss != 'variational':
+    #     optimizer.eval() # if schedular free optimizer
 
     with torch.no_grad():
         # sample batch
