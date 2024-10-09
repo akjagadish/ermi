@@ -105,7 +105,119 @@ class FunctionlearningTask(nn.Module):
 
         return packed_inputs.to(self.device), sequence_lengths, stacked_targets
 
+class SyntheticFunctionlearningTask(nn.Module):
+    """
+    Synthetic function learning based on Lucas et al. 2015 
+    """
 
+    def __init__(self, max_steps=20, num_dims=1, scale=0.5, batch_size=64, mode='train',  device='cpu', noise=0., normalize_inputs=True):
+        """
+        Initialise the environment
+        Args:
+            data: path to csv file containing data
+            max_steps: number of steps in each episode
+            num_dims: number of dimensions in each input
+            batch_size: number of tasks in each batch
+        """
+        super(SyntheticFunctionlearningTask, self).__init__()
+    
+        self.device = torch.device(device)
+        self.max_steps = max_steps
+        self.num_choices = 1
+        self.num_dims = num_dims
+        self.mode = mode
+        self.batch_size = batch_size if mode == 'train' else 1000
+        self.scale = scale
+        self.noise = noise
+        self.normalize = normalize_inputs
+
+    def sample_parameters(self):
+        # shape and scale from Lucas et al. 2015
+        return torch.distributions.Gamma(1.001, 1.).sample((self.batch_size,))
+    
+    def positive_linear(self, x, weight, intercept):
+        return weight[:, None] * x + intercept[:, None]
+
+    def negative_linear(self, x, weight, intercept):
+        return -weight[:, None] * x + intercept[:, None]
+
+    def quadratic(self, x, weight, intercept):
+        return weight[:, None] * x**2 + intercept[:, None]
+
+    def radial_basis(self, x, height, distance):
+        return height[:, None] * torch.exp(-distance[:, None] * x**2)
+
+    def sample_batch_vectorized(self):
+        
+        x =torch.linspace(-1, 1, self.max_steps, device=self.device)
+        prior_probs = [8, 1, 0.1, 0.01]
+        kernel_types = ['positive_linear', 'negative_linear', 'quadratic', 'radial_basis']
+        kernel_choices = np.random.choice(kernel_types, size=self.batch_size, p=np.array(prior_probs) / sum(prior_probs))
+
+        weights = self.sample_parameters()
+        intercepts = self.sample_parameters()
+        heights = self.sample_parameters()
+        distances = self.sample_parameters()
+
+        y_batch = torch.zeros((self.batch_size, self.max_steps), device=self.device)
+
+        positive_linear_mask = kernel_choices == 'positive_linear'
+        negative_linear_mask = kernel_choices == 'negative_linear'
+        quadratic_mask = kernel_choices == 'quadratic'
+        radial_basis_mask = kernel_choices == 'radial_basis'
+        
+        y_batch[positive_linear_mask] = self.positive_linear(x, weights[positive_linear_mask], intercepts[positive_linear_mask])
+        y_batch[negative_linear_mask] = self.negative_linear(x, weights[negative_linear_mask], intercepts[negative_linear_mask])
+        y_batch[quadratic_mask] = self.quadratic(x, weights[quadratic_mask], intercepts[quadratic_mask])
+        y_batch[radial_basis_mask] = self.radial_basis(x, heights[radial_basis_mask], distances[radial_basis_mask])
+
+        y_batch += self.noise * torch.randn(self.batch_size, self.max_steps)
+        input_batch =  x.tile((self.batch_size,)).reshape(self.batch_size, self.max_steps)
+
+        return y_batch, input_batch
+    
+    def sample_batch(self):
+
+        # data: input, target, shifted target
+        targets, inputs  = self.sample_batch_vectorized()
+
+        # normalize the data
+        def stacked_normalized(data, scale):
+            data_min = data.min(dim=1, keepdim=True).values
+            data_max = data.max(dim=1, keepdim=True).values
+            return 2 * scale * (data - data_min) / (data_max - data_min + 1e-6) - scale
+        
+        targets = stacked_normalized(targets, self.scale) if self.normalize else targets
+        inputs = stacked_normalized(inputs, self.scale) if self.normalize else inputs
+        shifted_targets = torch.concatenate((torch.zeros(self.batch_size, 1), targets[:, :-1]), dim=1)
+        
+        # concatenate inputs and targets
+        stacked_task_features = torch.cat((inputs.unsqueeze(2), shifted_targets.unsqueeze(2)), dim=2)
+        sequence_lengths = [len(task_input_features)
+                            for task_input_features in inputs]
+        packed_inputs = rnn_utils.pad_sequence(
+            stacked_task_features, batch_first=True)
+        
+       
+        return packed_inputs.to(self.device), sequence_lengths, targets
+    
+    def save_data(self, num_batches=1000):
+        task_counter = 0
+        data = pd.DataFrame(columns=['task_id', 'trial_id', 'input', 'target'])
+        for _ in range(num_batches):
+           inputs, _, targets = self.sample_batch()
+           inputs = inputs[..., 0]
+           targets = targets
+           for task_id, (task_inputs, task_targets) in enumerate(zip(inputs, targets)):
+                task_counter += task_id
+                for trial_id, (input, target) in enumerate(zip(task_inputs, task_targets)):
+                    data = pd.concat([data, pd.DataFrame({'task_id': task_counter, 'trial_id': trial_id,
+                                                            'input': str(input.cpu().numpy().tolist()),
+                                                        'target': [target.cpu().numpy().tolist()]})], ignore_index=True)
+        # save data to csv file
+        data.to_csv(
+            f'{SYS_PATH}/functionlearning/data/generated_tasks/synthetic_functionlearning_tasks_dim{self.num_dims}_data{self.max_steps}_tasks{num_batches}.csv', index=False)                
+                    
 class DecisionmakingTask(nn.Module):
     """
     Decision making task

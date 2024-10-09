@@ -85,14 +85,14 @@ class TransformerDecoderRegression(nn.Module):
             model_preds = torch.concat([model_preds[i, :seq_len] for i, seq_len in enumerate(
                 sequence_lengths)], axis=0).squeeze().float()
             true_targets = torch.concat(
-                targets, axis=0).float().to(self.device)
+                targets, axis=0).float().to(self.device) if isinstance(targets, list) else targets.reshape(-1).float().to(self.device)
             return criterion(model_preds, true_targets)
         elif self.loss == 'nll':
             predictive_posterior = self.forward(
                 packed_inputs, sequence_lengths)
+            true_targets = torch.stack(targets).unsqueeze(2).float().to(self.device) if isinstance(targets, list) else targets.unsqueeze(2).float().to(self.device)
             return - \
-                predictive_posterior.log_prob(
-                    torch.stack(targets).unsqueeze(2).float().to(self.device)).mean()
+                predictive_posterior.log_prob(true_targets).mean()
 
 
 class TransformerDecoderClassification(nn.Module):

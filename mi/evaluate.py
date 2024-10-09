@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from envs import FunctionlearningTask, DecisionmakingTask, SyntheticDecisionmakingTask
+from envs import FunctionlearningTask, DecisionmakingTask, SyntheticDecisionmakingTask, SyntheticFunctionlearningTask
 import torch.nn as nn
 from model import TransformerDecoderClassification, TransformerDecoderLinearWeights
 from model_utils import parse_model_path
@@ -12,7 +12,7 @@ def evaluate_regression(env_name=None, model_path=None, experiment='llm_generate
     if env is None:
         # load environment
         if experiment == 'synthetic':
-            raise NotImplementedError
+            env = SyntheticFunctionlearningTask(num_dims=num_dims, mode=mode, max_steps=max_steps).to(device)
         elif experiment == 'llm_generated':
             env = FunctionlearningTask(data=env_name, num_dims=num_dims,
                                        mode=mode, max_steps=max_steps, shuffle_trials=shuffle_trials)
@@ -51,14 +51,15 @@ def evaluate_regression(env_name=None, model_path=None, experiment='llm_generate
             model_preds = torch.concat([model_preds[i, :seq_len] for i, seq_len in enumerate(
                 sequence_lengths)], axis=0).squeeze().float()
             true_targets = torch.concat(
-                targets, axis=0).float().to(device)
+                targets, axis=0).float().to(device) if isinstance(targets, list) else targets.reshape(-1).float().to(device)
             accuracy = criterion(model_preds, true_targets)
         elif loss == 'nll':
             predictive_posterior = model(
                 packed_inputs, sequence_lengths)
+            true_targets = torch.stack(targets).float().to(device) if isinstance(targets, list) else targets.float().to(device)
+            import ipdb; ipdb.set_trace()
             accuracy = - \
-                predictive_posterior.log_prob(
-                    torch.stack(targets).unsqueeze(2).float().to(device)).mean()
+                predictive_posterior.log_prob(true_targets).mean()
 
     if return_all:
         return accuracy, None, None, sequence_lengths, targets  # model_preds, true_targets
