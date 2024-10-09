@@ -11,7 +11,7 @@ from tqdm import tqdm
 from evaluate import evaluate_classification
 import schedulefree
 import ivon
-from model_utils import get_wd_from_std, compute_elbo, annealed_ess, compute_kld
+from model_utils import get_wd_from_std, compute_elbo, annealed_ess, compute_kld, annealed_lambda
 
 def run(env_name, paired, restart_training, restart_episode_id, num_episodes, train_samples, ess, ess_init, annealing_fraction, std, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, path_to_init_weights, regularize, batch_size=64):
 
@@ -54,7 +54,8 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
     # setup optimizer
     ## schedulefree optimizer
     # optimizer = schedulefree.AdamWScheduleFree(model.parameters(), lr=lr, weight_decay=ess)
-    optimizer = optim.AdamW(model_parameters, lr=lr, weight_decay=ess)
+    ess_init = ess_init or ess
+    optimizer = optim.AdamW(model_parameters, lr=lr, weight_decay=ess_init)
     ## ivon optimizer
     # ess_final = ess or len(env.data) 
     # ess_init = ess_init or ess_final
@@ -81,10 +82,9 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
         loss.backward()
         optimizer.step()
         scheduler.step()
-        # if annealing_fraction > 0:
-        #   ess = annealed_ess(t+1, num_episodes, ess_init, ess_final, annealing_fraction)
-        #   for param_group in optimizer.param_groups:
-        #         param_group['weight_decay'] = ess
+        if annealing_fraction > 0:
+          for param_group in optimizer.param_groups:
+                param_group['weight_decay'] = annealed_lambda(t+1, num_episodes, ess_init, ess, annealing_fraction)
             
         # import ipdb; ipdb.set_trace()
         # model.train()

@@ -158,3 +158,8 @@ def annealed_ess(episode, num_episodes, ess_init, ess_final, annealing_fraction)
     if episode < (num_episodes * annealing_fraction):
         return (ess_init - ess_final) * (1 - episode / (num_episodes * annealing_fraction)) + ess_final
     return ess_final
+
+def annealed_lambda(episode, num_episodes, ess_init, ess_final, annealing_fraction):
+    if episode < (num_episodes * annealing_fraction):
+        return (ess_final - ess_init) * (episode / (num_episodes * annealing_fraction)) + ess_init
+    return ess_final
