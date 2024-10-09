@@ -4,7 +4,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import os
 from torch.utils.tensorboard import SummaryWriter
-from envs import FunctionlearningTask
+from envs import FunctionlearningTask, SyntheticFunctionlearningTask
 from model import TransformerDecoderRegression
 import argparse
 from tqdm import tqdm
@@ -15,7 +15,7 @@ def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic,
 
     writer = SummaryWriter('runs/' + save_dir)
     if synthetic:
-        raise NotImplementedError
+       env = SyntheticFunctionlearningTask(num_dims=num_dims, max_steps=max_steps, batch_size=batch_size, noise=noise, device=device).to(device)
     else:
         env = FunctionlearningTask(data=env_name, num_dims=num_dims, max_steps=max_steps, sample_to_match_max_steps=sample_to_match_max_steps,
                                    batch_size=batch_size, noise=noise, shuffle_trials=shuffle, shuffle_features=shuffle_features, device=device).to(device)
@@ -58,7 +58,7 @@ def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic,
             torch.save([t, model.state_dict()], save_dir)#, elbo
             experiment = 'synthetic' if synthetic else 'llm_generated'
             acc = evaluate_regression(env_name=env_name, model_path=save_dir, experiment=experiment,
-                                      env=env, model=model, mode='val', loss='mse', shuffle_trials=shuffle, max_steps=max_steps, nonlinear=nonlinear, num_dims=num_dims, device=device)
+                                      env=None, model=model, mode='val', loss='mse', shuffle_trials=shuffle, max_steps=max_steps, nonlinear=nonlinear, num_dims=num_dims, device=device)
             accuracy.append(acc)
             writer.add_scalar('MSE', acc, t)
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     parser.add_argument('--env-type', default=None, 
                         help='name of the environment when name of the dataset does not explain the model fully')
     parser.add_argument(
-        '--env-dir', help='name of the environment', required=True)
+        '--env-dir', help='name of the environment', required=False)
     parser.add_argument(
         '--save-dir', help='directory to save models', required=True)
     parser.add_argument('--test', action='store_true',
