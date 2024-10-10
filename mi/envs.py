@@ -149,11 +149,10 @@ class SyntheticFunctionlearningTask(nn.Module):
 
     def sample_batch_vectorized(self):
         
-        x =torch.linspace(-1, 1, self.max_steps, device=self.device)
+        x = torch.linspace(-1, 1, self.max_steps, device=self.device)[torch.randperm(self.max_steps)]
         prior_probs = [8, 1, 0.1, 0.01]
         kernel_types = ['positive_linear', 'negative_linear', 'quadratic', 'radial_basis']
         kernel_choices = np.random.choice(kernel_types, size=self.batch_size, p=np.array(prior_probs) / sum(prior_probs))
-       
         weights = self.sample_parameters().to(self.device)
         intercepts = self.sample_parameters().to(self.device)
         heights = self.sample_parameters().to(self.device)
@@ -201,22 +200,24 @@ class SyntheticFunctionlearningTask(nn.Module):
        
         return packed_inputs.to(self.device), sequence_lengths, targets
     
-    def save_data(self, num_batches=1000):
+    def save_synthetic_data(self, num_tasks=1000):
+
+        num_batches = num_tasks//self.batch_size
         task_counter = 0
         data = pd.DataFrame(columns=['task_id', 'trial_id', 'input', 'target'])
         for _ in range(num_batches):
            inputs, _, targets = self.sample_batch()
            inputs = inputs[..., 0]
            targets = targets
-           for task_id, (task_inputs, task_targets) in enumerate(zip(inputs, targets)):
-                task_counter += task_id
+           for (task_inputs, task_targets) in zip(inputs, targets):
                 for trial_id, (input, target) in enumerate(zip(task_inputs, task_targets)):
                     data = pd.concat([data, pd.DataFrame({'task_id': task_counter, 'trial_id': trial_id,
                                                             'input': str(input.cpu().numpy().tolist()),
                                                         'target': [target.cpu().numpy().tolist()]})], ignore_index=True)
+                task_counter += 1
         # save data to csv file
         data.to_csv(
-            f'{SYS_PATH}/functionlearning/data/generated_tasks/synthetic_functionlearning_tasks_dim{self.num_dims}_data{self.max_steps}_tasks{num_batches}.csv', index=False)                
+            f'{SYS_PATH}/functionlearning/data/generated_tasks/synthetic_functionlearning_tasks_dim{self.num_dims}_data{self.max_steps}_tasks{num_tasks}.csv', index=False)                
                     
 class DecisionmakingTask(nn.Module):
     """

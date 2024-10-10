@@ -38,7 +38,7 @@ def run(env_name, restart_training, restart_episode_id, num_episodes, synthetic,
 
     # train for num_episodes
     for t in tqdm(range(start_id, int(num_episodes))):
-        # TODO: nll loss only works for sample_to_match_max_steps=True
+        # sample batch
         packed_inputs, sequence_lengths, targets = env.sample_batch()
         loss = model.compute_loss(packed_inputs, targets, sequence_lengths)
 
