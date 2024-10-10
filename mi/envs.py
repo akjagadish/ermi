@@ -133,7 +133,7 @@ class SyntheticFunctionlearningTask(nn.Module):
 
     def sample_parameters(self):
         # shape and scale from Lucas et al. 2015
-        return torch.distributions.Gamma(1.001, 1.).sample((self.batch_size,))
+        return torch.distributions.Gamma(1.001, 1.).sample((self.batch_size,)).to(self.device)
     
     def positive_linear(self, x, weight, intercept):
         return weight[:, None] * x + intercept[:, None]
@@ -153,11 +153,11 @@ class SyntheticFunctionlearningTask(nn.Module):
         prior_probs = [8, 1, 0.1, 0.01]
         kernel_types = ['positive_linear', 'negative_linear', 'quadratic', 'radial_basis']
         kernel_choices = np.random.choice(kernel_types, size=self.batch_size, p=np.array(prior_probs) / sum(prior_probs))
-
-        weights = self.sample_parameters()
-        intercepts = self.sample_parameters()
-        heights = self.sample_parameters()
-        distances = self.sample_parameters()
+       
+        weights = self.sample_parameters().to(self.device)
+        intercepts = self.sample_parameters().to(self.device)
+        heights = self.sample_parameters().to(self.device)
+        distances = self.sample_parameters().to(self.device)
 
         y_batch = torch.zeros((self.batch_size, self.max_steps), device=self.device)
 
@@ -166,12 +166,12 @@ class SyntheticFunctionlearningTask(nn.Module):
         quadratic_mask = kernel_choices == 'quadratic'
         radial_basis_mask = kernel_choices == 'radial_basis'
         
-        y_batch[positive_linear_mask] = self.positive_linear(x, weights[positive_linear_mask], intercepts[positive_linear_mask])
-        y_batch[negative_linear_mask] = self.negative_linear(x, weights[negative_linear_mask], intercepts[negative_linear_mask])
-        y_batch[quadratic_mask] = self.quadratic(x, weights[quadratic_mask], intercepts[quadratic_mask])
-        y_batch[radial_basis_mask] = self.radial_basis(x, heights[radial_basis_mask], distances[radial_basis_mask])
+        y_batch[positive_linear_mask] = self.positive_linear(x, weights[positive_linear_mask], intercepts[positive_linear_mask]).to(self.device)
+        y_batch[negative_linear_mask] = self.negative_linear(x, weights[negative_linear_mask], intercepts[negative_linear_mask]).to(self.device)
+        y_batch[quadratic_mask] = self.quadratic(x, weights[quadratic_mask], intercepts[quadratic_mask]).to(self.device)
+        y_batch[radial_basis_mask] = self.radial_basis(x, heights[radial_basis_mask], distances[radial_basis_mask]).to(self.device)
 
-        y_batch += self.noise * torch.randn(self.batch_size, self.max_steps)
+        y_batch += self.noise * torch.randn(self.batch_size, self.max_steps).to(self.device)
         input_batch =  x.tile((self.batch_size,)).reshape(self.batch_size, self.max_steps)
 
         return y_batch, input_batch
@@ -189,7 +189,7 @@ class SyntheticFunctionlearningTask(nn.Module):
         
         targets = stacked_normalized(targets, self.scale) if self.normalize else targets
         inputs = stacked_normalized(inputs, self.scale) if self.normalize else inputs
-        shifted_targets = torch.concatenate((torch.zeros(self.batch_size, 1), targets[:, :-1]), dim=1)
+        shifted_targets = torch.concatenate((torch.zeros((self.batch_size, 1), device=self.device), targets[:, :-1]), dim=1)
         
         # concatenate inputs and targets
         stacked_task_features = torch.cat((inputs.unsqueeze(2), shifted_targets.unsqueeze(2)), dim=2)

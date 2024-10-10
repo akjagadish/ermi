@@ -12,10 +12,10 @@ def evaluate_regression(env_name=None, model_path=None, experiment='llm_generate
     if env is None:
         # load environment
         if experiment == 'synthetic':
-            env = SyntheticFunctionlearningTask(num_dims=num_dims, mode=mode, max_steps=max_steps).to(device)
+            env = SyntheticFunctionlearningTask(num_dims=num_dims, mode=mode, max_steps=max_steps, device=device)
         elif experiment == 'llm_generated':
             env = FunctionlearningTask(data=env_name, num_dims=num_dims,
-                                       mode=mode, max_steps=max_steps, shuffle_trials=shuffle_trials)
+                                       mode=mode, max_steps=max_steps, shuffle_trials=shuffle_trials, device=device)
 
     if model is None:
         # load model
@@ -46,10 +46,10 @@ def evaluate_regression(env_name=None, model_path=None, experiment='llm_generate
         if loss == 'mse':
             criterion = nn.MSELoss()
             predictive_posterior = model(
-                packed_inputs, sequence_lengths)
+                packed_inputs.to(device), sequence_lengths)
             model_preds = predictive_posterior.mean
             model_preds = torch.concat([model_preds[i, :seq_len] for i, seq_len in enumerate(
-                sequence_lengths)], axis=0).squeeze().float()
+                sequence_lengths)], axis=0).squeeze().float().to(device)
             true_targets = torch.concat(
                 targets, axis=0).float().to(device) if isinstance(targets, list) else targets.reshape(-1).float().to(device)
             accuracy = criterion(model_preds, true_targets)
@@ -57,7 +57,6 @@ def evaluate_regression(env_name=None, model_path=None, experiment='llm_generate
             predictive_posterior = model(
                 packed_inputs, sequence_lengths)
             true_targets = torch.stack(targets).float().to(device) if isinstance(targets, list) else targets.float().to(device)
-            import ipdb; ipdb.set_trace()
             accuracy = - \
                 predictive_posterior.log_prob(true_targets).mean()
 
