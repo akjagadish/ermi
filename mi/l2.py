@@ -85,7 +85,25 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
         loss = model.compute_loss(packed_inputs, targets, sequence_lengths)
         
         ## backprop
-        loss.backward()ß
+        loss.backward()
+        # Calculate and log gradient norm
+        total_norm = 0
+        for p in model.parameters():
+            if p.grad is not None:
+                param_norm = p.grad.data.norm(2)
+                total_norm += param_norm.item() ** 2
+        total_norm = total_norm ** 0.5
+        wandb.log({"gradient_norm": total_norm})
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)  # Gradient clipping
+        optimizer.step()
+        
+        if optim != 'schedulefree':
+            scheduler.step()
+
+        if annealing_fraction > 0:
+          for param_group in optimizer.param_groups:
+                ess_t = annealed_lambda(t+1, num_episodes, ess_init, ess, annealing_fraction)
+                param_group['weight_decay'] = ess_t
                 wandb.log({"annealing lambda": ess_t})
 
         ## ivon optimizer 
