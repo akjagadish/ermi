@@ -34,8 +34,8 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
     # state_dict = torch.load(
     #     model_path, map_location=device)[1]
     _, state_dict, opt_dict, _, _ = torch.load(model_path, map_location=device, weights_only=False)
-    optimizer = ivon.IVON(model.parameters(), lr=1., ess=1000000) # dummy optimizer
-    optimizer.load_state_dict(opt_dict)
+    # optimizer = ivon.IVON(model.parameters(), lr=1., ess=1000000) # dummy optimizer
+    # optimizer.load_state_dict(opt_dict)
     model.load_state_dict(state_dict)
     model.to(device)
 
@@ -44,7 +44,7 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
         # model setup: eval mode and set beta
         model.eval()
         model.beta = beta
-        model.device = device   
+        model.device = device  
         # env setup: sample batch from environment and unpack
         outputs = env.sample_batch(participant, paired=paired)
 
@@ -54,14 +54,15 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
             packed_inputs, sequence_lengths, correct_choices, human_choices, _, _ = outputs
 
         # get model choices
-        model_choice_probs = []
-        test_samples = 10
-        for i in range(test_samples):
-            with optimizer.sampled_params():
-                sampled_probs = model(
-                    packed_inputs.float().to(device), sequence_lengths)
-                model_choice_probs.append(sampled_probs)
-        model_choice_probs = torch.stack(model_choice_probs).mean(0)
+        # model_choice_probs = []
+        # test_samples = 10
+        # for i in range(test_samples):
+        #     with optimizer.sampled_params():
+        #         sampled_probs = model(
+        #             packed_inputs.float().to(device), sequence_lengths)
+        #         model_choice_probs.append(sampled_probs)
+        # model_choice_probs = torch.stack(model_choice_probs).mean(0)
+        model_choice_probs = model(packed_inputs.float().to(device), sequence_lengths)
         model_choices = model_choice_probs.round() if policy == 'greedy' else Bernoulli(
                     probs=model_choice_probs).sample()
 
@@ -112,7 +113,6 @@ def compute_mses_human_predictions_under_model(env=None, model_path=None, partic
         # env setup: sample batch from environment and unpack
         outputs = env.sample_batch(participant, paired=paired)
         packed_inputs, sequence_lengths, targets, human_preds, ground_truth_functions = outputs
-        # packed_inputs: (40*24)X25X1
         
         # get model preds
         model_preds = model(
@@ -223,6 +223,7 @@ if __name__ == '__main__':
     
     if args.paradigm == 'functionlearning':
         model_preds, model_errors, targets, human_preds, ground_truth_functions = sample_model(args)
+        print('saving')
         # save list of results
         np.savez(save_path, model_preds=model_preds, model_errors=model_errors, targets=targets, 
                  human_preds=human_preds, ground_truth_functions=ground_truth_functions)
