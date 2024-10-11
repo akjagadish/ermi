@@ -36,6 +36,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
     
     if restart_training and os.path.exists(save_dir):
         t, state_dict, opt_dict, _, _ = torch.load(save_dir)
+        # t, state_dict, opt_dict, _, _ = torch.load(save_dir, map_location=torch.device('cpu'))
         model.load_state_dict(state_dict)
         model = model.to(device)
         restart_episode_id = t if restart_episode_id == 0 else restart_episode_id
@@ -71,10 +72,6 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
 
     if restart_training and os.path.exists(save_dir):
        optimizer.load_state_dict(opt_dict)
-
-    ## scheduler
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, eta_min=start_id, T_max=num_episodes)
-
     losses = []  # keep track of losses
     accuracy = []  # keep track of accuracies
 
@@ -89,7 +86,15 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
         
         ## backprop
         loss.backward()
+        # Calculate and log gradient norm
+        total_norm = 0
+        for p in model.parameters():
+            if p.grad is not None:
+                param_norm = p.grad.data.norm(2)
+                total_norm += param_norm.item() ** 2
+        total_norm = total_norm ** 0.5
         wandb.log({"gradient_norm": total_norm})
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)  # Gradient clipping
         optimizer.step()
         
         if optim != 'schedulefree':
@@ -97,6 +102,8 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
 
         if annealing_fraction > 0:
           for param_group in optimizer.param_groups:
+                ess_t = annealed_lambda(t+1, num_episodes, ess_init, ess, annealing_fraction)
+                param_group['weight_decay'] = ess_t
                 wandb.log({"annealing lambda": ess_t})
 
         ## ivon optimizer 
@@ -274,4 +281,4 @@ if __name__ == "__main__":
         wandb.run.save()        
         path_to_init_weights = f'{args.save_dir}{args.path_to_init_weights}.pt' if args.path_to_init_weights is not None else None
         run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.train_samples, args.ess, args.ess_init, args.annealing_fraction, args.prior_std, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
-            args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, path_to_init_weights, args.regularize, args.batch_size)
+            args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, path_to_init_weights, args.regularize, args.optimizer, args.batch_size)
