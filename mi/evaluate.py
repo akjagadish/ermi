@@ -66,7 +66,7 @@ def evaluate_regression(env_name=None, model_path=None, experiment='llm_generate
         return accuracy
 
 
-def evaluate_classification(env_name=None, model_path=None, experiment='llm_generated', paired=False, env=None, model=None, mode='val', shuffle_trials=False, loss='nll', policy='greedy', beta=1., max_steps=70, nonlinear=False, num_dims=3, device='cpu', optimizer=None, return_all=False):
+def evaluate_classification(env_name=None, model_path=None, experiment='llm_generated', paired=False, env=None, model=None, mode='val', shuffle_trials=False, loss='nll', policy='greedy', beta=1., max_steps=70, nonlinear=False, num_dims=3, device='cpu', optimizer=None, optim='adamw', return_all=False):
 
     if env is None:
         # load environment
@@ -98,8 +98,8 @@ def evaluate_classification(env_name=None, model_path=None, experiment='llm_gene
         model.to(device)
 
     model.eval()
-    # if optimizer is not None and loss != 'variational':
-    #     optimizer.eval() # if schedular free optimizer
+    if optimizer is not None and optim == 'schedulefree':
+        optimizer.eval()
 
     with torch.no_grad():
         # sample batch
