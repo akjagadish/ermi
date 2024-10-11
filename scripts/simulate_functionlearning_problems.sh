@@ -12,7 +12,7 @@ cd ~/ermi/mi/
 
 module purge
 module load anaconda/3/2023.03
-export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
+module load gcc/13 impi/2021.9
 
 
-python simulate_data.py --num-tasks 10000 --num-dims 2 --max-steps 20 --paradigm decisionmaking
+python simulate_data.py --num-tasks 10000 --num-dims 1 --max-steps 25 --paradigm functionlearning
