@@ -4,6 +4,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import os
 from torch.utils.tensorboard import SummaryWriter
+import wandb
 from envs import DecisionmakingTask, SyntheticDecisionmakingTask
 from model import TransformerDecoderClassification, TransformerDecoderLinearWeights
 import argparse
@@ -80,13 +81,12 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
         
         ## backprop
         loss.backward()
+        wandb.log({"gradient_norm": total_norm})
         optimizer.step()
         scheduler.step()
         if annealing_fraction > 0:
           for param_group in optimizer.param_groups:
-                param_group['weight_decay'] = annealed_lambda(t+1, num_episodes, ess_init, ess, annealing_fraction)
-            
-        # import ipdb; ipdb.set_trace()
+                wandb.log({"annealing lambda": ess_t})
         # model.train()
         # packed_inputs, sequence_lengths, targets = env.sample_batch(paired=paired)
         # for _ in range(train_samples):
@@ -111,9 +111,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
             norm = torch.norm(torch.cat([p.flatten() for p in model.parameters() if p is not None]), 2)#.item()
         
         if (not t % print_every):
-            writer.add_scalar('Loss', loss, t)
-            # writer.add_scalar('ELBO', elbo, t)
-            writer.add_scalar('l2 norm', norm, t)
+            wandb.log({"loss": loss, "l2 norm": norm, "episode": t})
 
         if (not t % save_every):
             torch.save([t, model.state_dict(), optimizer.state_dict(), std, ess], save_dir)
@@ -121,7 +119,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
             acc = evaluate_classification(env_name=env_name, experiment=experiment, paired=paired,
                                           env=None, model=model, mode='val', shuffle_trials=shuffle, loss=loss_fn, max_steps=max_steps, num_dims=num_dims, optimizer=optimizer, device=device)
             accuracy.append(acc)
-            writer.add_scalar('Val. Acc.', acc, t)
+            wandb.log({"Val. Acc.": acc})
 
     return losses, accuracy
 
@@ -215,6 +213,33 @@ if __name__ == "__main__":
     device = torch.device("cuda" if use_cuda else "cpu")
     env = f'{args.env_name}_dim{args.num_dims}' if args.synthetic else args.env_name if args.env_type is None else args.env_type
     args.ess = args.ess * args.scale + args.offset if args.job_array else args.ess
+    wandb.login()
+    wandb.init(
+        # set the wandb project where this run will be logged
+        project="BERMI - decisionmaking",
+
+        # track hyperparameters and run metadata
+        config={
+        "learning_rate": args.lr,
+        "architecture": args.model_name,
+        "dataset": env,
+        "epochs": args.num_episodes,
+        "num_hidden": args.num_hidden,
+        "num_layers": args.num_layers,
+        "d_model": args.d_model,
+        "num_head": args.num_head,
+        "noise": args.noise,
+        "shuffle": args.shuffle,
+        "paired": args.paired,
+        "loss": args.loss,
+        "ess": args.ess,
+        "std": args.prior_std,
+        "optimizer": args.optimizer,
+        "batch_size": args.batch_size,
+        "annealing_fraction": args.annealing_fraction,
+        "regularize": args.regularize,
+        }
+    )
 
     for i in range(args.runs):
 
@@ -226,6 +251,8 @@ if __name__ == "__main__":
         env_name = f'/{args.env_dir}/{args.env_name}.csv' if not args.synthetic else None
         save_dir = save_dir.replace('.pt', f'_reg{args.regularize}.pt') if args.path_to_init_weights is not None else save_dir
         save_dir = save_dir.replace('.pt', f'_essinit{str(args.ess_init)}_annealed.pt') if args.annealing_fraction > 0 else save_dir
+        wandb.run.name = save_dir[len(args.save_dir):]
+        wandb.run.save()        
         path_to_init_weights = f'{args.save_dir}{args.path_to_init_weights}.pt' if args.path_to_init_weights is not None else None
         run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.train_samples, args.ess, args.ess_init, args.annealing_fraction, args.prior_std, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
             args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, path_to_init_weights, args.regularize, args.batch_size)
