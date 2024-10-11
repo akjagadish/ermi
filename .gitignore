@@ -171,4 +171,5 @@ runs/*
 scripts/*raven.sh
 man/*
 core*
-.gitignore 
+.gitignore
+wandb/*
