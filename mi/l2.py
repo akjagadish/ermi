@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-import torch.optim as optim
 import torch.nn.functional as F
 import os
 from torch.utils.tensorboard import SummaryWriter
@@ -14,7 +13,7 @@ import schedulefree
 import ivon
 from model_utils import get_wd_from_std, compute_elbo, annealed_ess, compute_kld, annealed_lambda
 
-def run(env_name, paired, restart_training, restart_episode_id, num_episodes, train_samples, ess, ess_init, annealing_fraction, std, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, path_to_init_weights, regularize, batch_size=64):
+def run(env_name, paired, restart_training, restart_episode_id, num_episodes, train_samples, ess, ess_init, annealing_fraction, std, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, path_to_init_weights, regularize, optim, batch_size=64):
 
     writer = SummaryWriter('runs/' + save_dir)
     if synthetic:
@@ -54,14 +53,22 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
     model_parameters =  list(model.parameters()) #model.get_mlp_weights() if ((regularize == 'mlp_only') and (path_to_init_weights is not None)) else model.get_self_attention_weights() if ((regularize == 'attn_only') and (path_to_init_weights is not None)) else
     # setup optimizer
     ## schedulefree optimizer
-    # optimizer = schedulefree.AdamWScheduleFree(model.parameters(), lr=lr, weight_decay=ess)
-    ess_init = ess_init or ess
-    optimizer = optim.AdamW(model_parameters, lr=lr, weight_decay=ess_init)
-    ## ivon optimizer
-    # ess_final = ess or len(env.data) 
-    # ess_init = ess_init or ess_final
-    # wd = get_wd_from_std(std, ess_init)
-    # optimizer = ivon.IVON(model_parameters, lr=lr, ess=ess_init, weight_decay=wd)
+    if optim == 'schedulefree':
+        optimizer = schedulefree.AdamWScheduleFree(model.parameters(), lr=lr, weight_decay=ess_init)
+    else:
+        ess_init = ess_init or ess
+        if optim == 'adamw':
+            optimizer = torch.optim.AdamW(model_parameters, lr=lr, weight_decay=ess_init)
+        
+        # elif optimizer=='ivon': ## ivon optimizer
+        #     ess_final = ess or len(env.data) 
+        #     ess_init = ess_init or ess_final
+        #     wd = get_wd_from_std(std, ess_init)
+        #     optimizer = ivon.IVON(model_parameters, lr=lr, ess=ess_init, weight_decay=wd)
+
+        ## scheduler
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, eta_min=start_id, T_max=num_episodes)
+
     if restart_training and os.path.exists(save_dir):
        optimizer.load_state_dict(opt_dict)
 
@@ -73,7 +80,8 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
 
     # train for num_episodes
     for t in tqdm(range(start_id, int(num_episodes))):
-        # optimizer.train() if schedulefree optimizer else nothing
+        if optim == 'schedulefree':
+            optimizer.train()
         model.train()
         packed_inputs, sequence_lengths, targets = env.sample_batch(paired=paired)
         optimizer.zero_grad()
@@ -83,10 +91,15 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
         loss.backward()
         wandb.log({"gradient_norm": total_norm})
         optimizer.step()
-        scheduler.step()
+        
+        if optim != 'schedulefree':
+            scheduler.step()
+
         if annealing_fraction > 0:
           for param_group in optimizer.param_groups:
                 wandb.log({"annealing lambda": ess_t})
+
+        ## ivon optimizer 
         # model.train()
         # packed_inputs, sequence_lengths, targets = env.sample_batch(paired=paired)
         # for _ in range(train_samples):
@@ -117,7 +130,8 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
             torch.save([t, model.state_dict(), optimizer.state_dict(), std, ess], save_dir)
             experiment = 'synthetic' if synthetic else 'llm_generated'
             acc = evaluate_classification(env_name=env_name, experiment=experiment, paired=paired,
-                                          env=None, model=model, mode='val', shuffle_trials=shuffle, loss=loss_fn, max_steps=max_steps, num_dims=num_dims, optimizer=optimizer, device=device)
+                                          env=None, model=model, mode='val', shuffle_trials=shuffle, loss=loss_fn, 
+                                          max_steps=max_steps, num_dims=num_dims, optimizer=optimizer, optim=optim, device=device)
             accuracy.append(acc)
             wandb.log({"Val. Acc.": acc})
 
@@ -206,6 +220,8 @@ if __name__ == "__main__":
                         help='offset for the job array')
     parser.add_argument('--regularize', default='all',
                         help='regularize the specific model parameters or all')
+    parser.add_argument('--optimizer', default='adamw',
+                        help='optimizer')
     # parser.add_argument('--eval', default='categorisation', help='what to eval your meta-learner on')
 
     args = parser.parse_args()
@@ -213,6 +229,8 @@ if __name__ == "__main__":
     device = torch.device("cuda" if use_cuda else "cpu")
     env = f'{args.env_name}_dim{args.num_dims}' if args.synthetic else args.env_name if args.env_type is None else args.env_type
     args.ess = args.ess * args.scale + args.offset if args.job_array else args.ess
+
+    # wandb configuration
     wandb.login()
     wandb.init(
         # set the wandb project where this run will be logged
@@ -251,6 +269,7 @@ if __name__ == "__main__":
         env_name = f'/{args.env_dir}/{args.env_name}.csv' if not args.synthetic else None
         save_dir = save_dir.replace('.pt', f'_reg{args.regularize}.pt') if args.path_to_init_weights is not None else save_dir
         save_dir = save_dir.replace('.pt', f'_essinit{str(args.ess_init)}_annealed.pt') if args.annealing_fraction > 0 else save_dir
+        save_dir = save_dir.replace('.pt', f'_schedulefree.pt') if args.optimizer == 'schedulefree' else save_dir
         wandb.run.name = save_dir[len(args.save_dir):]
         wandb.run.save()        
         path_to_init_weights = f'{args.save_dir}{args.path_to_init_weights}.pt' if args.path_to_init_weights is not None else None
