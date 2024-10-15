@@ -4,6 +4,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import os
 from torch.utils.tensorboard import SummaryWriter
+import wandb
 from envs import DecisionmakingTask, SyntheticDecisionmakingTask
 from model import TransformerDecoderClassification, TransformerDecoderLinearWeights
 import argparse
@@ -85,6 +86,7 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
                 loss.backward()
 
         elbo = loss.item()*ess + compute_kld(optimizer, std)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
         scheduler.step()
         if annealing_fraction > 0:
@@ -97,18 +99,16 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
         # logging
         losses.append(loss.item())
         # elbo = compute_elbo(optimizer, model, std, packed_inputs, targets, sequence_lengths)
-
         if (not t % print_every):
-            writer.add_scalar('Loss', loss, t)
-            writer.add_scalar('ELBO', elbo, t)
+            wandb.log({"loss": loss, "elbo": elbo, "episode": t})
 
         if (not t % save_every):
             torch.save([t, model.state_dict(), optimizer.state_dict(), std, ess], save_dir)
             experiment = 'synthetic' if synthetic else 'llm_generated'
             acc = evaluate_classification(env_name=env_name, experiment=experiment, paired=paired,
-                                          env=env, model=model, mode='val', shuffle_trials=shuffle, loss=loss_fn, max_steps=max_steps, num_dims=num_dims, optimizer=optimizer, device=device)
+                                          env=None, model=model, mode='val', shuffle_trials=shuffle, loss=loss_fn, max_steps=max_steps, num_dims=num_dims, optimizer=optimizer, device=device)
             accuracy.append(acc)
-            writer.add_scalar('Val. Acc.', acc, t)
+            wandb.log({"Val. Acc.": acc})
 
     return losses, accuracy
 
@@ -189,9 +189,9 @@ if __name__ == "__main__":
                         default=False, help='restart training')
     parser.add_argument('--restart-episode-id', type=int,
                         default=0, help='restart episode id')
-    parser.add_argument('--scale', type=int, default=10000,
+    parser.add_argument('--scale', type=float, default=10000,
                         help='scale for the job array')
-    parser.add_argument('--offset', type=int, default=0,
+    parser.add_argument('--offset', type=float, default=0,
                         help='offset for the job array')
     parser.add_argument('--regularize', default='all',
                         help='regularize the specific model parameters or all')
@@ -203,9 +203,37 @@ if __name__ == "__main__":
     env = f'{args.env_name}_dim{args.num_dims}' if args.synthetic else args.env_name if args.env_type is None else args.env_type
     args.ess = args.ess * args.scale + args.offset if args.job_array else args.ess
 
+    # wandb configuration
+    wandb.login()
+    wandb.init(
+        # set the wandb project where this run will be logged
+        project="BERMI - decisionmaking",
+
+        # track hyperparameters and run metadata
+        config={
+        "learning_rate": args.lr,
+        "architecture": args.model_name,
+        "dataset": env,
+        "epochs": args.num_episodes,
+        "num_hidden": args.num_hidden,
+        "num_layers": args.num_layers,
+        "d_model": args.d_model,
+        "num_head": args.num_head,
+        "noise": args.noise,
+        "shuffle": args.shuffle,
+        "paired": args.paired,
+        "loss": args.loss,
+        "ess": args.ess,
+        "std": args.prior_std,
+        "batch_size": args.batch_size,
+        "annealing_fraction": args.annealing_fraction,
+        "regularize": args.regularize,
+        }
+    )
+
     for i in range(args.runs):
 
-        save_dir = f'{args.save_dir}env={env}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_paired{str(args.paired)}_loss{str(args.loss)}_ess{str(int(args.ess))}_std{str(args.prior_std)}_run={str(args.first_run_id + i)}.pt'
+        save_dir = f'{args.save_dir}env={env}_model={args.model_name}_num_episodes{str(args.num_episodes)}_num_hidden={str(args.num_hidden)}_lr{str(args.lr)}_num_layers={str(args.num_layers)}_d_model={str(args.d_model)}_num_head={str(args.num_head)}_noise{str(args.noise)}_shuffle{str(args.shuffle)}_paired{str(args.paired)}_loss{str(args.loss)}_ess{str(round(float(args.ess), 4))}_std{str(args.prior_std)}_run={str(args.first_run_id + i)}.pt'
         save_dir = save_dir.replace(
                 '.pt', f'_{"ranking" if args.ranking else "direction" if args.direction else "unknown"}.pt') if args.synthetic else save_dir
         save_dir = save_dir.replace(
@@ -213,6 +241,8 @@ if __name__ == "__main__":
         env_name = f'/{args.env_dir}/{args.env_name}.csv' if not args.synthetic else None
         save_dir = save_dir.replace('.pt', f'_reg{args.regularize}.pt') if args.path_to_init_weights is not None else save_dir
         save_dir = save_dir.replace('.pt', f'_essinit{str(args.ess_init)}_annealed.pt') if args.annealing_fraction > 0 else save_dir
+        wandb.run.name = save_dir[len(args.save_dir):]
+        wandb.run.save()        
         path_to_init_weights = f'{args.save_dir}{args.path_to_init_weights}.pt' if args.path_to_init_weights is not None else None
         run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.train_samples, args.ess, args.ess_init, args.annealing_fraction, args.prior_std, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
             args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, path_to_init_weights, args.regularize, args.batch_size)
