@@ -223,6 +223,7 @@ class TransformerDecoderLinearWeights(nn.Module):
         self.linear = nn.Linear(d_model, self.num_output)
         self.sigmoid = nn.Sigmoid()
         self.beta = beta
+        self.lambda_ = nn.Parameter(-5 * torch.ones([]), requires_grad=True)
 
         assert loss in ['bce', 'nll', 'variational'], "loss must be binary cross entropy or negative log likelihood"
         self.loss = loss
