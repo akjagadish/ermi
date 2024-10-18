@@ -13,7 +13,7 @@ import schedulefree
 import ivon
 from model_utils import get_wd_from_std, compute_elbo, annealed_ess, compute_kld, annealed_lambda
 
-def run(env_name, paired, restart_training, restart_episode_id, num_episodes, train_samples, ess, ess_init, annealing_fraction, std, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, path_to_init_weights, regularize, optim, batch_size=64):
+def run(env_name, paired, restart_training, restart_episode_id, num_episodes, train_samples, ess, ess_init, constraint, annealing_fraction, std, synthetic, ranking, direction, num_dims, max_steps, sample_to_match_max_steps, noise, shuffle, shuffle_features, print_every, save_every, num_hidden, num_layers, d_model, num_head, loss_fn, save_dir, device, lr, path_to_init_weights, regularize, optim, batch_size=64):
 
     writer = SummaryWriter('runs/' + save_dir)
     if synthetic:
@@ -79,10 +79,22 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
     for t in tqdm(range(start_id, int(num_episodes))):
         if optim == 'schedulefree':
             optimizer.train()
+        elif optim != 'schedulefree' and t > 0:
+            scheduler.step()
         model.train()
         packed_inputs, sequence_lengths, targets = env.sample_batch(paired=paired)
         optimizer.zero_grad()
+
+        # with torch.no_grad(): #l2 norm over all parameters
+        norm = torch.norm(torch.cat([p.flatten() for p in model.parameters() if p is not None]), 2)#.item()
+
         loss = model.compute_loss(packed_inputs, targets, sequence_lengths)
+        
+        if constraint:
+            loss = torch.exp(model.lambda_.detach()) * norm + loss
+            loss_lambda = -torch.exp(model.lambda_) * (norm - ess).detach()
+            loss = loss + loss_lambda
+            wandb.log({"lambda": torch.exp(model.lambda_.detach())})
         
         ## backprop
         loss.backward()
@@ -96,9 +108,6 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
         wandb.log({"gradient_norm": total_norm})
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)  # Gradient clipping
         optimizer.step()
-        
-        if optim != 'schedulefree':
-            scheduler.step()
 
         if annealing_fraction > 0:
           for param_group in optimizer.param_groups:
@@ -127,11 +136,9 @@ def run(env_name, paired, restart_training, restart_episode_id, num_episodes, tr
         # logging
         losses.append(loss.item())
         # elbo = compute_elbo(optimizer, model, std, packed_inputs, targets, sequence_lengths)
-        with torch.no_grad():   #l2 norm over all parameters
-            norm = torch.norm(torch.cat([p.flatten() for p in model.parameters() if p is not None]), 2)#.item()
         
         if (not t % print_every):
-            wandb.log({"loss": loss, "l2 norm": norm, "episode": t})
+            wandb.log({"loss": loss, "l2 norm": norm.detach().item(), "episode": t})
 
         if (not t % save_every):
             torch.save([t, model.state_dict(), optimizer.state_dict(), std, ess], save_dir)
@@ -221,7 +228,7 @@ if __name__ == "__main__":
                         default=False, help='restart training')
     parser.add_argument('--restart-episode-id', type=int,
                         default=0, help='restart episode id')
-    parser.add_argument('--scale', type=float, default=10000,
+    parser.add_argument('--scale', type=float, default=1,
                         help='scale for the job array')
     parser.add_argument('--offset', type=float, default=0,
                         help='offset for the job array')
@@ -229,6 +236,8 @@ if __name__ == "__main__":
                         help='regularize the specific model parameters or all')
     parser.add_argument('--optimizer', default='adamw',
                         help='optimizer')
+    parser.add_argument('--constraint', action='store_true',
+                        help='constraint for the l2 norm')
     # parser.add_argument('--eval', default='categorisation', help='what to eval your meta-learner on')
 
     args = parser.parse_args()
@@ -263,6 +272,7 @@ if __name__ == "__main__":
         "batch_size": args.batch_size,
         "annealing_fraction": args.annealing_fraction,
         "regularize": args.regularize,
+        "constraint": args.constraint
         }
     )
 
@@ -276,9 +286,10 @@ if __name__ == "__main__":
         env_name = f'/{args.env_dir}/{args.env_name}.csv' if not args.synthetic else None
         save_dir = save_dir.replace('.pt', f'_reg{args.regularize}.pt') if args.path_to_init_weights is not None else save_dir
         save_dir = save_dir.replace('.pt', f'_essinit{str(args.ess_init)}_annealed.pt') if args.annealing_fraction > 0 else save_dir
+        save_dir = save_dir.replace('.pt', f'_constraint{str(args.constraint)}.pt') if args.constraint else save_dir
         save_dir = save_dir.replace('.pt', f'_schedulefree.pt') if args.optimizer == 'schedulefree' else save_dir
         wandb.run.name = save_dir[len(args.save_dir):]
         wandb.run.save()        
         path_to_init_weights = f'{args.save_dir}{args.path_to_init_weights}.pt' if args.path_to_init_weights is not None else None
-        run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.train_samples, args.ess, args.ess_init, args.annealing_fraction, args.prior_std, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
+        run(env_name, args.paired, args.restart_training, args.restart_episode_id, args.num_episodes, args.train_samples, args.ess, args.ess_init, args.constraint, args.annealing_fraction, args.prior_std, args.synthetic, args.ranking, args.direction, args.num_dims, args.max_steps, args.sample_to_match_max_steps,
             args.noise, args.shuffle, args.shuffle_features, args.print_every, args.save_every, args.num_hidden, args.num_layers, args.d_model, args.num_head, args.loss, save_dir, device, args.lr, path_to_init_weights, args.regularize, args.optimizer, args.batch_size)
