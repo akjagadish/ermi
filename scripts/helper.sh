@@ -30,10 +30,20 @@ module purge
 module load anaconda/3/2023.03
 module load gcc/13 impi/2021.9
 module load pytorch/cpu/2.0.0 
-pip3 install --user accelerate openai gym ipdb transformers tensorboard anthropic openml wordcloud mycolorpy Pillow pyro-ppl nnsight
+pip3 install --user openai ipdb transformers anthropic openml wordcloud mycolorpy Pillow pyro-ppl nnsight
 clear
 jupyter-lab
 
+## viper
+cd ~/ermi/
+module purge
+module load anaconda/3/2023.03
+module load gcc/13
+pip3 install --user openai ipdb transformers anthropic openml wordcloud mycolorpy Pillow pyro-ppl nnsight torch ivon-opt
+clear
+jupyter-lab
+
+## categorisation
 cd ~/ermi/categorisation/
 module purge
 module load anaconda/3/2021.11
