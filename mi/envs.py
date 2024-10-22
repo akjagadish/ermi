@@ -150,7 +150,7 @@ class SyntheticFunctionlearningTask(nn.Module):
     def sample_batch_vectorized(self):
         
         x = torch.linspace(-1, 1, self.max_steps, device=self.device)[torch.randperm(self.max_steps)]
-        prior_probs = [8, 1, 0.1, 0.01]
+        prior_probs = [8, 1, 0.1, 0.01] if self.mode == 'train' else [1, 1, 1, 1]
         kernel_types = ['positive_linear', 'negative_linear', 'quadratic', 'radial_basis']
         kernel_choices = np.random.choice(kernel_types, size=self.batch_size, p=np.array(prior_probs) / sum(prior_probs))
         weights = self.sample_parameters().to(self.device)
