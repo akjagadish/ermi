@@ -173,12 +173,12 @@ class SyntheticFunctionlearningTask(nn.Module):
         y_batch += self.noise * torch.randn(self.batch_size, self.max_steps).to(self.device)
         input_batch =  x.tile((self.batch_size,)).reshape(self.batch_size, self.max_steps)
 
-        return y_batch, input_batch
+        return y_batch, input_batch, kernel_choices
     
     def sample_batch(self):
 
         # data: input, target, shifted target
-        targets, inputs  = self.sample_batch_vectorized()
+        targets, inputs, kernel_choices  = self.sample_batch_vectorized()
 
         # normalize the data
         def stacked_normalized(data, scale):
@@ -197,7 +197,8 @@ class SyntheticFunctionlearningTask(nn.Module):
         packed_inputs = rnn_utils.pad_sequence(
             stacked_task_features, batch_first=True)
         
-       
+        if self.mode=='test':
+            return packed_inputs.to(self.device), sequence_lengths, targets, inputs, kernel_choices
         return packed_inputs.to(self.device), sequence_lengths, targets
     
     def save_synthetic_data(self, num_tasks=1000):
@@ -702,7 +703,7 @@ class Little2022(nn.Module):
         self.data = pd.read_csv(f'{DATA_PATH}/little2022functionestimation.csv')
         # filter participants with less than 24 tasks
         self.data = self.data.groupby('participant').filter(lambda x: len(x.task.unique()) == 24) 
-
+        self.match_train_data = True
         # Function to scale 'x' and 'y' for each participant and task
         def scale_participant_task_data(group):
             scaler = MinMaxScaler(feature_range=(-scale, scale))
@@ -754,8 +755,12 @@ class Little2022(nn.Module):
 
             # get the predictions made by the participants
             test_condition = (data_participant.task==task_id) & (data_participant.type=='test')
-            test_features =  data_participant[test_condition].x.values[::self.sampling_rate].reshape(-1,1)
-            test_preds = data_participant[test_condition].y.values[::self.sampling_rate].reshape(-1,1)
+            if self.match_train_data:
+                test_features = train_features
+                test_preds = train_preds
+            else:
+                test_features =  data_participant[test_condition].x.values[::self.sampling_rate].reshape(-1,1)
+                test_preds = data_participant[test_condition].y.values[::self.sampling_rate].reshape(-1,1)
             pred_values = np.concatenate((test_features, test_preds), axis=1)
 
             for (x_test, y_test) in zip(test_features, test_preds):
