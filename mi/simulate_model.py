@@ -1,13 +1,13 @@
 import numpy as np
 import torch
-from envs import Binz2022, Badham2017, Devraj2022, Little2022
+from envs import Binz2022, Badham2017, Devraj2022, Little2022, SyntheticFunctionlearningTask
 import argparse
 from tqdm import tqdm
 from scipy.optimize import differential_evolution, minimize
 from model import TransformerDecoderClassification, TransformerDecoderLinearWeights, TransformerDecoderRegression, TransformerDecoderRegressionLinearWeights
 import sys
 import re
-import ivon
+# import ivon
 from model_utils import parse_model_path
 from torch.distributions import Bernoulli
 sys.path.insert(0, '/u/ajagadish/ermi/mi')
@@ -85,7 +85,7 @@ def compute_loglikelihood_human_choices_under_model(env=None, model_path=None, p
     return model_accuracy, per_trial_model_accuracy, human_accuracy, per_trial_human_accuracy, model_coefficients, expected_log_likelihood
 
 def compute_mses_human_predictions_under_model(env=None, model_path=None, participant=0, device='cpu', paired=False, policy='greedy', **kwargs):
-
+    
     # parse model parameters
     num_hidden, num_layers, d_model, num_head, loss_fn, model_max_steps = parse_model_path(model_path, kwargs)
 
@@ -111,23 +111,34 @@ def compute_mses_human_predictions_under_model(env=None, model_path=None, partic
         model.device = device
 
         # env setup: sample batch from environment and unpack
-        outputs = env.sample_batch(participant, paired=paired)
-        packed_inputs, sequence_lengths, targets, human_preds, ground_truth_functions = outputs
+        if kwargs.get('synthetic'):
+            packed_inputs, sequence_lengths, targets, inputs, kernel_choices = env.sample_batch()
+
+            # get model preds
+            model_preds = model(packed_inputs.float().to(device), sequence_lengths)
+            model_preds = model_preds.mean if policy == 'greedy' else model_preds.sample()
+
+            # compute metrics
+            model_error = compute_mse(model_preds, targets.unsqueeze(2))
+            return model_preds, model_error, targets, inputs, kernel_choices
         
-        # get model preds
-        model_preds = model(
-            packed_inputs.float().to(device), sequence_lengths)
-        model_preds = model_preds.mean if policy == 'greedy' else model_preds.sample()
+        else:
 
-        # compute metrics
-        model_error = compute_mse(model_preds[:, -1], targets[:, -1])
-        model_preds = torch.concat([model_preds[i, [-1]] for i, _ in enumerate(
-            sequence_lengths)], axis=0).squeeze().float()
-        targets = torch.concat([targets[i, [-1]] for i, _ in enumerate(
-            sequence_lengths)], axis=0).squeeze().float()
-        targets = targets.reshape(-1).float().to(device)
+            packed_inputs, sequence_lengths, targets, human_preds, ground_truth_functions = env.sample_batch(participant, paired=paired)
+         
+            # get model preds
+            model_preds = model(packed_inputs.float().to(device), sequence_lengths)
+            model_preds = model_preds.mean if policy == 'greedy' else model_preds.sample()
 
-    return model_preds, model_error, targets, human_preds, ground_truth_functions
+            # compute metrics
+            model_error = compute_mse(model_preds[:, -1], targets[:, -1])
+            model_preds = torch.concat([model_preds[i, [-1]] for i, _ in enumerate(
+                sequence_lengths)], axis=0).squeeze().float()
+            targets = torch.concat([targets[i, [-1]] for i, _ in enumerate(
+                sequence_lengths)], axis=0).squeeze().float()
+            targets = targets.reshape(-1).float().to(device)
+
+            return model_preds, model_error, targets, human_preds, ground_truth_functions
 
 
 def sample_model(args):
@@ -145,23 +156,27 @@ def sample_model(args):
     elif args.task_name == 'little2022':
         env = Little2022()
         task_features = {'model_max_steps': 25}
+    elif args.task_name == 'syntheticfunctionlearning':
+        env = SyntheticFunctionlearningTask(num_dims=1, mode='test', max_steps=25)
+        env.num_samples = 10
+        env.batch_size = 100
+        task_features = {'model_max_steps': 25, 'synthetic': True}
     else:
         raise NotImplementedError
    
-    participants = env.data.participant.unique()
+    participants = env.data.participant.unique() if task_features.get('synthetic') is None else range(env.num_samples)
     
-    if args.task_name in ['little2022']:
+    if args.task_name in ['little2022', 'syntheticfunctionlearning']:
 
         model_errors, model_preds, targets, human_preds, ground_truth_functions = [], [], [], [], []
         for participant in participants:
             model_pred, model_error, target, human_pred, ground_truth_function = compute_mses_human_predictions_under_model(env=env, model_path=model_path, participant=participant, shuffle_trials=True,
-                                                                                                                    paired=args.paired, **task_features)
+                                                                                                             paired=args.paired, **task_features)
             model_preds.append(model_pred)
             model_errors.append(model_error)
             targets.append(target)
             human_preds.append(human_pred)
             ground_truth_functions.append(ground_truth_function)
-
         return np.stack(model_preds), np.stack(model_errors), np.stack(targets), np.stack(human_preds), np.stack(ground_truth_functions)
         
     else:
@@ -214,7 +229,8 @@ if __name__ == '__main__':
     args.ess = args.ess * args.scale + args.offset if args.job_array else args.ess
     args.model_name = args.model_name.replace('essNone', f'ess{str(int(args.ess))}') if (args.ess is not None) and (args.job_array) else args.model_name
     if args.use_filename:
-        save_path = f"{args.paradigm}/data/model_simulation/{args.model_name}.npz"
+        save_path = f"{args.paradigm}/data/model_simulation/{args.model_name}_{args.task_name}.npz"
+
     else:
         num_hidden, num_layers, d_model, num_head, loss_fn, _, source, condition = parse_model_path(args.model_name, {}, return_data_info=True)
         save_path = f"{args.paradigm}/data/model_simulation/task={args.task_name}_experiment={args.exp_id}_source={source}_condition={condition}_loss={loss_fn}_paired={args.paired}_policy={args.policy}.npz"
