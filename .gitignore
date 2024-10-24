@@ -168,7 +168,7 @@ categorisation/data/*.csv
 functionlearning/data/*.csv
 functionlearning/figures/*  
 runs/*
-scripts/*raven.sh
+# scripts/*raven.sh
 man/*
 core*
 .gitignore
