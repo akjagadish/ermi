@@ -37,7 +37,7 @@ Ecological rationality refers to the notion that humans are rational agents adap
 │   │   ├── generated_tasks # generated tasks from LLM, synthetic, and OpenML-CC18
 │   │   ├── human # human data from the three experiments
 │   │   ├── llm # data from large language models
-│   │   ├── meta_learner # simulate data from metalearned inference models
+│   │   ├── meta_learner # simulate data from meta learned inference models
 │   │   ├── model_comparison # results from model comparison
 │   │   ├── stats # statistics from generated tasks
 │   │   └── task_labels  # LLM synthesized problems
