@@ -166,3 +166,5 @@ runs/u/ajagadish/ermi/functionlearning/*
 runs/u/ajagadish/ermi/decisionmaking/*
 man/*
 *raven.sh
+figures/*
+wandb/*
